@@ -1,6 +1,6 @@
 // ============================================================
 // CAXIENSE LOG - CONTROLE OPERACIONAL
-// script.js
+// script.js COMPLETO
 // ============================================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
@@ -134,8 +134,8 @@ function mostrarPagina(paginaId) {
 
         pagina.classList.remove("ativa");
 
-        // Força esconder
         pagina.style.display = "none";
+
     });
 
 
@@ -147,15 +147,10 @@ function mostrarPagina(paginaId) {
     }
 
 
-    // Mostra a página escolhida
     pagina.classList.add("ativa");
 
     pagina.style.display = "block";
 
-
-    // ========================================================
-    // TÍTULO
-    // ========================================================
 
     const titulo = elemento("tituloPagina");
 
@@ -169,13 +164,10 @@ function mostrarPagina(paginaId) {
 
 
     if (titulo) {
-        titulo.textContent = titulos[paginaId] || "Dashboard";
+        titulo.textContent =
+            titulos[paginaId] || "Dashboard";
     }
 
-
-    // ========================================================
-    // MENU ATIVO
-    // ========================================================
 
     document
         .querySelectorAll(".menu-item[data-pagina]")
@@ -196,10 +188,6 @@ function mostrarPagina(paginaId) {
     }
 
 
-    // ========================================================
-    // FECHA MENU MOBILE
-    // ========================================================
-
     const sidebar = document.querySelector(".sidebar");
 
     if (sidebar) {
@@ -207,14 +195,8 @@ function mostrarPagina(paginaId) {
     }
 
 
-    // ========================================================
-    // REGISTROS
-    // ========================================================
-
     if (paginaId === "paginaRegistros") {
-
         renderizarRegistros();
-
     }
 }
 
@@ -253,7 +235,6 @@ function configurarNavegacao() {
     });
 
 
-    // Dashboard inicial
     mostrarPagina("paginaDashboard");
 }
 
@@ -264,7 +245,8 @@ function configurarNavegacao() {
 
 window.alternarSidebar = function () {
 
-    const sidebar = document.querySelector(".sidebar");
+    const sidebar =
+        document.querySelector(".sidebar");
 
     if (!sidebar) {
         console.warn("Sidebar não encontrada.");
@@ -281,101 +263,185 @@ window.alternarSidebar = function () {
 
 function configurarLogin() {
 
-    const formLogin = elemento("formLogin");
+    const formLogin =
+        elemento("formLogin");
 
     if (!formLogin) {
-        console.warn("Formulário de login não encontrado.");
+        console.warn(
+            "Formulário de login não encontrado."
+        );
         return;
     }
 
 
-    formLogin.addEventListener("submit", async function (event) {
+    formLogin.addEventListener(
+        "submit",
+        async function (event) {
 
-        event.preventDefault();
-
-
-        const email =
-            elemento("loginEmail")?.value.trim();
-
-        const senha =
-            elemento("loginSenha")?.value;
+            event.preventDefault();
 
 
-        const mensagem =
-            elemento("mensagemLogin");
+            const email =
+                elemento("loginEmail")?.value.trim();
+
+            const senha =
+                elemento("loginSenha")?.value;
 
 
-        if (!email || !senha) {
+            const mensagem =
+                elemento("mensagemLogin");
 
-            if (mensagem) {
-                mensagem.textContent =
-                    "Informe o e-mail e a senha.";
+
+            if (!email || !senha) {
+
+                if (mensagem) {
+                    mensagem.textContent =
+                        "Informe o e-mail e a senha.";
+                }
+
+                return;
             }
 
-            return;
+
+            try {
+
+                if (mensagem) {
+                    mensagem.textContent =
+                        "Entrando...";
+                }
+
+
+                await signInWithEmailAndPassword(
+                    auth,
+                    email,
+                    senha
+                );
+
+
+                if (mensagem) {
+                    mensagem.textContent = "";
+                }
+
+
+            } catch (erro) {
+
+                console.error(
+                    "Erro no login:",
+                    erro
+                );
+
+
+                let texto =
+                    "Não foi possível entrar.";
+
+
+                if (
+                    erro.code ===
+                    "auth/invalid-credential"
+                ) {
+                    texto =
+                        "E-mail ou senha incorretos.";
+                }
+
+
+                if (
+                    erro.code ===
+                    "auth/invalid-email"
+                ) {
+                    texto =
+                        "Digite um e-mail válido.";
+                }
+
+
+                if (
+                    erro.code ===
+                    "auth/user-disabled"
+                ) {
+                    texto =
+                        "Esta conta está desativada.";
+                }
+
+
+                if (mensagem) {
+                    mensagem.textContent =
+                        texto;
+                }
+
+            }
+
         }
+    );
 
 
-        try {
-
-            if (mensagem) {
-                mensagem.textContent =
-                    "Entrando...";
-            }
+    console.log(
+        "Login configurado."
+    );
+}
 
 
-            await signInWithEmailAndPassword(
-                auth,
-                email,
-                senha
-            );
+// ============================================================
+// ABRIR MODAL
+// ============================================================
+
+function abrirModalPorId(modalId) {
+
+    if (!modalId) {
+        console.warn(
+            "ID do modal não informado."
+        );
+        return false;
+    }
 
 
-            if (mensagem) {
-                mensagem.textContent = "";
-            }
+    const modal =
+        elemento(modalId);
 
 
-        } catch (erro) {
+    if (!modal) {
 
-            console.error(
-                "Erro no login:",
-                erro
-            );
+        console.warn(
+            "Modal não encontrado:",
+            modalId
+        );
 
-
-            let texto =
-                "Não foi possível entrar.";
-
-
-            if (
-                erro.code ===
-                "auth/invalid-credential"
-            ) {
-                texto =
-                    "E-mail ou senha incorretos.";
-            }
+        return false;
+    }
 
 
-            if (
-                erro.code ===
-                "auth/invalid-email"
-            ) {
-                texto =
-                    "Digite um e-mail válido.";
-            }
+    modal.classList.remove("oculto");
+
+    modal.style.display = "flex";
 
 
-            if (mensagem) {
-                mensagem.textContent = texto;
-            }
-
-        }
-
-    });
+    console.log(
+        "Modal aberto:",
+        modalId
+    );
 
 
-    console.log("Login configurado.");
+    return true;
+}
+
+
+// ============================================================
+// FECHAR MODAL
+// ============================================================
+
+function fecharModalPorId(modalId) {
+
+    if (!modalId) return;
+
+
+    const modal =
+        elemento(modalId);
+
+
+    if (!modal) return;
+
+
+    modal.classList.add("oculto");
+
+    modal.style.display = "none";
 }
 
 
@@ -388,14 +454,18 @@ function configurarRecuperacao() {
     const btn =
         elemento("btnEsqueciSenha");
 
+
     const modal =
         elemento("modalRecuperacao");
+
 
     const fechar =
         elemento("fecharModalRecuperacao");
 
+
     const cancelar =
         elemento("cancelarRecuperacao");
+
 
     const form =
         elemento("formRecuperacao");
@@ -406,27 +476,86 @@ function configurarRecuperacao() {
     );
 
 
+    // --------------------------------------------------------
+    // BOTÃO ESQUECI MINHA SENHA
+    // --------------------------------------------------------
+
     if (btn) {
 
         btn.addEventListener(
             "click",
-            function () {
+            function (event) {
+
+                event.preventDefault();
 
                 console.log(
                     "Botão 'Esqueci minha senha' clicado."
                 );
 
 
-                if (modal) {
+                abrirModalPorId(
+                    "modalRecuperacao"
+                );
 
-                    modal.classList.remove("oculto");
 
-                    modal.style.display = "flex";
+                // Se o e-mail do login já estiver preenchido,
+                // copia automaticamente para o campo de recuperação.
 
-                    console.log(
-                        "Modal de recuperação aberto."
-                    );
+                const emailLogin =
+                    elemento("loginEmail")?.value.trim();
+
+
+                const emailRecuperacao =
+                    elemento("emailRecuperacao");
+
+
+                if (
+                    emailLogin &&
+                    emailRecuperacao &&
+                    !emailRecuperacao.value
+                ) {
+
+                    emailRecuperacao.value =
+                        emailLogin;
+
                 }
+
+
+                setTimeout(() => {
+
+                    if (emailRecuperacao) {
+                        emailRecuperacao.focus();
+                    }
+
+                }, 100);
+
+            }
+        );
+
+    } else {
+
+        console.warn(
+            "Botão btnEsqueciSenha não encontrado."
+        );
+
+    }
+
+
+    // --------------------------------------------------------
+    // FECHAR
+    // --------------------------------------------------------
+
+    if (fechar) {
+
+        fechar.addEventListener(
+            "click",
+            function (event) {
+
+                event.preventDefault();
+
+                fecharModalPorId(
+                    "modalRecuperacao"
+                );
 
             }
         );
@@ -434,32 +563,31 @@ function configurarRecuperacao() {
     }
 
 
-    function fecharModal() {
-
-        if (!modal) return;
-
-        modal.classList.add("oculto");
-
-        modal.style.display = "none";
-
-    }
-
-
-    if (fechar) {
-        fechar.addEventListener(
-            "click",
-            fecharModal
-        );
-    }
-
+    // --------------------------------------------------------
+    // CANCELAR
+    // --------------------------------------------------------
 
     if (cancelar) {
+
         cancelar.addEventListener(
             "click",
-            fecharModal
+            function (event) {
+
+                event.preventDefault();
+
+                fecharModalPorId(
+                    "modalRecuperacao"
+                );
+
+            }
         );
+
     }
 
+
+    // --------------------------------------------------------
+    // FORMULÁRIO
+    // --------------------------------------------------------
 
     if (form) {
 
@@ -471,9 +599,9 @@ function configurarRecuperacao() {
 
 
                 const email =
-                    elemento("emailRecuperacao")
-                        ?.value
-                        .trim();
+                    elemento(
+                        "emailRecuperacao"
+                    )?.value.trim();
 
 
                 if (!email) {
@@ -489,6 +617,12 @@ function configurarRecuperacao() {
 
                 try {
 
+                    console.log(
+                        "Enviando recuperação para:",
+                        email
+                    );
+
+
                     await sendPasswordResetEmail(
                         auth,
                         email
@@ -496,22 +630,76 @@ function configurarRecuperacao() {
 
 
                     mostrarToast(
-                        "E-mail de recuperação enviado."
+                        "E-mail de recuperação enviado! Verifique também a caixa de spam."
                     );
 
 
-                    fecharModal();
+                    form.reset();
+
+
+                    fecharModalPorId(
+                        "modalRecuperacao"
+                    );
 
 
                 } catch (erro) {
 
                     console.error(
+                        "Erro ao recuperar senha:",
                         erro
                     );
 
 
+                    let mensagem =
+                        "Não foi possível enviar o e-mail de recuperação.";
+
+
+                    if (
+                        erro.code ===
+                        "auth/user-not-found"
+                    ) {
+
+                        mensagem =
+                            "Não encontramos uma conta com esse e-mail.";
+
+                    }
+
+
+                    if (
+                        erro.code ===
+                        "auth/invalid-email"
+                    ) {
+
+                        mensagem =
+                            "Digite um e-mail válido.";
+
+                    }
+
+
+                    if (
+                        erro.code ===
+                        "auth/too-many-requests"
+                    ) {
+
+                        mensagem =
+                            "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
+
+                    }
+
+
+                    if (
+                        erro.code ===
+                        "auth/network-request-failed"
+                    ) {
+
+                        mensagem =
+                            "Erro de conexão. Verifique sua internet.";
+
+                    }
+
+
                     mostrarToast(
-                        "Não foi possível enviar o e-mail.",
+                        mensagem,
                         "erro"
                     );
 
@@ -520,11 +708,426 @@ function configurarRecuperacao() {
             }
         );
 
+    } else {
+
+        console.warn(
+            "formRecuperacao não encontrado."
+        );
+
     }
 
 
     console.log(
-        "Recuperação de senha configurada."
+        "Formulário de recuperação configurado."
+    );
+}
+
+
+// ============================================================
+// ALTERAR SENHA
+// ============================================================
+
+function configurarAlteracaoSenha() {
+
+    const form =
+        elemento("formAlterarSenha");
+
+
+    console.log(
+        "Configurando alteração de senha..."
+    );
+
+
+    // --------------------------------------------------------
+    // LOCALIZA MODAL
+    // --------------------------------------------------------
+
+    const modalAlterar =
+        elemento("modalAlterarSenha");
+
+
+    // --------------------------------------------------------
+    // BOTÕES QUE PODEM ABRIR O MODAL
+    // --------------------------------------------------------
+
+    const possiveisBotoes = [
+
+        "btnAlterarSenha",
+
+        "btnAbrirAlterarSenha",
+
+        "btnSenha",
+
+        "btnMudarSenha"
+
+    ];
+
+
+    let encontrouBotao = false;
+
+
+    possiveisBotoes.forEach((id) => {
+
+        const botao =
+            elemento(id);
+
+
+        if (!botao) return;
+
+
+        encontrouBotao = true;
+
+
+        botao.addEventListener(
+            "click",
+            function (event) {
+
+                event.preventDefault();
+
+
+                console.log(
+                    "Abrindo modal de alteração de senha."
+                );
+
+
+                abrirModalPorId(
+                    "modalAlterarSenha"
+                );
+
+            }
+        );
+
+    });
+
+
+    // --------------------------------------------------------
+    // SUPORTE PARA data-abrir-modal
+    // --------------------------------------------------------
+
+    document
+        .querySelectorAll("[data-abrir-modal]")
+        .forEach((botao) => {
+
+            botao.addEventListener(
+                "click",
+                function (event) {
+
+                    event.preventDefault();
+
+
+                    const modalId =
+                        botao.getAttribute(
+                            "data-abrir-modal"
+                        );
+
+
+                    abrirModalPorId(
+                        modalId
+                    );
+
+                }
+            );
+
+        });
+
+
+    if (!encontrouBotao) {
+
+        console.warn(
+            "Nenhum botão padrão de alteração de senha encontrado."
+        );
+
+    }
+
+
+    // --------------------------------------------------------
+    // BOTÕES DE FECHAR
+    // --------------------------------------------------------
+
+    const possiveisFechamentos = [
+
+        "fecharModalAlterarSenha",
+
+        "cancelarAlterarSenha"
+
+    ];
+
+
+    possiveisFechamentos.forEach((id) => {
+
+        const botao =
+            elemento(id);
+
+
+        if (!botao) return;
+
+
+        botao.addEventListener(
+            "click",
+            function (event) {
+
+                event.preventDefault();
+
+
+                fecharModalPorId(
+                    "modalAlterarSenha"
+                );
+
+            }
+        );
+
+    });
+
+
+    // --------------------------------------------------------
+    // FORMULÁRIO
+    // --------------------------------------------------------
+
+    if (!form) {
+
+        console.warn(
+            "formAlterarSenha não encontrado."
+        );
+
+        return;
+
+    }
+
+
+    form.addEventListener(
+        "submit",
+        async function (event) {
+
+            event.preventDefault();
+
+
+            const user =
+                auth.currentUser;
+
+
+            if (!user) {
+
+                mostrarToast(
+                    "Você precisa estar logado para alterar a senha.",
+                    "erro"
+                );
+
+                return;
+
+            }
+
+
+            const senhaAtual =
+                elemento("senhaAtual")?.value || "";
+
+
+            const novaSenha =
+                elemento("novaSenha")?.value || "";
+
+
+            const confirmarSenha =
+                elemento("confirmarNovaSenha")?.value || "";
+
+
+            // ------------------------------------------------
+            // VALIDAÇÕES
+            // ------------------------------------------------
+
+            if (
+                !senhaAtual ||
+                !novaSenha ||
+                !confirmarSenha
+            ) {
+
+                mostrarToast(
+                    "Preencha todos os campos.",
+                    "erro"
+                );
+
+                return;
+
+            }
+
+
+            if (novaSenha.length < 6) {
+
+                mostrarToast(
+                    "A nova senha precisa ter pelo menos 6 caracteres.",
+                    "erro"
+                );
+
+                return;
+
+            }
+
+
+            if (
+                novaSenha !==
+                confirmarSenha
+            ) {
+
+                mostrarToast(
+                    "As novas senhas não são iguais.",
+                    "erro"
+                );
+
+                return;
+
+            }
+
+
+            if (
+                novaSenha ===
+                senhaAtual
+            ) {
+
+                mostrarToast(
+                    "A nova senha precisa ser diferente da senha atual.",
+                    "erro"
+                );
+
+                return;
+
+            }
+
+
+            try {
+
+                console.log(
+                    "Reautenticando usuário para alteração de senha..."
+                );
+
+
+                // ------------------------------------------------
+                // REAUTENTICAÇÃO
+                // ------------------------------------------------
+
+                const credencial =
+                    EmailAuthProvider.credential(
+                        user.email,
+                        senhaAtual
+                    );
+
+
+                await reauthenticateWithCredential(
+                    user,
+                    credencial
+                );
+
+
+                console.log(
+                    "Usuário reautenticado com sucesso."
+                );
+
+
+                // ------------------------------------------------
+                // ALTERA SENHA
+                // ------------------------------------------------
+
+                await updatePassword(
+                    user,
+                    novaSenha
+                );
+
+
+                console.log(
+                    "Senha alterada com sucesso."
+                );
+
+
+                mostrarToast(
+                    "Senha alterada com sucesso!"
+                );
+
+
+                form.reset();
+
+
+                fecharModalPorId(
+                    "modalAlterarSenha"
+                );
+
+
+            } catch (erro) {
+
+                console.error(
+                    "Erro ao alterar senha:",
+                    erro
+                );
+
+
+                let mensagem =
+                    "Não foi possível alterar a senha.";
+
+
+                if (
+                    erro.code ===
+                    "auth/wrong-password"
+                ) {
+
+                    mensagem =
+                        "A senha atual está incorreta.";
+
+                }
+
+
+                if (
+                    erro.code ===
+                    "auth/invalid-credential"
+                ) {
+
+                    mensagem =
+                        "A senha atual está incorreta.";
+
+                }
+
+
+                if (
+                    erro.code ===
+                    "auth/weak-password"
+                ) {
+
+                    mensagem =
+                        "A nova senha é muito fraca. Use pelo menos 6 caracteres.";
+
+                }
+
+
+                if (
+                    erro.code ===
+                    "auth/requires-recent-login"
+                ) {
+
+                    mensagem =
+                        "Por segurança, faça login novamente e tente alterar a senha.";
+
+                }
+
+
+                if (
+                    erro.code ===
+                    "auth/network-request-failed"
+                ) {
+
+                    mensagem =
+                        "Erro de conexão. Verifique sua internet.";
+
+                }
+
+
+                mostrarToast(
+                    mensagem,
+                    "erro"
+                );
+
+            }
+
+        }
+    );
+
+
+    console.log(
+        "Alteração de senha configurada."
     );
 }
 
@@ -545,7 +1148,10 @@ function configurarLogout() {
 
         botao.addEventListener(
             "click",
-            async function () {
+            async function (event) {
+
+                event.preventDefault();
+
 
                 try {
 
@@ -556,6 +1162,11 @@ function configurarLogout() {
                     console.error(
                         "Erro ao sair:",
                         erro
+                    );
+
+                    mostrarToast(
+                        "Erro ao sair.",
+                        "erro"
                     );
 
                 }
@@ -588,13 +1199,11 @@ function configurarAutenticacao() {
 
             if (user) {
 
-                // Esconde login
                 esconderElemento(
                     "telaLogin"
                 );
 
 
-                // Mostra sistema
                 mostrarElemento(
                     "sistema"
                 );
@@ -613,29 +1222,24 @@ function configurarAutenticacao() {
                 }
 
 
-                // Garante dashboard
                 mostrarPagina(
                     "paginaDashboard"
                 );
 
 
-                // Carrega dados
                 await carregarDados();
 
 
-                // Atualiza dashboard
                 atualizarDashboard();
 
 
             } else {
 
-                // Mostra login
                 mostrarElemento(
                     "telaLogin"
                 );
 
 
-                // Esconde sistema
                 esconderElemento(
                     "sistema"
                 );
@@ -759,6 +1363,7 @@ async function carregarDados() {
             "Erro ao carregar dados:",
             erro
         );
+
 
         mostrarToast(
             "Erro ao carregar os dados.",
@@ -1164,6 +1769,7 @@ function atualizarDashboard() {
             const el =
                 elemento(id);
 
+
             if (el) {
 
                 el.textContent =
@@ -1354,6 +1960,7 @@ function renderizarRegistros() {
                         const id =
                             botao.dataset.id;
 
+
                         const tipo =
                             botao.dataset.tipo;
 
@@ -1365,8 +1972,10 @@ function renderizarRegistros() {
                             tipo ===
                             "Ambulância"
                         ) {
+
                             caminho =
                                 "ambulancias";
+
                         }
 
 
@@ -1374,8 +1983,10 @@ function renderizarRegistros() {
                             tipo ===
                             "Transferência"
                         ) {
+
                             caminho =
                                 "transferencias";
+
                         }
 
 
@@ -1383,8 +1994,10 @@ function renderizarRegistros() {
                             tipo ===
                             "Apoio de Rota"
                         ) {
+
                             caminho =
                                 "apoios";
+
                         }
 
 
@@ -1446,126 +2059,14 @@ function renderizarRegistros() {
 
 
 // ============================================================
-// ALTERAR SENHA
-// ============================================================
-
-function configurarAlteracaoSenha() {
-
-    const form =
-        elemento("formAlterarSenha");
-
-
-    if (!form) return;
-
-
-    form.addEventListener(
-        "submit",
-        async function (event) {
-
-            event.preventDefault();
-
-
-            const user =
-                auth.currentUser;
-
-
-            if (!user) return;
-
-
-            const senhaAtual =
-                elemento("senhaAtual")?.value;
-
-
-            const novaSenha =
-                elemento("novaSenha")?.value;
-
-
-            const confirmarSenha =
-                elemento("confirmarNovaSenha")?.value;
-
-
-            if (
-                !senhaAtual ||
-                !novaSenha ||
-                !confirmarSenha
-            ) {
-
-                mostrarToast(
-                    "Preencha todos os campos.",
-                    "erro"
-                );
-
-                return;
-
-            }
-
-
-            if (novaSenha !== confirmarSenha) {
-
-                mostrarToast(
-                    "As senhas não são iguais.",
-                    "erro"
-                );
-
-                return;
-
-            }
-
-
-            try {
-
-                const credencial =
-                    EmailAuthProvider.credential(
-                        user.email,
-                        senhaAtual
-                    );
-
-
-                await reauthenticateWithCredential(
-                    user,
-                    credencial
-                );
-
-
-                await updatePassword(
-                    user,
-                    novaSenha
-                );
-
-
-                mostrarToast(
-                    "Senha alterada com sucesso."
-                );
-
-
-                form.reset();
-
-
-            } catch (erro) {
-
-                console.error(
-                    erro
-                );
-
-
-                mostrarToast(
-                    "Não foi possível alterar a senha.",
-                    "erro"
-                );
-
-            }
-
-        }
-    );
-
-}
-
-
-// ============================================================
-// MODAIS
+// MODAIS GERAIS
 // ============================================================
 
 function configurarModais() {
+
+    // --------------------------------------------------------
+    // QUALQUER BOTÃO COM data-fechar-modal
+    // --------------------------------------------------------
 
     document
         .querySelectorAll(
@@ -1576,7 +2077,10 @@ function configurarModais() {
 
                 botao.addEventListener(
                     "click",
-                    function () {
+                    function (event) {
+
+                        event.preventDefault();
+
 
                         const modalId =
                             botao.getAttribute(
@@ -1584,20 +2088,80 @@ function configurarModais() {
                             );
 
 
-                        const modal =
-                            elemento(modalId);
-
-
-                        if (!modal) return;
-
-
-                        modal.classList.add(
-                            "oculto"
+                        fecharModalPorId(
+                            modalId
                         );
 
+                    }
+                );
 
-                        modal.style.display =
-                            "none";
+            }
+        );
+
+
+    // --------------------------------------------------------
+    // QUALQUER BOTÃO COM data-abrir-modal
+    // --------------------------------------------------------
+
+    document
+        .querySelectorAll(
+            "[data-abrir-modal]"
+        )
+        .forEach(
+            (botao) => {
+
+                botao.addEventListener(
+                    "click",
+                    function (event) {
+
+                        event.preventDefault();
+
+
+                        const modalId =
+                            botao.getAttribute(
+                                "data-abrir-modal"
+                            );
+
+
+                        abrirModalPorId(
+                            modalId
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+
+    // --------------------------------------------------------
+    // CLICAR FORA DO MODAL FECHA
+    // --------------------------------------------------------
+
+    document
+        .querySelectorAll(
+            ".modal-overlay"
+        )
+        .forEach(
+            (modal) => {
+
+                modal.addEventListener(
+                    "click",
+                    function (event) {
+
+                        if (
+                            event.target ===
+                            modal
+                        ) {
+
+                            modal.classList.add(
+                                "oculto"
+                            );
+
+                            modal.style.display =
+                                "none";
+
+                        }
 
                     }
                 );
@@ -1623,21 +2187,30 @@ document.addEventListener(
 
         configurarLogin();
 
+
         configurarRecuperacao();
+
 
         configurarLogout();
 
+
         configurarNavegacao();
+
 
         configurarFormularioAmbulancia();
 
+
         configurarFormularioTransferencia();
+
 
         configurarFormularioApoio();
 
+
         configurarAlteracaoSenha();
 
+
         configurarModais();
+
 
         configurarAutenticacao();
 
