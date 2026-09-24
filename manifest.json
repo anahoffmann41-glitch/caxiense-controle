@@ -1,0 +1,11 @@
+{
+  "name": "Caxiense Controle Operacional",
+  "short_name": "Caxiense",
+  "description": "Sistema de Controle Operacional Caxiense LOG",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f7fa",
+  "theme_color": "#0757a0",
+  "orientation": "portrait-primary"
+}

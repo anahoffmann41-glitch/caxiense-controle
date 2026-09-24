@@ -2,9 +2,40 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0757a0"
+    >
+
+    <meta
+        name="mobile-web-app-capable"
+        content="yes"
+    >
+
+    <meta
+        name="apple-mobile-web-app-capable"
+        content="yes"
+    >
+
+    <meta
+        name="apple-mobile-web-app-status-bar-style"
+        content="default"
+    >
+
+    <meta
+        name="apple-mobile-web-app-title"
+        content="Caxiense"
+    >
+
+    <link
+        rel="manifest"
+        href="./manifest.json"
     >
 
     <title>Caxiense LOG • Controle Operacional</title>
@@ -13,11 +44,13 @@
         rel="preconnect"
         href="https://fonts.googleapis.com"
     >
+
     <link
         rel="preconnect"
         href="https://fonts.gstatic.com"
         crossorigin
     >
+
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
         rel="stylesheet"
@@ -1581,10 +1614,41 @@
     ></div>
 
 
+    <!-- =========================================================
+         SCRIPT PRINCIPAL
+    ========================================================== -->
+
     <script
         type="module"
         src="./script.js"
     ></script>
+
+
+    <!-- =========================================================
+         SERVICE WORKER / PWA
+    ========================================================== -->
+
+    <script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", function () {
+
+                navigator.serviceWorker
+                    .register("./service-worker.js")
+                    .then(function () {
+                        console.log(
+                            "Caxiense PWA: Service Worker registrado com sucesso."
+                        );
+                    })
+                    .catch(function (error) {
+                        console.error(
+                            "Caxiense PWA: erro ao registrar Service Worker:",
+                            error
+                        );
+                    });
+
+            });
+        }
+    </script>
 
 </body>
 </html>
