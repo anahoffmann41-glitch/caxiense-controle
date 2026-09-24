@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -27,7 +29,7 @@
 
     <link
         rel="preconnect"
-        href="https://fonts.gstatic.com"
+        href="https://fonts.googleapis.com"
         crossorigin
     >
 
@@ -35,13 +37,15 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
         rel="stylesheet"
     >
+
 </head>
 
 <body>
 
-    <!-- =========================
+
+    <!-- ======================================================
          TELA DE LOGIN
-    ========================== -->
+    ======================================================= -->
 
     <section
         id="telaLogin"
@@ -51,16 +55,21 @@
         <div class="login-card">
 
             <div class="login-logo">
+
                 <div class="logo-circulo">
                     CL
                 </div>
 
-                <h1>Caxiense LOG</h1>
+                <h1>
+                    Caxiense LOG
+                </h1>
 
                 <p>
                     Controle Operacional
                 </p>
+
             </div>
+
 
             <form id="formLogin">
 
@@ -80,6 +89,7 @@
 
                 </div>
 
+
                 <div class="campo">
 
                     <label for="loginSenha">
@@ -96,12 +106,14 @@
 
                 </div>
 
+
                 <button
                     type="submit"
                     class="btn btn-principal"
                 >
                     Entrar
                 </button>
+
 
                 <button
                     type="button"
@@ -110,6 +122,7 @@
                 >
                     Esqueci minha senha
                 </button>
+
 
                 <div
                     id="mensagemLogin"
@@ -123,18 +136,22 @@
     </section>
 
 
-    <!-- =========================
+    <!-- ======================================================
          SISTEMA
-    ========================== -->
+    ======================================================= -->
 
     <div
         id="sistema"
         class="sistema oculto"
     >
 
-        <!-- SIDEBAR -->
+
+        <!-- ==================================================
+             SIDEBAR
+        =================================================== -->
 
         <aside class="sidebar">
+
 
             <div class="sidebar-top">
 
@@ -145,6 +162,7 @@
                     </div>
 
                     <div>
+
                         <strong>
                             Caxiense
                         </strong>
@@ -152,6 +170,7 @@
                         <span>
                             Controle
                         </span>
+
                     </div>
 
                 </div>
@@ -159,88 +178,144 @@
             </div>
 
 
+            <!-- MENU -->
+
             <nav class="menu">
+
 
                 <button
                     type="button"
                     class="menu-item ativo"
                     data-pagina="paginaDashboard"
                 >
-                    <span>📊</span>
+
+                    <span>
+                        📊
+                    </span>
+
                     Dashboard
+
                 </button>
+
 
                 <button
                     type="button"
                     class="menu-item"
                     data-pagina="paginaAmbulancia"
                 >
-                    <span>🚑</span>
+
+                    <span>
+                        🚑
+                    </span>
+
                     Ambulâncias
+
                 </button>
+
 
                 <button
                     type="button"
                     class="menu-item"
                     data-pagina="paginaTransferencia"
                 >
-                    <span>🔄</span>
+
+                    <span>
+                        🔄
+                    </span>
+
                     Transferências
+
                 </button>
+
 
                 <button
                     type="button"
                     class="menu-item"
                     data-pagina="paginaApoio"
                 >
-                    <span>🤝</span>
+
+                    <span>
+                        🤝
+                    </span>
+
                     Apoio de Rota
+
                 </button>
+
 
                 <button
                     type="button"
                     class="menu-item"
                     data-pagina="paginaRegistros"
                 >
-                    <span>📋</span>
+
+                    <span>
+                        📋
+                    </span>
+
                     Registros
+
                 </button>
+
 
             </nav>
 
 
+            <!-- PARTE INFERIOR -->
+
             <div class="sidebar-bottom">
+
 
                 <button
                     type="button"
                     class="menu-item"
                     id="btnAlterarSenha"
                 >
-                    <span>🔐</span>
+
+                    <span>
+                        🔐
+                    </span>
+
                     Alterar senha
+
                 </button>
+
 
                 <button
                     type="button"
                     class="menu-item sair"
                     id="btnSair"
                 >
-                    <span>🚪</span>
+
+                    <span>
+                        🚪
+                    </span>
+
                     Sair
+
                 </button>
 
+
             </div>
+
 
         </aside>
 
 
-        <!-- CONTEÚDO PRINCIPAL -->
+        <!-- ==================================================
+             CONTEÚDO PRINCIPAL
+        =================================================== -->
 
         <main class="conteudo">
 
+
+            <!-- TOPO -->
+
             <header class="topbar">
 
+
                 <div class="topbar-esquerda">
+
 
                     <button
                         type="button"
@@ -251,6 +326,7 @@
                     >
                         ☰
                     </button>
+
 
                     <div>
 
@@ -263,6 +339,7 @@
                         </p>
 
                     </div>
+
 
                 </div>
 
@@ -279,17 +356,19 @@
 
                 </div>
 
+
             </header>
 
 
-            <!-- =========================
+            <!-- ==================================================
                  DASHBOARD
-            ========================== -->
+            =================================================== -->
 
             <section
                 id="paginaDashboard"
                 class="pagina ativa"
             >
+
 
                 <div class="pagina-cabecalho">
 
@@ -309,6 +388,7 @@
 
 
                 <div class="cards-dashboard">
+
 
                     <div class="card-dashboard">
 
@@ -393,10 +473,12 @@
 
                     </div>
 
+
                 </div>
 
 
                 <div class="cards-dashboard">
+
 
                     <div class="card-dashboard">
 
@@ -465,10 +547,12 @@
 
                     </div>
 
+
                 </div>
 
 
                 <div class="dashboard-grid">
+
 
                     <div class="painel">
 
@@ -487,6 +571,7 @@
                             </div>
 
                         </div>
+
 
                         <div
                             id="graficoDistribuicao"
@@ -514,6 +599,7 @@
 
                         </div>
 
+
                         <div
                             id="valorTotalApoio"
                             class="valor-grande"
@@ -522,6 +608,7 @@
                         </div>
 
                     </div>
+
 
                 </div>
 
@@ -544,6 +631,7 @@
 
                     </div>
 
+
                     <div
                         id="ultimosLancamentos"
                         class="lista-registros"
@@ -551,17 +639,19 @@
 
                 </div>
 
+
             </section>
 
 
-            <!-- =========================
+            <!-- ==================================================
                  AMBULÂNCIA
-            ========================== -->
+            =================================================== -->
 
             <section
                 id="paginaAmbulancia"
                 class="pagina"
             >
+
 
                 <div class="pagina-cabecalho">
 
@@ -584,7 +674,9 @@
 
                     <form id="formAmbulancia">
 
+
                         <div class="form-grid">
+
 
                             <div class="campo">
 
@@ -603,13 +695,13 @@
 
                             <div class="campo">
 
-                                <label for="ambulanciaRota">
+                                <label for="ambulanciaRouteId">
                                     ID da rota
                                 </label>
 
                                 <input
                                     type="text"
-                                    id="ambulanciaRota"
+                                    id="ambulanciaRouteId"
                                     placeholder="Ex.: 503485291004"
                                     required
                                 >
@@ -619,13 +711,13 @@
 
                             <div class="campo">
 
-                                <label for="ambulanciaDriver">
+                                <label for="ambulanciaMotorista">
                                     Motorista
                                 </label>
 
                                 <input
                                     type="text"
-                                    id="ambulanciaDriver"
+                                    id="ambulanciaMotorista"
                                     placeholder="Nome do motorista"
                                     required
                                 >
@@ -684,13 +776,13 @@
 
                             <div class="campo campo-full">
 
-                                <label for="ambulanciaMeli">
+                                <label for="ambulanciaAutorizadoPor">
                                     Quem autorizou / liberou no Meli
                                 </label>
 
                                 <input
                                     type="text"
-                                    id="ambulanciaMeli"
+                                    id="ambulanciaAutorizadoPor"
                                     placeholder="Nome da pessoa do Meli"
                                     required
                                 >
@@ -712,6 +804,7 @@
 
                             </div>
 
+
                         </div>
 
 
@@ -726,21 +819,24 @@
 
                         </div>
 
+
                     </form>
 
                 </div>
 
+
             </section>
 
 
-            <!-- =========================
+            <!-- ==================================================
                  TRANSFERÊNCIA
-            ========================== -->
+            =================================================== -->
 
             <section
                 id="paginaTransferencia"
                 class="pagina"
             >
+
 
                 <div class="pagina-cabecalho">
 
@@ -763,7 +859,9 @@
 
                     <form id="formTransferencia">
 
+
                         <div class="form-grid">
+
 
                             <div class="campo">
 
@@ -782,13 +880,13 @@
 
                             <div class="campo">
 
-                                <label for="transferenciaRota">
+                                <label for="transferenciaRouteId">
                                     ID da rota
                                 </label>
 
                                 <input
                                     type="text"
-                                    id="transferenciaRota"
+                                    id="transferenciaRouteId"
                                     placeholder="ID da rota"
                                     required
                                 >
@@ -798,13 +896,13 @@
 
                             <div class="campo">
 
-                                <label for="transferenciaDriverInicial">
+                                <label for="transferenciaMotoristaInicio">
                                     Motorista que iniciou
                                 </label>
 
                                 <input
                                     type="text"
-                                    id="transferenciaDriverInicial"
+                                    id="transferenciaMotoristaInicio"
                                     placeholder="Nome do motorista"
                                     required
                                 >
@@ -814,13 +912,13 @@
 
                             <div class="campo">
 
-                                <label for="transferenciaDriverSubstituto">
+                                <label for="transferenciaMotoristaSubstituto">
                                     Motorista substituto
                                 </label>
 
                                 <input
                                     type="text"
-                                    id="transferenciaDriverSubstituto"
+                                    id="transferenciaMotoristaSubstituto"
                                     placeholder="Nome do substituto"
                                     required
                                 >
@@ -862,13 +960,13 @@
 
                             <div class="campo campo-full">
 
-                                <label for="transferenciaMeli">
+                                <label for="transferenciaAutorizadoPor">
                                     Quem autorizou / liberou no Meli
                                 </label>
 
                                 <input
                                     type="text"
-                                    id="transferenciaMeli"
+                                    id="transferenciaAutorizadoPor"
                                     placeholder="Nome da pessoa do Meli"
                                     required
                                 >
@@ -890,6 +988,7 @@
 
                             </div>
 
+
                         </div>
 
 
@@ -904,21 +1003,24 @@
 
                         </div>
 
+
                     </form>
 
                 </div>
 
+
             </section>
 
 
-            <!-- =========================
+            <!-- ==================================================
                  APOIO DE ROTA
-            ========================== -->
+            =================================================== -->
 
             <section
                 id="paginaApoio"
                 class="pagina"
             >
+
 
                 <div class="pagina-cabecalho">
 
@@ -941,7 +1043,9 @@
 
                     <form id="formApoio">
 
+
                         <div class="form-grid">
+
 
                             <div class="campo">
 
@@ -960,13 +1064,13 @@
 
                             <div class="campo">
 
-                                <label for="apoioRota">
+                                <label for="apoioRouteId">
                                     ID da rota
                                 </label>
 
                                 <input
                                     type="text"
-                                    id="apoioRota"
+                                    id="apoioRouteId"
                                     placeholder="ID da rota"
                                     required
                                 >
@@ -994,13 +1098,13 @@
 
                             <div class="campo">
 
-                                <label for="apoioDriver">
+                                <label for="apoioMotoristaApoio">
                                     Motorista que realizou o apoio
                                 </label>
 
                                 <input
                                     type="text"
-                                    id="apoioDriver"
+                                    id="apoioMotoristaApoio"
                                     placeholder="Nome do motorista"
                                     required
                                 >
@@ -1010,13 +1114,13 @@
 
                             <div class="campo">
 
-                                <label for="apoioDriverAjudado">
+                                <label for="apoioMotoristaAjudado">
                                     Motorista que recebeu o apoio
                                 </label>
 
                                 <input
                                     type="text"
-                                    id="apoioDriverAjudado"
+                                    id="apoioMotoristaAjudado"
                                     placeholder="Nome do motorista"
                                     required
                                 >
@@ -1026,13 +1130,13 @@
 
                             <div class="campo">
 
-                                <label for="apoioMeli">
+                                <label for="apoioAutorizadoPor">
                                     Quem autorizou / liberou
                                 </label>
 
                                 <input
                                     type="text"
-                                    id="apoioMeli"
+                                    id="apoioAutorizadoPor"
                                     placeholder="Nome da pessoa"
                                     required
                                 >
@@ -1054,6 +1158,7 @@
 
                             </div>
 
+
                         </div>
 
 
@@ -1068,21 +1173,24 @@
 
                         </div>
 
+
                     </form>
 
                 </div>
 
+
             </section>
 
 
-            <!-- =========================
+            <!-- ==================================================
                  REGISTROS
-            ========================== -->
+            =================================================== -->
 
             <section
                 id="paginaRegistros"
                 class="pagina"
             >
+
 
                 <div class="pagina-cabecalho">
 
@@ -1104,6 +1212,7 @@
                 <div class="painel">
 
                     <div class="filtros">
+
 
                         <div class="campo">
 
@@ -1186,6 +1295,7 @@
                             Limpar filtros
                         </button>
 
+
                     </div>
 
                 </div>
@@ -1200,35 +1310,45 @@
 
                 </div>
 
+
             </section>
 
+
         </main>
+
 
     </div>
 
 
-    <!-- =========================
+    <!-- ======================================================
          MODAL ALTERAR SENHA
-    ========================== -->
+         
+         CORRIGIDO:
+         modalSenha -> modalAlterarSenha
+    ======================================================= -->
 
     <div
-        id="modalSenha"
+        id="modalAlterarSenha"
         class="modal-overlay oculto"
     >
 
         <div class="modal-card">
 
+
             <button
                 type="button"
                 class="modal-fechar"
-                data-fechar-modal="modalSenha"
+                data-fechar-modal="modalAlterarSenha"
+                id="fecharModalAlterarSenha"
             >
                 ×
             </button>
 
+
             <h2>
                 Alterar senha
             </h2>
+
 
             <p>
                 Digite sua senha atual e escolha uma nova senha.
@@ -1236,6 +1356,7 @@
 
 
             <form id="formAlterarSenha">
+
 
                 <div class="campo">
 
@@ -1246,6 +1367,8 @@
                     <input
                         type="password"
                         id="senhaAtual"
+                        placeholder="Digite sua senha atual"
+                        autocomplete="current-password"
                         required
                     >
 
@@ -1261,7 +1384,9 @@
                     <input
                         type="password"
                         id="novaSenha"
+                        placeholder="Digite a nova senha"
                         minlength="6"
+                        autocomplete="new-password"
                         required
                     >
 
@@ -1277,7 +1402,9 @@
                     <input
                         type="password"
                         id="confirmarNovaSenha"
+                        placeholder="Digite novamente a nova senha"
                         minlength="6"
+                        autocomplete="new-password"
                         required
                     >
 
@@ -1292,6 +1419,17 @@
 
                 <div class="form-acoes">
 
+
+                    <button
+                        type="button"
+                        class="btn btn-secundario"
+                        id="cancelarAlterarSenha"
+                        data-fechar-modal="modalAlterarSenha"
+                    >
+                        Cancelar
+                    </button>
+
+
                     <button
                         type="submit"
                         class="btn btn-principal"
@@ -1299,44 +1437,56 @@
                         Alterar senha
                     </button>
 
+
                 </div>
 
+
             </form>
+
 
         </div>
 
     </div>
 
 
-    <!-- =========================
+    <!-- ======================================================
          MODAL RECUPERAR SENHA
-    ========================== -->
+         
+         CORRIGIDO:
+         modalRecuperarSenha -> modalRecuperacao
+         formRecuperarSenha -> formRecuperacao
+    ======================================================= -->
 
     <div
-        id="modalRecuperarSenha"
+        id="modalRecuperacao"
         class="modal-overlay oculto"
     >
 
         <div class="modal-card">
 
+
             <button
                 type="button"
                 class="modal-fechar"
-                data-fechar-modal="modalRecuperarSenha"
+                data-fechar-modal="modalRecuperacao"
+                id="fecharModalRecuperacao"
             >
                 ×
             </button>
 
+
             <h2>
                 Recuperar senha
             </h2>
+
 
             <p>
                 Digite seu e-mail para receber o link de recuperação.
             </p>
 
 
-            <form id="formRecuperarSenha">
+            <form id="formRecuperacao">
+
 
                 <div class="campo">
 
@@ -1348,6 +1498,7 @@
                         type="email"
                         id="emailRecuperacao"
                         placeholder="Digite seu e-mail"
+                        autocomplete="email"
                         required
                     >
 
@@ -1355,12 +1506,23 @@
 
 
                 <div
-                    id="mensagemRecuperarSenha"
+                    id="mensagemRecuperacao"
                     class="mensagem"
                 ></div>
 
 
                 <div class="form-acoes">
+
+
+                    <button
+                        type="button"
+                        class="btn btn-secundario"
+                        id="cancelarRecuperacao"
+                        data-fechar-modal="modalRecuperacao"
+                    >
+                        Cancelar
+                    </button>
+
 
                     <button
                         type="submit"
@@ -1369,18 +1531,21 @@
                         Enviar recuperação
                     </button>
 
+
                 </div>
 
+
             </form>
+
 
         </div>
 
     </div>
 
 
-    <!-- =========================
+    <!-- ======================================================
          TOAST
-    ========================== -->
+    ======================================================= -->
 
     <div
         id="toast"
@@ -1388,14 +1553,16 @@
     ></div>
 
 
-    <!-- =========================
+    <!-- ======================================================
          JAVASCRIPT
-    ========================== -->
+    ======================================================= -->
 
     <script
         type="module"
         src="./script.js"
     ></script>
 
+
 </body>
+
 </html>
