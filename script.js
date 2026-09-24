@@ -20,7 +20,6 @@ import {
     getDatabase,
     ref,
     push,
-    set,
     get,
     remove
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
@@ -399,8 +398,8 @@ function abrirModalPorId(modalId) {
 
     if (!modal) {
 
-        console.warn(
-            "Modal não encontrado:",
+        console.error(
+            "ERRO: Modal não encontrado:",
             modalId
         );
 
@@ -411,6 +410,10 @@ function abrirModalPorId(modalId) {
     modal.classList.remove("oculto");
 
     modal.style.display = "flex";
+
+    modal.style.visibility = "visible";
+
+    modal.style.opacity = "1";
 
 
     console.log(
@@ -442,7 +445,90 @@ function fecharModalPorId(modalId) {
     modal.classList.add("oculto");
 
     modal.style.display = "none";
+
+    modal.style.visibility = "hidden";
+
+    modal.style.opacity = "0";
 }
+
+
+// ============================================================
+// FUNÇÃO GLOBAL - ALTERAR SENHA
+// ============================================================
+
+window.abrirModalAlterarSenha = function () {
+
+    console.log(
+        "FUNÇÃO abrirModalAlterarSenha EXECUTADA."
+    );
+
+
+    const modal =
+        elemento("modalAlterarSenha");
+
+
+    if (!modal) {
+
+        console.error(
+            "ERRO: elemento #modalAlterarSenha não existe no HTML."
+        );
+
+        alert(
+            "Erro: o sistema não encontrou o modal de alteração de senha."
+        );
+
+        return;
+
+    }
+
+
+    modal.classList.remove("oculto");
+
+    modal.style.display = "flex";
+
+    modal.style.visibility = "visible";
+
+    modal.style.opacity = "1";
+
+
+    console.log(
+        "Modal de alteração de senha ABERTO."
+    );
+
+
+    const senhaAtual =
+        elemento("senhaAtual");
+
+
+    if (senhaAtual) {
+
+        setTimeout(() => {
+
+            senhaAtual.focus();
+
+        }, 150);
+
+    }
+
+};
+
+
+// ============================================================
+// FUNÇÃO GLOBAL - FECHAR ALTERAÇÃO DE SENHA
+// ============================================================
+
+window.fecharModalAlterarSenha = function () {
+
+    console.log(
+        "Fechando modal de alteração de senha."
+    );
+
+
+    fecharModalPorId(
+        "modalAlterarSenha"
+    );
+
+};
 
 
 // ============================================================
@@ -497,9 +583,6 @@ function configurarRecuperacao() {
                     "modalRecuperacao"
                 );
 
-
-                // Se o e-mail do login já estiver preenchido,
-                // copia automaticamente para o campo de recuperação.
 
                 const emailLogin =
                     elemento("loginEmail")?.value.trim();
@@ -729,54 +812,46 @@ function configurarRecuperacao() {
 
 function configurarAlteracaoSenha() {
 
-    const form =
-        elemento("formAlterarSenha");
-
-
     console.log(
         "Configurando alteração de senha..."
     );
 
 
-    // --------------------------------------------------------
-    // LOCALIZA MODAL
-    // --------------------------------------------------------
+    const form =
+        elemento("formAlterarSenha");
 
-    const modalAlterar =
+
+    const modal =
         elemento("modalAlterarSenha");
 
 
+    const botao =
+        elemento("btnAlterarSenha");
+
+
+    console.log(
+        "Botão Alterar senha encontrado:",
+        !!botao
+    );
+
+
+    console.log(
+        "Modal Alterar senha encontrado:",
+        !!modal
+    );
+
+
+    console.log(
+        "Form Alterar senha encontrado:",
+        !!form
+    );
+
+
     // --------------------------------------------------------
-    // BOTÕES QUE PODEM ABRIR O MODAL
+    // BOTÃO PRINCIPAL
     // --------------------------------------------------------
 
-    const possiveisBotoes = [
-
-        "btnAlterarSenha",
-
-        "btnAbrirAlterarSenha",
-
-        "btnSenha",
-
-        "btnMudarSenha"
-
-    ];
-
-
-    let encontrouBotao = false;
-
-
-    possiveisBotoes.forEach((id) => {
-
-        const botao =
-            elemento(id);
-
-
-        if (!botao) return;
-
-
-        encontrouBotao = true;
-
+    if (botao) {
 
         botao.addEventListener(
             "click",
@@ -784,99 +859,146 @@ function configurarAlteracaoSenha() {
 
                 event.preventDefault();
 
+                event.stopPropagation();
+
 
                 console.log(
-                    "Abrindo modal de alteração de senha."
+                    "BOTÃO ALTERAR SENHA CLICADO."
                 );
 
 
-                abrirModalPorId(
-                    "modalAlterarSenha"
-                );
+                window.abrirModalAlterarSenha();
 
             }
         );
 
-    });
+    } else {
 
-
-    // --------------------------------------------------------
-    // SUPORTE PARA data-abrir-modal
-    // --------------------------------------------------------
-
-    document
-        .querySelectorAll("[data-abrir-modal]")
-        .forEach((botao) => {
-
-            botao.addEventListener(
-                "click",
-                function (event) {
-
-                    event.preventDefault();
-
-
-                    const modalId =
-                        botao.getAttribute(
-                            "data-abrir-modal"
-                        );
-
-
-                    abrirModalPorId(
-                        modalId
-                    );
-
-                }
-            );
-
-        });
-
-
-    if (!encontrouBotao) {
-
-        console.warn(
-            "Nenhum botão padrão de alteração de senha encontrado."
+        console.error(
+            "ERRO: btnAlterarSenha não foi encontrado."
         );
 
     }
 
 
     // --------------------------------------------------------
-    // BOTÕES DE FECHAR
+    // OUTROS POSSÍVEIS BOTÕES
     // --------------------------------------------------------
 
-    const possiveisFechamentos = [
-
-        "fecharModalAlterarSenha",
-
-        "cancelarAlterarSenha"
-
+    const outrosBotoes = [
+        "btnAbrirAlterarSenha",
+        "btnSenha",
+        "btnMudarSenha"
     ];
 
 
-    possiveisFechamentos.forEach((id) => {
+    outrosBotoes.forEach((id) => {
 
-        const botao =
+        const outroBotao =
             elemento(id);
 
 
-        if (!botao) return;
+        if (!outroBotao) return;
 
 
-        botao.addEventListener(
+        outroBotao.addEventListener(
             "click",
             function (event) {
 
                 event.preventDefault();
 
+                event.stopPropagation();
 
-                fecharModalPorId(
-                    "modalAlterarSenha"
-                );
+                window.abrirModalAlterarSenha();
 
             }
         );
 
     });
+
+
+    // --------------------------------------------------------
+    // EVENTO GLOBAL DE SEGURANÇA
+    // --------------------------------------------------------
+
+    document.addEventListener(
+        "click",
+        function (event) {
+
+            const alvo =
+                event.target.closest(
+                    "#btnAlterarSenha"
+                );
+
+
+            if (!alvo) return;
+
+
+            console.log(
+                "EVENTO GLOBAL: Alterar senha clicado."
+            );
+
+
+            event.preventDefault();
+
+            event.stopPropagation();
+
+
+            window.abrirModalAlterarSenha();
+
+        },
+        true
+    );
+
+
+    // --------------------------------------------------------
+    // FECHAR MODAL
+    // --------------------------------------------------------
+
+    const fechar =
+        elemento("fecharModalAlterarSenha");
+
+
+    if (fechar) {
+
+        fechar.addEventListener(
+            "click",
+            function (event) {
+
+                event.preventDefault();
+
+                event.stopPropagation();
+
+
+                window.fecharModalAlterarSenha();
+
+            }
+        );
+
+    }
+
+
+    const cancelar =
+        elemento("cancelarAlterarSenha");
+
+
+    if (cancelar) {
+
+        cancelar.addEventListener(
+            "click",
+            function (event) {
+
+                event.preventDefault();
+
+                event.stopPropagation();
+
+
+                window.fecharModalAlterarSenha();
+
+            }
+        );
+
+    }
 
 
     // --------------------------------------------------------
@@ -885,8 +1007,8 @@ function configurarAlteracaoSenha() {
 
     if (!form) {
 
-        console.warn(
-            "formAlterarSenha não encontrado."
+        console.error(
+            "ERRO: formAlterarSenha não encontrado."
         );
 
         return;
@@ -1043,9 +1165,7 @@ function configurarAlteracaoSenha() {
                 form.reset();
 
 
-                fecharModalPorId(
-                    "modalAlterarSenha"
-                );
+                window.fecharModalAlterarSenha();
 
 
             } catch (erro) {
@@ -2065,7 +2185,7 @@ function renderizarRegistros() {
 function configurarModais() {
 
     // --------------------------------------------------------
-    // QUALQUER BOTÃO COM data-fechar-modal
+    // BOTÕES FECHAR
     // --------------------------------------------------------
 
     document
@@ -2100,7 +2220,7 @@ function configurarModais() {
 
 
     // --------------------------------------------------------
-    // QUALQUER BOTÃO COM data-abrir-modal
+    // BOTÕES ABRIR
     // --------------------------------------------------------
 
     document
@@ -2135,7 +2255,7 @@ function configurarModais() {
 
 
     // --------------------------------------------------------
-    // CLICAR FORA DO MODAL FECHA
+    // CLICAR FORA DO MODAL
     // --------------------------------------------------------
 
     document
