@@ -220,6 +220,7 @@ label {
     width: 270px;
     min-width: 270px;
     min-height: 100vh;
+    height: 100vh;
     background: #ffffff;
     border-right: 1px solid var(--borda);
     display: flex;
@@ -291,6 +292,39 @@ label {
     min-width: 0;
     padding: 25px;
     background: var(--fundo);
+    overflow-x: hidden;
+}
+
+/* ======================================================
+   PÁGINAS
+   ====================================================== */
+
+/*
+   IMPORTANTE:
+   O HTML utiliza .pagina.
+   Por isso o controle de exibição precisa ser feito aqui.
+*/
+
+.pagina {
+    display: none;
+    width: 100%;
+}
+
+.pagina.ativa {
+    display: block;
+}
+
+/*
+   Compatibilidade com versões antigas
+*/
+
+.secao {
+    display: none;
+    width: 100%;
+}
+
+.secao.ativa {
+    display: block;
 }
 
 /* ======================================================
@@ -336,7 +370,7 @@ label {
 }
 
 /* ======================================================
-   CARDS
+   CARDS DASHBOARD
    ====================================================== */
 
 .cards-dashboard {
@@ -395,14 +429,6 @@ label {
 /* ======================================================
    SEÇÕES
    ====================================================== */
-
-.secao {
-    display: none;
-}
-
-.secao.ativa {
-    display: block;
-}
 
 .secao-titulo {
     margin-bottom: 20px;
@@ -722,7 +748,7 @@ label {
     border-radius: 15px;
     padding: 25px;
     position: relative;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, .20);
+    box-shadow: 0 20px 50px rgba(0, 0, .20);
 }
 
 .modal-card h2 {
@@ -844,13 +870,19 @@ label {
         position: fixed !important;
         top: 0;
         left: 0;
+
         width: 270px;
         min-width: 270px;
+
         height: 100vh;
         min-height: 100vh;
+
         transform: translateX(-105%);
+
         transition: transform .25s ease;
+
         z-index: 2000;
+
         box-shadow: 12px 0 35px rgba(0, 0, 0, .20);
     }
 
@@ -860,18 +892,25 @@ label {
 
     .btn-menu-mobile {
         display: flex !important;
+
         align-items: center;
         justify-content: center;
+
         width: 42px;
         height: 42px;
         min-width: 42px;
+
         padding: 0;
+
         border: 1px solid var(--borda);
         border-radius: 10px;
+
         background: #fff;
         color: var(--texto);
+
         font-size: 23px;
         line-height: 1;
+
         position: relative;
         z-index: 2500;
     }
