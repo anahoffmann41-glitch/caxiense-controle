@@ -3,28 +3,29 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 
 import {
-    getDatabase,
-    ref,
-    push,
-    onValue,
-    remove
-} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
-
-import {
     getAuth,
     signInWithEmailAndPassword,
     onAuthStateChanged,
     signOut,
-    updatePassword,
-    EmailAuthProvider,
     reauthenticateWithCredential,
+    EmailAuthProvider,
+    updatePassword,
     sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 
+import {
+    getDatabase,
+    ref,
+    push,
+    set,
+    get,
+    remove
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 
-/* =========================================================
-   FIREBASE
-========================================================= */
+
+// ======================================================
+// FIREBASE
+// ======================================================
 
 const firebaseConfig = {
     apiKey: "AIzaSyCZ3xorH3D9Z0vmIfd_zafyceLJekXJPaY",
@@ -37,41 +38,54 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+
 const auth = getAuth(app);
 
+const db = getDatabase(app);
 
-/* =========================================================
-   VARIÁVEIS
-========================================================= */
 
-let usuario = null;
+// ======================================================
+// VARIÁVEIS
+// ======================================================
+
 let todosRegistros = [];
-let toastTimeout = null;
 
 
-/* =========================================================
-   HELPERS
-========================================================= */
+// ======================================================
+// FUNÇÕES AUXILIARES
+// ======================================================
 
 function elemento(id) {
     return document.getElementById(id);
 }
 
 
-function hojeISO() {
+function mostrarElemento(id) {
+    const el = elemento(id);
 
-    const agora = new Date();
+    if (el) {
+        el.classList.remove("oculto");
+    }
+}
 
-    const ano = agora.getFullYear();
 
-    const mes = String(
-        agora.getMonth() + 1
-    ).padStart(2, "0");
+function esconderElemento(id) {
+    const el = elemento(id);
 
-    const dia = String(
-        agora.getDate()
-    ).padStart(2, "0");
+    if (el) {
+        el.classList.add("oculto");
+    }
+}
+
+
+function hoje() {
+    const data = new Date();
+
+    const ano = data.getFullYear();
+
+    const mes = String(data.getMonth() + 1).padStart(2, "0");
+
+    const dia = String(data.getDate()).padStart(2, "0");
 
     return `${ano}-${mes}-${dia}`;
 }
@@ -80,13 +94,13 @@ function hojeISO() {
 function formatarData(data) {
 
     if (!data) {
-        return "—";
+        return "-";
     }
 
     const partes = String(data).split("-");
 
     if (partes.length !== 3) {
-        return String(data);
+        return data;
     }
 
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
@@ -97,46 +111,14 @@ function formatarMoeda(valor) {
 
     const numero = Number(valor) || 0;
 
-    return numero.toLocaleString(
-        "pt-BR",
-        {
-            style: "currency",
-            currency: "BRL"
-        }
-    );
+    return numero.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+    });
 }
 
 
-function escaparHTML(valor) {
-
-    return String(valor ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
-
-
-function mostrarMensagem(
-    campo,
-    mensagem,
-    tipo = "erro"
-) {
-
-    if (!campo) {
-        return;
-    }
-
-    campo.textContent = mensagem;
-    campo.className = `mensagem ${tipo}`;
-}
-
-
-function mostrarToast(
-    mensagem,
-    tipo = "normal"
-) {
+function mostrarToast(mensagem, tipo = "normal") {
 
     const toast = elemento("toast");
 
@@ -144,347 +126,247 @@ function mostrarToast(
         return;
     }
 
-    clearTimeout(toastTimeout);
-
     toast.textContent = mensagem;
 
-    toast.className = `toast mostrar ${tipo}`;
+    toast.className = "toast";
 
-    toastTimeout = setTimeout(() => {
+    toast.classList.add("visivel");
 
-        toast.classList.remove("mostrar");
+    if (tipo === "erro") {
+        toast.classList.add("erro");
+    }
 
+    if (tipo === "sucesso") {
+        toast.classList.add("sucesso");
+    }
+
+    setTimeout(function () {
+        toast.classList.remove("visivel");
     }, 3500);
 }
 
 
-/* =========================================================
-   DATAS
-========================================================= */
-
-function preencherDatas() {
-
-    const hoje = hojeISO();
-
-    const campos = [
-        "dataAmbulancia",
-        "dataTransferencia",
-        "dataApoio"
-    ];
-
-    campos.forEach(id => {
-
-        const campo = elemento(id);
-
-        if (campo && !campo.value) {
-            campo.value = hoje;
-        }
-
-    });
-
-
-    const dataDashboard = elemento(
-        "dataDashboard"
-    );
-
-    if (dataDashboard) {
-        dataDashboard.textContent =
-            formatarData(hoje);
-    }
-
-
-    const dataTopbar = elemento(
-        "dataTopbar"
-    );
-
-    if (dataTopbar) {
-        dataTopbar.textContent =
-            formatarData(hoje);
-    }
-}
-
-
-/* =========================================================
-   LOGIN
-========================================================= */
+// ======================================================
+// LOGIN
+// ======================================================
 
 const formLogin = elemento("formLogin");
 
 if (formLogin) {
 
-    formLogin.addEventListener(
-        "submit",
-        async evento => {
+    formLogin.addEventListener("submit", async function (event) {
 
-            evento.preventDefault();
+        event.preventDefault();
 
-            const emailCampo = elemento(
-                "loginEmail"
-            );
+        const emailInput = elemento("loginEmail");
 
-            const senhaCampo = elemento(
-                "loginSenha"
-            );
+        const senhaInput = elemento("loginSenha");
 
-            const mensagem = elemento(
-                "mensagemLogin"
-            );
+        const mensagem = elemento("mensagemLogin");
 
-            if (!emailCampo || !senhaCampo) {
-                return;
+        const botao = formLogin.querySelector(
+            'button[type="submit"]'
+        );
+
+        const email = emailInput
+            ? emailInput.value.trim()
+            : "";
+
+        const senha = senhaInput
+            ? senhaInput.value
+            : "";
+
+        if (!email || !senha) {
+
+            if (mensagem) {
+                mensagem.textContent =
+                    "Digite seu e-mail e sua senha.";
+                mensagem.className =
+                    "mensagem erro";
             }
 
-            const email =
-                emailCampo.value.trim();
-
-            const senha =
-                senhaCampo.value;
-
-            if (!email || !senha) {
-
-                mostrarMensagem(
-                    mensagem,
-                    "Informe o e-mail e a senha.",
-                    "erro"
-                );
-
-                return;
-            }
-
-
-            mostrarMensagem(
-                mensagem,
-                "Entrando...",
-                "sucesso"
-            );
-
-
-            try {
-
-                await signInWithEmailAndPassword(
-                    auth,
-                    email,
-                    senha
-                );
-
-                if (mensagem) {
-
-                    mensagem.textContent = "";
-
-                    mensagem.className =
-                        "mensagem";
-                }
-
-            } catch (erro) {
-
-                console.error(
-                    "Erro no login:",
-                    erro
-                );
-
-                let texto =
-                    "Não foi possível entrar. Verifique o e-mail e a senha.";
-
-
-                switch (erro.code) {
-
-                    case "auth/invalid-credential":
-                        texto =
-                            "E-mail ou senha incorretos.";
-                        break;
-
-                    case "auth/user-not-found":
-                        texto =
-                            "Usuário não encontrado.";
-                        break;
-
-                    case "auth/wrong-password":
-                        texto =
-                            "Senha incorreta.";
-                        break;
-
-                    case "auth/too-many-requests":
-                        texto =
-                            "Muitas tentativas. Aguarde alguns minutos.";
-                        break;
-
-                    case "auth/invalid-api-key":
-                        texto =
-                            "Erro na configuração da autenticação.";
-                        break;
-
-                    case "auth/network-request-failed":
-                        texto =
-                            "Erro de conexão. Verifique sua internet.";
-                        break;
-
-                    case "auth/operation-not-allowed":
-                        texto =
-                            "O login por e-mail e senha não está habilitado no Firebase.";
-                        break;
-                }
-
-
-                mostrarMensagem(
-                    mensagem,
-                    texto,
-                    "erro"
-                );
-            }
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   AUTENTICAÇÃO
-========================================================= */
-
-onAuthStateChanged(
-    auth,
-    usuarioAtual => {
-
-        usuario = usuarioAtual;
-
-        const telaLogin =
-            elemento("telaLogin");
-
-        const sistema =
-            elemento("sistema");
-
-
-        if (!telaLogin || !sistema) {
-            console.error(
-                "Elementos de login/sistema não encontrados no HTML."
-            );
             return;
         }
 
+        if (botao) {
+            botao.disabled = true;
+            botao.textContent = "Entrando...";
+        }
 
-        if (usuarioAtual) {
+        if (mensagem) {
+            mensagem.textContent = "";
+            mensagem.className = "mensagem";
+        }
 
-            telaLogin.classList.add(
-                "oculto"
+        try {
+
+            console.log("Tentando fazer login:", email);
+
+            await signInWithEmailAndPassword(
+                auth,
+                email,
+                senha
             );
 
-            sistema.classList.remove(
-                "oculto"
-            );
+            console.log("Login realizado com sucesso.");
 
+            if (mensagem) {
+                mensagem.textContent =
+                    "Login realizado com sucesso!";
+                mensagem.className =
+                    "mensagem sucesso";
+            }
 
-            atualizarUsuario();
+        } catch (error) {
 
-            preencherDatas();
+            console.error("Erro no login:", error);
 
-            carregarDados();
+            let mensagemErro =
+                "Não foi possível entrar.";
 
-            mostrarPagina(
-                "dashboard"
-            );
+            switch (error.code) {
 
-        } else {
+                case "auth/invalid-credential":
+                    mensagemErro =
+                        "E-mail ou senha incorretos.";
+                    break;
 
-            telaLogin.classList.remove(
-                "oculto"
-            );
+                case "auth/invalid-email":
+                    mensagemErro =
+                        "E-mail inválido.";
+                    break;
 
-            sistema.classList.add(
-                "oculto"
-            );
+                case "auth/user-not-found":
+                    mensagemErro =
+                        "Usuário não encontrado.";
+                    break;
+
+                case "auth/wrong-password":
+                    mensagemErro =
+                        "Senha incorreta.";
+                    break;
+
+                case "auth/user-disabled":
+                    mensagemErro =
+                        "Este usuário está desativado.";
+                    break;
+
+                case "auth/too-many-requests":
+                    mensagemErro =
+                        "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
+                    break;
+
+                case "auth/network-request-failed":
+                    mensagemErro =
+                        "Erro de conexão. Verifique sua internet.";
+                    break;
+
+                default:
+                    mensagemErro =
+                        `Erro ao entrar: ${error.message}`;
+            }
+
+            if (mensagem) {
+                mensagem.textContent = mensagemErro;
+                mensagem.className =
+                    "mensagem erro";
+            }
+
+        } finally {
+
+            if (botao) {
+                botao.disabled = false;
+                botao.textContent = "Entrar";
+            }
 
         }
 
-    }
-);
-
-
-/* =========================================================
-   USUÁRIO
-========================================================= */
-
-function atualizarUsuario() {
-
-    if (!usuario) {
-        return;
-    }
-
-    const email =
-        usuario.email || "Usuário";
-
-    const nome =
-        email.includes("@")
-            ? email.split("@")[0]
-            : email;
-
-
-    const nomeUsuario =
-        elemento("nomeUsuario");
-
-    const emailUsuario =
-        elemento("emailUsuario");
-
-
-    if (nomeUsuario) {
-        nomeUsuario.textContent = nome;
-    }
-
-
-    if (emailUsuario) {
-        emailUsuario.textContent = email;
-    }
-
-
-    const avatar =
-        document.querySelector(".avatar");
-
-
-    if (avatar) {
-
-        avatar.textContent =
-            nome
-                .charAt(0)
-                .toUpperCase();
-
-    }
+    });
 
 }
 
 
-/* =========================================================
-   SAIR
-========================================================= */
+// ======================================================
+// OBSERVADOR DE LOGIN
+// ======================================================
 
-window.sairSistema = async function () {
+onAuthStateChanged(auth, async function (user) {
 
-    try {
+    console.log(
+        "Estado de autenticação:",
+        user ? user.email : "desconectado"
+    );
 
-        await signOut(auth);
+    if (user) {
 
-        mostrarToast(
-            "Você saiu do sistema."
-        );
+        esconderElemento("telaLogin");
 
-    } catch (erro) {
+        mostrarElemento("sistema");
 
-        console.error(
-            "Erro ao sair:",
-            erro
-        );
+        const usuarioEmail = elemento("usuarioEmail");
 
-        mostrarToast(
-            "Não foi possível sair do sistema.",
-            "erro"
-        );
+        if (usuarioEmail) {
+            usuarioEmail.textContent =
+                user.email || "Usuário";
+        }
+
+        await carregarDados();
+
+    } else {
+
+        mostrarElemento("telaLogin");
+
+        esconderElemento("sistema");
+
+        const usuarioEmail = elemento("usuarioEmail");
+
+        if (usuarioEmail) {
+            usuarioEmail.textContent = "-";
+        }
+
     }
 
-};
+});
 
 
-/* =========================================================
-   SIDEBAR MOBILE
-========================================================= */
+// ======================================================
+// LOGOUT
+// ======================================================
+
+const btnSair = elemento("btnSair");
+
+if (btnSair) {
+
+    btnSair.addEventListener("click", async function () {
+
+        try {
+
+            await signOut(auth);
+
+            mostrarToast(
+                "Você saiu do sistema.",
+                "sucesso"
+            );
+
+        } catch (error) {
+
+            console.error("Erro ao sair:", error);
+
+            mostrarToast(
+                "Não foi possível sair.",
+                "erro"
+            );
+
+        }
+
+    });
+
+}
+
+
+// ======================================================
+// SIDEBAR MOBILE
+// ======================================================
 
 window.alternarSidebar = function () {
 
@@ -495,25 +377,201 @@ window.alternarSidebar = function () {
         return;
     }
 
-    sidebar.classList.toggle(
-        "aberta"
-    );
+    sidebar.classList.toggle("aberta");
 };
 
 
-function fecharSidebarMobile() {
+document.addEventListener("click", function (event) {
 
     const sidebar =
         document.querySelector(".sidebar");
 
-    if (!sidebar) {
+    const botao =
+        elemento("btnMenuMobile");
+
+    if (!sidebar || !botao) {
         return;
     }
 
-    if (window.innerWidth <= 900) {
+    if (
+        window.innerWidth <= 900 &&
+        sidebar.classList.contains("aberta") &&
+        !sidebar.contains(event.target) &&
+        !botao.contains(event.target)
+    ) {
 
-        sidebar.classList.remove(
-            "aberta"
+        sidebar.classList.remove("aberta");
+
+    }
+
+});
+
+
+// ======================================================
+// NAVEGAÇÃO
+// ======================================================
+
+const menuItens =
+    document.querySelectorAll(".menu-item[data-pagina]");
+
+menuItens.forEach(function (item) {
+
+    item.addEventListener("click", function () {
+
+        const paginaId =
+            item.getAttribute("data-pagina");
+
+        if (!paginaId) {
+            return;
+        }
+
+        document
+            .querySelectorAll(".pagina")
+            .forEach(function (pagina) {
+
+                pagina.classList.remove("ativa");
+
+            });
+
+        const pagina =
+            elemento(paginaId);
+
+        if (pagina) {
+            pagina.classList.add("ativa");
+        }
+
+        document
+            .querySelectorAll(".menu-item[data-pagina]")
+            .forEach(function (menu) {
+
+                menu.classList.remove("ativo");
+
+            });
+
+        item.classList.add("ativo");
+
+        const titulo =
+            elemento("tituloPagina");
+
+        const titulos = {
+            paginaDashboard: "Dashboard",
+            paginaAmbulancia: "Ambulâncias",
+            paginaTransferencia: "Transferências",
+            paginaApoio: "Apoio de Rota",
+            paginaRegistros: "Registros"
+        };
+
+        if (titulo) {
+            titulo.textContent =
+                titulos[paginaId] || "Dashboard";
+        }
+
+        const sidebar =
+            document.querySelector(".sidebar");
+
+        if (
+            sidebar &&
+            window.innerWidth <= 900
+        ) {
+            sidebar.classList.remove("aberta");
+        }
+
+        if (paginaId === "paginaRegistros") {
+            renderizarRegistros();
+        }
+
+    });
+
+});
+
+
+// ======================================================
+// CARREGAR DADOS
+// ======================================================
+
+async function carregarDados() {
+
+    try {
+
+        console.log("Carregando dados do Firebase...");
+
+        const caminhos = [
+            {
+                caminho: "ambulancias",
+                tipo: "ambulancia"
+            },
+            {
+                caminho: "transferencias",
+                tipo: "transferencia"
+            },
+            {
+                caminho: "apoios",
+                tipo: "apoio"
+            }
+        ];
+
+        let registros = [];
+
+        for (const item of caminhos) {
+
+            const referencia =
+                ref(db, item.caminho);
+
+            const snapshot =
+                await get(referencia);
+
+            if (!snapshot.exists()) {
+                continue;
+            }
+
+            const dados =
+                snapshot.val();
+
+            Object.keys(dados).forEach(function (id) {
+
+                registros.push({
+                    id: id,
+                    tipo: item.tipo,
+                    ...dados[id]
+                });
+
+            });
+
+        }
+
+        registros.sort(function (a, b) {
+
+            const dataA =
+                `${a.data || ""} ${a.hora || ""}`;
+
+            const dataB =
+                `${b.data || ""} ${b.hora || ""}`;
+
+            return dataB.localeCompare(dataA);
+
+        });
+
+        todosRegistros = registros;
+
+        console.log(
+            "Dados carregados:",
+            todosRegistros
+        );
+
+        atualizarDashboard();
+
+        renderizarRegistros();
+
+    } catch (error) {
+
+        console.error(
+            "Erro ao carregar dados:",
+            error
+        );
+
+        mostrarToast(
+            "Não foi possível carregar os dados.",
+            "erro"
         );
 
     }
@@ -521,274 +579,107 @@ function fecharSidebarMobile() {
 }
 
 
-/* =========================================================
-   NAVEGAÇÃO
-========================================================= */
-
-window.mostrarPagina = function (
-    pagina
-) {
-
-    const paginas =
-        document.querySelectorAll(
-            ".pagina"
-        );
-
-
-    paginas.forEach(
-        paginaElemento => {
-
-            paginaElemento.classList.remove(
-                "ativa"
-            );
-
-        }
-    );
-
-
-    const primeiraLetra =
-        pagina.charAt(0).toUpperCase();
-
-    const restante =
-        pagina.slice(1);
-
-    const paginaAtual =
-        elemento(
-            `pagina${primeiraLetra}${restante}`
-        );
-
-
-    if (paginaAtual) {
-
-        paginaAtual.classList.add(
-            "ativa"
-        );
-
-    }
-
-
-    const menus = {
-
-        dashboard: "menuDashboard",
-
-        ambulancia: "menuAmbulancia",
-
-        transferencia: "menuTransferencia",
-
-        apoio: "menuApoio",
-
-        registros: "menuRegistros"
-
-    };
-
-
-    Object.values(menus).forEach(
-        id => {
-
-            const menu =
-                elemento(id);
-
-            if (menu) {
-
-                menu.classList.remove(
-                    "ativo"
-                );
-
-            }
-
-        }
-    );
-
-
-    const menuAtual =
-        elemento(
-            menus[pagina]
-        );
-
-
-    if (menuAtual) {
-
-        menuAtual.classList.add(
-            "ativo"
-        );
-
-    }
-
-
-    const nomes = {
-
-        dashboard:
-            "Dashboard",
-
-        ambulancia:
-            "Lançar ambulância",
-
-        transferencia:
-            "Lançar transferência",
-
-        apoio:
-            "Lançar apoio de rota",
-
-        registros:
-            "Registros operacionais"
-
-    };
-
-
-    const titulo =
-        elemento("tituloPagina");
-
-
-    if (titulo) {
-
-        titulo.textContent =
-            nomes[pagina] || "Dashboard";
-
-    }
-
-
-    const breadcrumb =
-        elemento("breadcrumb");
-
-
-    if (breadcrumb) {
-
-        breadcrumb.textContent =
-            `Principal / ${nomes[pagina] || "Dashboard"}`;
-
-    }
-
-
-    fecharSidebarMobile();
-
-
-    if (pagina === "dashboard") {
-        atualizarDashboard();
-    }
-
-
-    if (pagina === "registros") {
-        aplicarFiltros();
-    }
-
-};
-
-
-/* =========================================================
-   AMBULÂNCIA
-========================================================= */
+// ======================================================
+// AMBULÂNCIA
+// ======================================================
 
 const formAmbulancia =
     elemento("formAmbulancia");
-
 
 if (formAmbulancia) {
 
     formAmbulancia.addEventListener(
         "submit",
-        async evento => {
+        async function (event) {
 
-            evento.preventDefault();
+            event.preventDefault();
 
+            const user = auth.currentUser;
 
-            if (!usuario) {
-
+            if (!user) {
                 mostrarToast(
-                    "Faça login para registrar a operação.",
+                    "Faça login novamente.",
                     "erro"
                 );
-
                 return;
             }
 
-
-            const registro = {
-
-                tipo: "ambulancia",
+            const dados = {
 
                 data:
-                    elemento(
-                        "dataAmbulancia"
-                    ).value,
+                    elemento("ambulanciaData").value,
 
                 rota:
-                    elemento(
-                        "rotaAmbulancia"
-                    ).value.trim(),
+                    elemento("ambulanciaRota").value.trim(),
 
                 driver:
-                    elemento(
-                        "driverAmbulancia"
-                    ).value.trim(),
+                    elemento("ambulanciaDriver").value.trim(),
 
                 cidade:
-                    elemento(
-                        "cidadeAmbulancia"
-                    ).value.trim(),
+                    elemento("ambulanciaCidade").value.trim(),
 
                 pacotes:
                     Number(
-                        elemento(
-                            "pacotesAmbulancia"
-                        ).value
+                        elemento("ambulanciaPacotes").value
                     ) || 0,
 
                 motivo:
-                    elemento(
-                        "motivoAmbulancia"
-                    ).value.trim(),
+                    elemento("ambulanciaMotivo").value.trim(),
 
                 meli:
-                    elemento(
-                        "meliAmbulancia"
-                    ).value.trim(),
+                    elemento("ambulanciaMeli").value.trim(),
 
                 observacoes:
-                    elemento(
-                        "obsAmbulancia"
-                    ).value.trim(),
+                    elemento("ambulanciaObservacoes").value.trim(),
 
                 lancadoPor:
-                    usuario.email,
+                    user.email,
 
                 criadoEm:
-                    Date.now()
+                    Date.now(),
+
+                hora:
+                    new Date().toLocaleTimeString(
+                        "pt-BR",
+                        {
+                            hour: "2-digit",
+                            minute: "2-digit"
+                        }
+                    )
 
             };
 
-
             try {
 
-                await push(
-                    ref(
-                        db,
-                        "ambulancias"
-                    ),
-                    registro
+                const novaReferencia =
+                    push(ref(db, "ambulancias"));
+
+                await set(
+                    novaReferencia,
+                    dados
                 );
 
-
-                formAmbulancia.reset();
-
-                preencherDatas();
-
                 mostrarToast(
-                    "Ambulância registrada com sucesso.",
+                    "Ambulância lançada com sucesso!",
                     "sucesso"
                 );
 
-                carregarDados();
+                formAmbulancia.reset();
 
+                elemento("ambulanciaData").value =
+                    hoje();
 
-            } catch (erro) {
+                await carregarDados();
+
+            } catch (error) {
 
                 console.error(
-                    "Erro ao registrar ambulância:",
-                    erro
+                    "Erro ao salvar ambulância:",
+                    error
                 );
 
                 mostrarToast(
-                    "Erro ao registrar a ambulância.",
+                    "Erro ao salvar ambulância.",
                     "erro"
                 );
 
@@ -800,124 +691,119 @@ if (formAmbulancia) {
 }
 
 
-/* =========================================================
-   TRANSFERÊNCIA
-========================================================= */
+// ======================================================
+// TRANSFERÊNCIA
+// ======================================================
 
 const formTransferencia =
     elemento("formTransferencia");
-
 
 if (formTransferencia) {
 
     formTransferencia.addEventListener(
         "submit",
-        async evento => {
+        async function (event) {
 
-            evento.preventDefault();
+            event.preventDefault();
 
+            const user = auth.currentUser;
 
-            if (!usuario) {
-
+            if (!user) {
                 mostrarToast(
-                    "Faça login para registrar a operação.",
+                    "Faça login novamente.",
                     "erro"
                 );
-
                 return;
             }
 
-
-            const registro = {
-
-                tipo: "transferencia",
+            const dados = {
 
                 data:
-                    elemento(
-                        "dataTransferencia"
-                    ).value,
+                    elemento("transferenciaData").value,
 
                 rota:
-                    elemento(
-                        "rotaTransferencia"
-                    ).value.trim(),
+                    elemento("transferenciaRota").value.trim(),
 
                 driverInicial:
                     elemento(
-                        "driverInicial"
+                        "transferenciaDriverInicial"
                     ).value.trim(),
 
                 driverSubstituto:
                     elemento(
-                        "driverSubstituto"
-                    ).value.trim(),
-
-                driver:
-                    elemento(
-                        "driverSubstituto"
+                        "transferenciaDriverSubstituto"
                     ).value.trim(),
 
                 cidade:
                     elemento(
-                        "cidadeTransferencia"
+                        "transferenciaCidade"
                     ).value.trim(),
 
                 motivo:
                     elemento(
-                        "motivoTransferencia"
+                        "transferenciaMotivo"
                     ).value.trim(),
 
                 meli:
                     elemento(
-                        "meliTransferencia"
+                        "transferenciaMeli"
                     ).value.trim(),
 
                 observacoes:
                     elemento(
-                        "obsTransferencia"
+                        "transferenciaObservacoes"
                     ).value.trim(),
 
                 lancadoPor:
-                    usuario.email,
+                    user.email,
 
                 criadoEm:
-                    Date.now()
+                    Date.now(),
+
+                hora:
+                    new Date().toLocaleTimeString(
+                        "pt-BR",
+                        {
+                            hour: "2-digit",
+                            minute: "2-digit"
+                        }
+                    )
 
             };
 
-
             try {
 
-                await push(
-                    ref(
-                        db,
-                        "transferencias"
-                    ),
-                    registro
+                const novaReferencia =
+                    push(
+                        ref(db, "transferencias")
+                    );
+
+                await set(
+                    novaReferencia,
+                    dados
                 );
 
-
-                formTransferencia.reset();
-
-                preencherDatas();
-
                 mostrarToast(
-                    "Transferência registrada com sucesso.",
+                    "Transferência lançada com sucesso!",
                     "sucesso"
                 );
 
-                carregarDados();
+                formTransferencia.reset();
 
+                elemento("transferenciaData").value =
+                    hoje();
 
-            } catch (erro) {
+                await carregarDados();
+
+            } catch (error) {
 
                 console.error(
-                    "Erro ao registrar transferência:",
-                    erro
+                    "Erro ao salvar transferência:",
+                    error
                 );
 
                 mostrarToast(
-                    "Erro ao registrar a transferência.",
+                    "Erro ao salvar transferência.",
                     "erro"
                 );
 
@@ -929,121 +815,108 @@ if (formTransferencia) {
 }
 
 
-/* =========================================================
-   APOIO
-========================================================= */
+// ======================================================
+// APOIO
+// ======================================================
 
 const formApoio =
     elemento("formApoio");
-
 
 if (formApoio) {
 
     formApoio.addEventListener(
         "submit",
-        async evento => {
+        async function (event) {
 
-            evento.preventDefault();
+            event.preventDefault();
 
+            const user = auth.currentUser;
 
-            if (!usuario) {
-
+            if (!user) {
                 mostrarToast(
-                    "Faça login para registrar a operação.",
+                    "Faça login novamente.",
                     "erro"
                 );
-
                 return;
             }
 
-
-            const registro = {
-
-                tipo: "apoio",
+            const dados = {
 
                 data:
-                    elemento(
-                        "dataApoio"
-                    ).value,
+                    elemento("apoioData").value,
 
                 rota:
-                    elemento(
-                        "rotaApoio"
-                    ).value.trim(),
+                    elemento("apoioRota").value.trim(),
 
                 valor:
                     Number(
-                        elemento(
-                            "valorApoio"
-                        ).value
+                        elemento("apoioValor").value
                     ) || 0,
 
-                driverRealiza:
-                    elemento(
-                        "driverRealizaApoio"
-                    ).value.trim(),
-
-                driverPrecisa:
-                    elemento(
-                        "driverPrecisaApoio"
-                    ).value.trim(),
-
                 driver:
+                    elemento("apoioDriver").value.trim(),
+
+                driverAjudado:
                     elemento(
-                        "driverRealizaApoio"
+                        "apoioDriverAjudado"
                     ).value.trim(),
 
-                quemLiberou:
-                    elemento(
-                        "quemLiberouApoio"
-                    ).value.trim(),
+                meli:
+                    elemento("apoioMeli").value.trim(),
 
                 observacoes:
                     elemento(
-                        "obsApoio"
+                        "apoioObservacoes"
                     ).value.trim(),
 
                 lancadoPor:
-                    usuario.email,
+                    user.email,
 
                 criadoEm:
-                    Date.now()
+                    Date.now(),
+
+                hora:
+                    new Date().toLocaleTimeString(
+                        "pt-BR",
+                        {
+                            hour: "2-digit",
+                            minute: "2-digit"
+                        }
+                    )
 
             };
 
-
             try {
 
-                await push(
-                    ref(
-                        db,
-                        "apoios"
-                    ),
-                    registro
+                const novaReferencia =
+                    push(ref(db, "apoios"));
+
+                await set(
+                    novaReferencia,
+                    dados
                 );
 
-
-                formApoio.reset();
-
-                preencherDatas();
-
                 mostrarToast(
-                    "Apoio registrado com sucesso.",
+                    "Apoio lançado com sucesso!",
                     "sucesso"
                 );
 
-                carregarDados();
+                formApoio.reset();
 
+                elemento("apoioData").value =
+                    hoje();
 
-            } catch (erro) {
+                await carregarDados();
+
+            } catch (error) {
 
                 console.error(
-                    "Erro ao registrar apoio:",
-                    erro
+                    "Erro ao salvar apoio:",
+                    error
                 );
 
                 mostrarToast(
-                    "Erro ao registrar o apoio.",
+                    "Erro ao salvar apoio.",
                     "erro"
                 );
 
@@ -1055,1170 +928,625 @@ if (formApoio) {
 }
 
 
-/* =========================================================
-   CARREGAR TODOS OS DADOS
-========================================================= */
-
-async function carregarDados() {
-
-    if (!usuario) {
-        return;
-    }
-
-
-    const caminhos = [
-        {
-            tipo: "ambulancia",
-            caminho: "ambulancias"
-        },
-        {
-            tipo: "transferencia",
-            caminho: "transferencias"
-        },
-        {
-            tipo: "apoio",
-            caminho: "apoios"
-        }
-    ];
-
-
-    const resultados = [];
-
-
-    let carregados = 0;
-
-
-    caminhos.forEach(item => {
-
-        onValue(
-            ref(
-                db,
-                item.caminho
-            ),
-
-            snapshot => {
-
-                const valor =
-                    snapshot.val() || {};
-
-
-                const registros =
-                    Object.entries(valor)
-                        .map(
-                            ([id, registro]) => ({
-                                ...registro,
-                                id,
-                                tipo: item.tipo
-                            })
-                        );
-
-
-                resultados.push(
-                    ...registros
-                );
-
-
-                carregados++;
-
-
-                if (
-                    carregados ===
-                    caminhos.length
-                ) {
-
-                    todosRegistros =
-                        resultados.sort(
-                            (a, b) =>
-                                Number(
-                                    b.criadoEm || 0
-                                ) -
-                                Number(
-                                    a.criadoEm || 0
-                                )
-                        );
-
-
-                    atualizarDashboard();
-
-                    aplicarFiltros();
-
-                }
-
-            },
-
-            {
-                onlyOnce: true
-            }
-
-        );
-
-    });
-
-}
-
-
-/* =========================================================
-   DASHBOARD
-========================================================= */
+// ======================================================
+// DASHBOARD
+// ======================================================
 
 function atualizarDashboard() {
 
-    const registros =
-        todosRegistros || [];
-
-
     const ambulancias =
-        registros.filter(
-            registro =>
-                registro.tipo ===
-                "ambulancia"
+        todosRegistros.filter(
+            item => item.tipo === "ambulancia"
         );
-
 
     const transferencias =
-        registros.filter(
-            registro =>
-                registro.tipo ===
-                "transferencia"
+        todosRegistros.filter(
+            item => item.tipo === "transferencia"
         );
-
 
     const apoios =
-        registros.filter(
-            registro =>
-                registro.tipo ===
-                "apoio"
+        todosRegistros.filter(
+            item => item.tipo === "apoio"
         );
 
-
     const total =
-        registros.length;
+        todosRegistros.length;
 
+    const dataHoje =
+        hoje();
+
+    const ambulanciasHoje =
+        ambulancias.filter(
+            item => item.data === dataHoje
+        );
+
+    const transferenciasHoje =
+        transferencias.filter(
+            item => item.data === dataHoje
+        );
+
+    const apoiosHoje =
+        apoios.filter(
+            item => item.data === dataHoje
+        );
+
+    const valorHoje =
+        apoiosHoje.reduce(
+            function (total, item) {
+                return total + (Number(item.valor) || 0);
+            },
+            0
+        );
 
     const valorTotal =
         apoios.reduce(
-            (totalValor, registro) =>
-                totalValor +
-                (
-                    Number(
-                        registro.valor
-                    ) || 0
-                ),
+            function (total, item) {
+                return total + (Number(item.valor) || 0);
+            },
             0
         );
 
 
-    definirTexto(
-        "totalAmbulancias",
-        ambulancias.length
-    );
+    const valores = {
 
-
-    definirTexto(
-        "totalTransferencias",
-        transferencias.length
-    );
-
-
-    definirTexto(
-        "totalApoios",
-        apoios.length
-    );
-
-
-    definirTexto(
-        "totalGeral",
-        total
-    );
-
-
-    definirTexto(
-        "valorTotalApoios",
-        formatarMoeda(
-            valorTotal
-        )
-    );
-
-
-    const hoje =
-        hojeISO();
-
-
-    const hojeAmbulancias =
-        ambulancias.filter(
-            registro =>
-                registro.data === hoje
-        );
-
-
-    const hojeTransferencias =
-        transferencias.filter(
-            registro =>
-                registro.data === hoje
-        );
-
-
-    const hojeApoios =
-        apoios.filter(
-            registro =>
-                registro.data === hoje
-        );
-
-
-    const hojeValor =
-        hojeApoios.reduce(
-            (totalValor, registro) =>
-                totalValor +
-                (
-                    Number(
-                        registro.valor
-                    ) || 0
-                ),
-            0
-        );
-
-
-    definirTexto(
-        "hojeAmbulancias",
-        hojeAmbulancias.length
-    );
-
-
-    definirTexto(
-        "hojeTransferencias",
-        hojeTransferencias.length
-    );
-
-
-    definirTexto(
-        "hojeApoios",
-        hojeApoios.length
-    );
-
-
-    definirTexto(
-        "hojeValorApoios",
-        formatarMoeda(
-            hojeValor
-        )
-    );
-
-
-    definirTexto(
-        "barraAmbulanciasTexto",
-        ambulancias.length
-    );
-
-
-    definirTexto(
-        "barraTransferenciasTexto",
-        transferencias.length
-    );
-
-
-    definirTexto(
-        "barraApoiosTexto",
-        apoios.length
-    );
-
-
-    const maior =
-        Math.max(
+        totalAmbulancias:
             ambulancias.length,
+
+        totalTransferencias:
             transferencias.length,
+
+        totalApoios:
             apoios.length,
-            1
-        );
 
+        totalGeral:
+            total,
 
-    definirLargura(
-        "barraAmbulancias",
-        ambulancias.length /
-        maior *
-        100
-    );
+        ambulanciasHoje:
+            ambulanciasHoje.length,
 
+        transferenciasHoje:
+            transferenciasHoje.length,
 
-    definirLargura(
-        "barraTransferencias",
-        transferencias.length /
-        maior *
-        100
-    );
-
-
-    definirLargura(
-        "barraApoios",
-        apoios.length /
-        maior *
-        100
-    );
-
-
-    criarUltimosLancamentos(
-        registros.slice(
-            0,
-            6
-        )
-    );
-
-}
-
-
-/* =========================================================
-   DEFINIR TEXTO
-========================================================= */
-
-function definirTexto(
-    id,
-    valor
-) {
-
-    const campo =
-        elemento(id);
-
-    if (campo) {
-
-        campo.textContent =
-            valor;
-
-    }
-
-}
-
-
-/* =========================================================
-   BARRAS
-========================================================= */
-
-function definirLargura(
-    id,
-    valor
-) {
-
-    const campo =
-        elemento(id);
-
-    if (!campo) {
-        return;
-    }
-
-
-    const largura =
-        Math.max(
-            0,
-            Math.min(
-                100,
-                Number(valor) || 0
-            )
-        );
-
-
-    campo.style.width =
-        `${largura}%`;
-
-}
-
-
-/* =========================================================
-   ÚLTIMOS LANÇAMENTOS
-========================================================= */
-
-function criarUltimosLancamentos(
-    registros
-) {
-
-    const container =
-        elemento(
-            "ultimosLancamentos"
-        );
-
-
-    if (!container) {
-        return;
-    }
-
-
-    if (!registros.length) {
-
-        container.innerHTML = `
-            <div class="empty-state">
-                Nenhum lançamento encontrado.
-            </div>
-        `;
-
-        return;
-    }
-
-
-    container.innerHTML =
-        registros
-            .map(
-                criarMiniRegistro
-            )
-            .join("");
-
-}
-
-
-function criarMiniRegistro(
-    registro
-) {
-
-    const config =
-        obterConfigTipo(
-            registro.tipo
-        );
-
-
-    const identificacao =
-        registro.rota ||
-        registro.cidade ||
-        "Sem identificação";
-
-
-    const pessoa =
-        registro.driver ||
-        registro.driverSubstituto ||
-        registro.driverRealiza ||
-        "—";
-
-
-    return `
-        <div class="mini-registro">
-
-            <div
-                class="mini-icon"
-                style="
-                    background:${config.fundo};
-                    color:${config.cor};
-                "
-            >
-                ${config.icone}
-            </div>
-
-            <div class="mini-info">
-
-                <strong>
-                    ${escaparHTML(config.nome)}
-                    •
-                    ${escaparHTML(identificacao)}
-                </strong>
-
-                <span>
-                    ${escaparHTML(pessoa)}
-                </span>
-
-            </div>
-
-            <div class="mini-data">
-                ${formatarData(registro.data)}
-            </div>
-
-        </div>
-    `;
-
-}
-
-
-/* =========================================================
-   FILTROS
-========================================================= */
-
-function aplicarFiltros() {
-
-    const data =
-        elemento(
-            "filtroData"
-        )?.value || "";
-
-
-    const rota =
-        elemento(
-            "filtroRota"
-        )?.value
-            ?.trim()
-            .toLowerCase() || "";
-
-
-    const driver =
-        elemento(
-            "filtroDriver"
-        )?.value
-            ?.trim()
-            .toLowerCase() || "";
-
-
-    const tipo =
-        elemento(
-            "filtroTipo"
-        )?.value || "";
-
-
-    const filtrados =
-        todosRegistros.filter(
-            registro => {
-
-                const rotaRegistro =
-                    String(
-                        registro.rota || ""
-                    )
-                    .toLowerCase();
-
-
-                const motoristas = [
-
-                    registro.driver,
-
-                    registro.driverInicial,
-
-                    registro.driverSubstituto,
-
-                    registro.driverRealiza,
-
-                    registro.driverPrecisa
-
-                ]
-                    .filter(Boolean)
-                    .join(" ")
-                    .toLowerCase();
-
-
-                return (
-
-                    (
-                        !data ||
-                        registro.data === data
-                    )
-
-                    &&
-
-                    (
-                        !rota ||
-                        rotaRegistro.includes(rota)
-                    )
-
-                    &&
-
-                    (
-                        !driver ||
-                        motoristas.includes(driver)
-                    )
-
-                    &&
-
-                    (
-                        !tipo ||
-                        registro.tipo === tipo
-                    )
-
-                );
-
-            }
-        );
-
-
-    renderizarRegistros(
-        filtrados
-    );
-
-}
-
-
-window.limparFiltros =
-    function () {
-
-        [
-            "filtroData",
-            "filtroRota",
-            "filtroDriver"
-        ].forEach(
-            id => {
-
-                const campo =
-                    elemento(id);
-
-                if (campo) {
-                    campo.value = "";
-                }
-
-            }
-        );
-
-
-        const tipo =
-            elemento(
-                "filtroTipo"
-            );
-
-
-        if (tipo) {
-            tipo.value = "";
-        }
-
-
-        renderizarRegistros(
-            todosRegistros
-        );
+        apoiosHoje:
+            apoiosHoje.length
 
     };
 
 
-/* =========================================================
-   EVENTOS DOS FILTROS
-========================================================= */
+    Object.keys(valores).forEach(function (id) {
+
+        const el =
+            elemento(id);
+
+        if (el) {
+            el.textContent =
+                valores[id];
+        }
+
+    });
+
+
+    const apoioValorHoje =
+        elemento("apoioValorHoje");
+
+    if (apoioValorHoje) {
+        apoioValorHoje.textContent =
+            formatarMoeda(valorHoje);
+    }
+
+
+    const valorTotalApoio =
+        elemento("valorTotalApoio");
+
+    if (valorTotalApoio) {
+        valorTotalApoio.textContent =
+            formatarMoeda(valorTotal);
+    }
+
+
+    const grafico =
+        elemento("graficoDistribuicao");
+
+    if (grafico) {
+
+        const maior =
+            Math.max(
+                ambulancias.length,
+                transferencias.length,
+                apoios.length,
+                1
+            );
+
+        grafico.innerHTML = `
+
+            <div class="barra-item">
+
+                <div class="barra-info">
+                    <span>Ambulâncias</span>
+                    <strong>${ambulancias.length}</strong>
+                </div>
+
+                <div class="barra-fundo">
+                    <div
+                        class="barra"
+                        style="width:${(
+                            ambulancias.length / maior
+                        ) * 100}%"
+                    ></div>
+                </div>
+
+            </div>
+
+
+            <div class="barra-item">
+
+                <div class="barra-info">
+                    <span>Transferências</span>
+                    <strong>${transferencias.length}</strong>
+                </div>
+
+                <div class="barra-fundo">
+                    <div
+                        class="barra"
+                        style="width:${(
+                            transferencias.length / maior
+                        ) * 100}%"
+                    ></div>
+                </div>
+
+            </div>
+
+
+            <div class="barra-item">
+
+                <div class="barra-info">
+                    <span>Apoios</span>
+                    <strong>${apoios.length}</strong>
+                </div>
+
+                <div class="barra-fundo">
+                    <div
+                        class="barra"
+                        style="width:${(
+                            apoios.length / maior
+                        ) * 100}%"
+                    ></div>
+                </div>
+
+            </div>
+
+        `;
+
+    }
+
+
+    const ultimos =
+        elemento("ultimosLancamentos");
+
+    if (ultimos) {
+
+        const recentes =
+            todosRegistros.slice(0, 8);
+
+        ultimos.innerHTML =
+            criarListaRegistros(recentes);
+
+    }
+
+}
+
+
+// ======================================================
+// REGISTROS
+// ======================================================
+
+function criarListaRegistros(registros) {
+
+    if (!registros.length) {
+
+        return `
+            <div class="estado-vazio">
+                Nenhum registro encontrado.
+            </div>
+        `;
+
+    }
+
+    return registros.map(function (registro) {
+
+        let tipoTexto =
+            "Registro";
+
+        let icone =
+            "📋";
+
+        if (registro.tipo === "ambulancia") {
+            tipoTexto = "Ambulância";
+            icone = "🚑";
+        }
+
+        if (registro.tipo === "transferencia") {
+            tipoTexto = "Transferência";
+            icone = "🔄";
+        }
+
+        if (registro.tipo === "apoio") {
+            tipoTexto = "Apoio";
+            icone = "🤝";
+        }
+
+        let motorista =
+            registro.driver ||
+            registro.driverInicial ||
+            "-";
+
+        if (
+            registro.tipo === "transferencia"
+        ) {
+
+            motorista =
+                `${registro.driverInicial || "-"} → ${registro.driverSubstituto || "-"}`;
+
+        }
+
+        return `
+
+            <div class="registro-item">
+
+                <div class="registro-icone">
+                    ${icone}
+                </div>
+
+                <div class="registro-info">
+
+                    <strong>
+                        ${tipoTexto}
+                    </strong>
+
+                    <span>
+                        Rota: ${registro.rota || "-"}
+                    </span>
+
+                    <span>
+                        Motorista: ${motorista}
+                    </span>
+
+                    <span>
+                        ${formatarData(registro.data)}
+                    </span>
+
+                </div>
+
+                <div class="registro-acoes">
+
+                    <button
+                        type="button"
+                        class="btn-excluir"
+                        onclick="excluirRegistro(
+                            '${registro.tipo}',
+                            '${registro.id}'
+                        )"
+                    >
+                        Excluir
+                    </button>
+
+                </div>
+
+            </div>
+
+        `;
+
+    }).join("");
+
+}
+
+
+function renderizarRegistros() {
+
+    const lista =
+        elemento("listaRegistros");
+
+    if (!lista) {
+        return;
+    }
+
+    const filtroData =
+        elemento("filtroData")
+            ?.value || "";
+
+    const filtroRota =
+        elemento("filtroRota")
+            ?.value
+            .trim()
+            .toLowerCase() || "";
+
+    const filtroDriver =
+        elemento("filtroDriver")
+            ?.value
+            .trim()
+            .toLowerCase() || "";
+
+    const filtroTipo =
+        elemento("filtroTipo")
+            ?.value || "";
+
+
+    const filtrados =
+        todosRegistros.filter(function (registro) {
+
+            if (
+                filtroData &&
+                registro.data !== filtroData
+            ) {
+                return false;
+            }
+
+            if (
+                filtroRota &&
+                !String(
+                    registro.rota || ""
+                )
+                    .toLowerCase()
+                    .includes(filtroRota)
+            ) {
+                return false;
+            }
+
+
+            if (filtroTipo) {
+
+                if (
+                    registro.tipo !== filtroTipo
+                ) {
+                    return false;
+                }
+
+            }
+
+
+            if (filtroDriver) {
+
+                const textoMotorista = [
+
+                    registro.driver || "",
+
+                    registro.driverInicial || "",
+
+                    registro.driverSubstituto || "",
+
+                    registro.driverAjudado || ""
+
+                ]
+                    .join(" ")
+                    .toLowerCase();
+
+
+                if (
+                    !textoMotorista.includes(
+                        filtroDriver
+                    )
+                ) {
+                    return false;
+                }
+
+            }
+
+            return true;
+
+        });
+
+
+    lista.innerHTML =
+        criarListaRegistros(filtrados);
+
+}
+
+
+// ======================================================
+// FILTROS
+// ======================================================
 
 [
     "filtroData",
     "filtroRota",
     "filtroDriver",
     "filtroTipo"
-].forEach(id => {
+].forEach(function (id) {
 
-    const campo =
+    const el =
         elemento(id);
 
-
-    if (!campo) {
+    if (!el) {
         return;
     }
 
+    el.addEventListener(
+        "input",
+        renderizarRegistros
+    );
 
-    campo.addEventListener(
-        campo.tagName === "SELECT"
-            ? "change"
-            : "input",
-        aplicarFiltros
+    el.addEventListener(
+        "change",
+        renderizarRegistros
     );
 
 });
 
 
-/* =========================================================
-   RENDERIZAR REGISTROS
-========================================================= */
+const btnLimparFiltros =
+    elemento("btnLimparFiltros");
 
-function renderizarRegistros(
-    registros
+if (btnLimparFiltros) {
+
+    btnLimparFiltros.addEventListener(
+        "click",
+        function () {
+
+            elemento("filtroData").value = "";
+
+            elemento("filtroRota").value = "";
+
+            elemento("filtroDriver").value = "";
+
+            elemento("filtroTipo").value = "";
+
+            renderizarRegistros();
+
+        }
+    );
+
+}
+
+
+// ======================================================
+// EXCLUIR REGISTRO
+// ======================================================
+
+window.excluirRegistro = async function (
+    tipo,
+    id
 ) {
 
-    const lista =
-        elemento(
-            "listaRegistros"
+    const confirmar =
+        confirm(
+            "Tem certeza que deseja excluir este registro?"
         );
 
-
-    if (!lista) {
+    if (!confirmar) {
         return;
     }
 
 
-    if (!registros.length) {
+    const caminhos = {
 
-        lista.innerHTML = `
-            <div class="empty-state">
-                Nenhum registro encontrado.
-            </div>
-        `;
+        ambulancia:
+            "ambulancias",
 
+        transferencia:
+            "transferencias",
+
+        apoio:
+            "apoios"
+
+    };
+
+
+    const caminho =
+        caminhos[tipo];
+
+
+    if (!caminho) {
         return;
     }
 
 
-    lista.innerHTML =
-        registros
-            .map(
-                criarRegistroHTML
+    try {
+
+        await remove(
+            ref(
+                db,
+                `${caminho}/${id}`
             )
-            .join("");
+        );
+
+        mostrarToast(
+            "Registro excluído.",
+            "sucesso"
+        );
+
+        await carregarDados();
+
+    } catch (error) {
+
+        console.error(
+            "Erro ao excluir:",
+            error
+        );
+
+        mostrarToast(
+            "Não foi possível excluir.",
+            "erro"
+        );
+
+    }
+
+};
+
+
+// ======================================================
+// ALTERAR SENHA
+// ======================================================
+
+const btnAlterarSenha =
+    elemento("btnAlterarSenha");
+
+if (btnAlterarSenha) {
+
+    btnAlterarSenha.addEventListener(
+        "click",
+        function () {
+
+            mostrarElemento("modalSenha");
+
+        }
+    );
 
 }
-
-
-/* =========================================================
-   REGISTRO HTML
-========================================================= */
-
-function criarRegistroHTML(
-    registro
-) {
-
-    const config =
-        obterConfigTipo(
-            registro.tipo
-        );
-
-
-    let titulo = "";
-
-    let detalhes = "";
-
-
-    if (
-        registro.tipo ===
-        "ambulancia"
-    ) {
-
-        titulo =
-            `Rota ${registro.rota || "—"}`;
-
-        detalhes =
-            `${registro.driver || "—"} • ${registro.cidade || "—"} • ${registro.pacotes || 0} pacotes`;
-
-    }
-
-
-    if (
-        registro.tipo ===
-        "transferencia"
-    ) {
-
-        titulo =
-            `Rota ${registro.rota || "—"}`;
-
-        detalhes =
-            `${registro.driverInicial || "—"} → ${registro.driverSubstituto || "—"} • ${registro.cidade || "—"}`;
-
-    }
-
-
-    if (
-        registro.tipo ===
-        "apoio"
-    ) {
-
-        titulo =
-            `Rota ${registro.rota || "—"}`;
-
-        detalhes =
-            `${registro.driverRealiza || "—"} apoiou ${registro.driverPrecisa || "—"} • ${formatarMoeda(registro.valor)}`;
-
-    }
-
-
-    const tipoSeguro =
-        escaparHTML(
-            registro.tipo
-        );
-
-
-    const idSeguro =
-        escaparHTML(
-            registro.id
-        );
-
-
-    return `
-        <div class="registro-card">
-
-            <div class="registro-tipo">
-
-                <div
-                    class="registro-tipo-icon"
-                    style="
-                        background:${config.fundo};
-                        color:${config.cor};
-                    "
-                >
-                    ${config.icone}
-                </div>
-
-                <div class="registro-tipo-text">
-
-                    <strong>
-                        ${escaparHTML(
-                            config.nome
-                        )}
-                    </strong>
-
-                    <span>
-                        ${formatarData(
-                            registro.data
-                        )}
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <div class="registro-info">
-
-                <strong>
-                    ${escaparHTML(
-                        titulo
-                    )}
-                </strong>
-
-                <span>
-                    ${escaparHTML(
-                        detalhes
-                    )}
-                </span>
-
-
-                ${
-                    registro.motivo
-                        ? `
-                            <span>
-                                Motivo:
-                                ${escaparHTML(
-                                    registro.motivo
-                                )}
-                            </span>
-                        `
-                        : ""
-                }
-
-
-                ${
-                    registro.observacoes
-                        ? `
-                            <span>
-                                Obs.:
-                                ${escaparHTML(
-                                    registro.observacoes
-                                )}
-                            </span>
-                        `
-                        : ""
-                }
-
-
-                <span>
-                    Lançado por:
-                    ${escaparHTML(
-                        registro.lancadoPor ||
-                        "—"
-                    )}
-                </span>
-
-            </div>
-
-
-            <div class="registro-extra">
-
-                <span class="registro-data">
-
-                    ${
-                        registro.criadoEm
-                            ? new Date(
-                                registro.criadoEm
-                            ).toLocaleString(
-                                "pt-BR"
-                            )
-                            : "—"
-                    }
-
-                </span>
-
-
-                <button
-                    type="button"
-                    class="btn-excluir"
-                    onclick="excluirRegistro('${tipoSeguro}', '${idSeguro}')"
-                    title="Excluir registro"
-                >
-                    🗑
-                </button>
-
-            </div>
-
-        </div>
-    `;
-
-}
-
-
-/* =========================================================
-   TIPOS
-========================================================= */
-
-function obterConfigTipo(
-    tipo
-) {
-
-    if (
-        tipo ===
-        "ambulancia"
-    ) {
-
-        return {
-
-            nome: "Ambulância",
-
-            icone: "🚑",
-
-            cor: "#16a34a",
-
-            fundo: "#dcfce7"
-
-        };
-
-    }
-
-
-    if (
-        tipo ===
-        "transferencia"
-    ) {
-
-        return {
-
-            nome: "Transferência",
-
-            icone: "⇄",
-
-            cor: "#2563eb",
-
-            fundo: "#dbeafe"
-
-        };
-
-    }
-
-
-    return {
-
-        nome: "Apoio de rota",
-
-        icone: "＋",
-
-        cor: "#ea580c",
-
-        fundo: "#ffedd5"
-
-    };
-
-}
-
-
-/* =========================================================
-   EXCLUIR REGISTRO
-========================================================= */
-
-window.excluirRegistro =
-    async function (
-        tipo,
-        id
-    ) {
-
-        if (!tipo || !id) {
-            return;
-        }
-
-
-        const confirmou =
-            window.confirm(
-                "Tem certeza que deseja excluir este registro?"
-            );
-
-
-        if (!confirmou) {
-            return;
-        }
-
-
-        const caminhos = {
-
-            ambulancia:
-                "ambulancias",
-
-            transferencia:
-                "transferencias",
-
-            apoio:
-                "apoios"
-
-        };
-
-
-        const caminho =
-            caminhos[tipo];
-
-
-        if (!caminho) {
-            return;
-        }
-
-
-        try {
-
-            await remove(
-                ref(
-                    db,
-                    `${caminho}/${id}`
-                )
-            );
-
-
-            mostrarToast(
-                "Registro excluído com sucesso.",
-                "sucesso"
-            );
-
-
-            carregarDados();
-
-
-        } catch (erro) {
-
-            console.error(
-                "Erro ao excluir:",
-                erro
-            );
-
-
-            mostrarToast(
-                "Não foi possível excluir o registro.",
-                "erro"
-            );
-
-        }
-
-    };
-
-
-/* =========================================================
-   ALTERAR SENHA
-========================================================= */
-
-window.abrirAlterarSenha =
-    function () {
-
-        const modal =
-            elemento(
-                "modalSenha"
-            );
-
-
-        if (!modal) {
-            return;
-        }
-
-
-        modal.classList.remove(
-            "oculto"
-        );
-
-
-        const form =
-            elemento(
-                "formAlterarSenha"
-            );
-
-
-        if (form) {
-            form.reset();
-        }
-
-
-        const mensagem =
-            elemento(
-                "mensagemSenha"
-            );
-
-
-        if (mensagem) {
-
-            mensagem.textContent = "";
-
-            mensagem.className =
-                "mensagem";
-
-        }
-
-    };
-
-
-window.fecharAlterarSenha =
-    function () {
-
-        const modal =
-            elemento(
-                "modalSenha"
-            );
-
-
-        if (modal) {
-
-            modal.classList.add(
-                "oculto"
-            );
-
-        }
-
-    };
 
 
 const formAlterarSenha =
-    elemento(
-        "formAlterarSenha"
-    );
-
+    elemento("formAlterarSenha");
 
 if (formAlterarSenha) {
 
     formAlterarSenha.addEventListener(
         "submit",
-        async evento => {
+        async function (event) {
 
-            evento.preventDefault();
+            event.preventDefault();
 
+            const user =
+                auth.currentUser;
 
-            if (!usuario) {
+            if (!user) {
                 return;
             }
 
 
             const senhaAtual =
-                elemento(
-                    "senhaAtual"
-                ).value;
-
+                elemento("senhaAtual").value;
 
             const novaSenha =
+                elemento("novaSenha").value;
+
+            const confirmar =
                 elemento(
-                    "novaSenha"
+                    "confirmarNovaSenha"
                 ).value;
-
-
-            const confirmarSenha =
-                elemento(
-                    "confirmarSenha"
-                ).value;
-
 
             const mensagem =
-                elemento(
-                    "mensagemSenha"
-                );
+                elemento("mensagemSenha");
 
 
-            if (
-                novaSenha !==
-                confirmarSenha
-            ) {
+            if (novaSenha !== confirmar) {
 
-                mostrarMensagem(
-                    mensagem,
-                    "As novas senhas não coincidem.",
-                    "erro"
-                );
+                mensagem.textContent =
+                    "As novas senhas não conferem.";
+
+                mensagem.className =
+                    "mensagem erro";
 
                 return;
             }
 
 
-            if (
-                novaSenha.length < 6
-            ) {
+            if (novaSenha.length < 6) {
 
-                mostrarMensagem(
-                    mensagem,
-                    "A nova senha precisa ter pelo menos 6 caracteres.",
-                    "erro"
-                );
+                mensagem.textContent =
+                    "A nova senha deve ter pelo menos 6 caracteres.";
+
+                mensagem.className =
+                    "mensagem erro";
 
                 return;
             }
@@ -2228,90 +1556,45 @@ if (formAlterarSenha) {
 
                 const credencial =
                     EmailAuthProvider.credential(
-                        usuario.email,
+                        user.email,
                         senhaAtual
                     );
 
 
                 await reauthenticateWithCredential(
-                    usuario,
+                    user,
                     credencial
                 );
 
 
                 await updatePassword(
-                    usuario,
+                    user,
                     novaSenha
                 );
 
 
-                mostrarMensagem(
-                    mensagem,
-                    "Senha alterada com sucesso.",
-                    "sucesso"
-                );
+                mensagem.textContent =
+                    "Senha alterada com sucesso.";
+
+                mensagem.className =
+                    "mensagem sucesso";
 
 
                 formAlterarSenha.reset();
 
 
-                setTimeout(
-                    () => {
-
-                        fecharAlterarSenha();
-
-                    },
-                    1200
-                );
-
-
-            } catch (erro) {
+            } catch (error) {
 
                 console.error(
                     "Erro ao alterar senha:",
-                    erro
+                    error
                 );
 
+                mensagem.textContent =
+                    "Não foi possível alterar a senha. Verifique sua senha atual.";
 
-                let texto =
-                    "Não foi possível alterar a senha.";
-
-
-                switch (erro.code) {
-
-                    case "auth/invalid-credential":
-
-                    case "auth/wrong-password":
-
-                        texto =
-                            "A senha atual está incorreta.";
-
-                        break;
-
-
-                    case "auth/weak-password":
-
-                        texto =
-                            "A nova senha é muito fraca.";
-
-                        break;
-
-
-                    case "auth/requires-recent-login":
-
-                        texto =
-                            "Faça login novamente e tente alterar a senha.";
-
-                        break;
-
-                }
-
-
-                mostrarMensagem(
-                    mensagem,
-                    texto,
-                    "erro"
-                );
+                mensagem.className =
+                    "mensagem erro";
 
             }
 
@@ -2321,133 +1604,68 @@ if (formAlterarSenha) {
 }
 
 
-/* =========================================================
-   RECUPERAR SENHA
-========================================================= */
+// ======================================================
+// RECUPERAR SENHA
+// ======================================================
 
-window.abrirRecuperarSenha =
-    function () {
+const btnEsqueciSenha =
+    elemento("btnEsqueciSenha");
 
-        const modal =
-            elemento(
+if (btnEsqueciSenha) {
+
+    btnEsqueciSenha.addEventListener(
+        "click",
+        function () {
+
+            const emailLogin =
+                elemento("loginEmail");
+
+            const emailRecuperacao =
+                elemento(
+                    "emailRecuperacao"
+                );
+
+            if (
+                emailLogin &&
+                emailRecuperacao &&
+                emailLogin.value
+            ) {
+
+                emailRecuperacao.value =
+                    emailLogin.value;
+
+            }
+
+            mostrarElemento(
                 "modalRecuperarSenha"
             );
 
-
-        if (!modal) {
-            return;
         }
+    );
 
-
-        modal.classList.remove(
-            "oculto"
-        );
-
-
-        const emailLogin =
-            elemento(
-                "loginEmail"
-            )?.value.trim();
-
-
-        const emailRecuperacao =
-            elemento(
-                "emailRecuperacao"
-            );
-
-
-        if (
-            emailLogin &&
-            emailRecuperacao
-        ) {
-
-            emailRecuperacao.value =
-                emailLogin;
-
-        }
-
-
-        const mensagem =
-            elemento(
-                "mensagemRecuperacao"
-            );
-
-
-        if (mensagem) {
-
-            mensagem.textContent = "";
-
-            mensagem.className =
-                "mensagem";
-
-        }
-
-    };
-
-
-window.fecharRecuperarSenha =
-    function () {
-
-        const modal =
-            elemento(
-                "modalRecuperarSenha"
-            );
-
-
-        if (modal) {
-
-            modal.classList.add(
-                "oculto"
-            );
-
-        }
-
-    };
+}
 
 
 const formRecuperarSenha =
-    elemento(
-        "formRecuperarSenha"
-    );
-
+    elemento("formRecuperarSenha");
 
 if (formRecuperarSenha) {
 
     formRecuperarSenha.addEventListener(
         "submit",
-        async evento => {
+        async function (event) {
 
-            evento.preventDefault();
+            event.preventDefault();
 
-
-            const campoEmail =
+            const email =
                 elemento(
                     "emailRecuperacao"
-                );
-
+                ).value.trim();
 
             const mensagem =
                 elemento(
-                    "mensagemRecuperacao"
+                    "mensagemRecuperarSenha"
                 );
-
-
-            const email =
-                campoEmail
-                    ?.value
-                    .trim();
-
-
-            if (!email) {
-
-                mostrarMensagem(
-                    mensagem,
-                    "Digite seu e-mail.",
-                    "erro"
-                );
-
-                return;
-            }
 
 
             try {
@@ -2458,58 +1676,25 @@ if (formRecuperarSenha) {
                 );
 
 
-                mostrarMensagem(
-                    mensagem,
-                    "E-mail de recuperação enviado. Verifique também a caixa de spam.",
-                    "sucesso"
-                );
+                mensagem.textContent =
+                    "E-mail de recuperação enviado. Verifique também a caixa de spam.";
+
+                mensagem.className =
+                    "mensagem sucesso";
 
 
-            } catch (erro) {
+            } catch (error) {
 
                 console.error(
                     "Erro na recuperação:",
-                    erro
+                    error
                 );
 
-
-                let texto =
+                mensagem.textContent =
                     "Não foi possível enviar o e-mail de recuperação.";
 
-
-                switch (erro.code) {
-
-                    case "auth/user-not-found":
-
-                        texto =
-                            "Não encontramos uma conta com esse e-mail.";
-
-                        break;
-
-
-                    case "auth/invalid-email":
-
-                        texto =
-                            "Digite um e-mail válido.";
-
-                        break;
-
-
-                    case "auth/network-request-failed":
-
-                        texto =
-                            "Erro de conexão. Verifique sua internet.";
-
-                        break;
-
-                }
-
-
-                mostrarMensagem(
-                    mensagem,
-                    texto,
-                    "erro"
-                );
+                mensagem.className =
+                    "mensagem erro";
 
             }
 
@@ -2519,126 +1704,97 @@ if (formRecuperarSenha) {
 }
 
 
-/* =========================================================
-   FECHAR MODAIS
-========================================================= */
+// ======================================================
+// FECHAR MODAIS
+// ======================================================
 
-window.addEventListener(
-    "click",
-    evento => {
+document
+    .querySelectorAll("[data-fechar-modal]")
+    .forEach(function (botao) {
 
-        const modalSenha =
-            elemento(
-                "modalSenha"
-            );
+        botao.addEventListener(
+            "click",
+            function () {
 
+                const modalId =
+                    botao.getAttribute(
+                        "data-fechar-modal"
+                    );
 
-        const modalRecuperacao =
-            elemento(
-                "modalRecuperarSenha"
-            );
+                esconderElemento(
+                    modalId
+                );
 
-
-        if (
-            evento.target ===
-            modalSenha
-        ) {
-
-            fecharAlterarSenha();
-
-        }
-
-
-        if (
-            evento.target ===
-            modalRecuperacao
-        ) {
-
-            fecharRecuperarSenha();
-
-        }
-
-    }
-);
-
-
-/* =========================================================
-   FECHAR SIDEBAR MOBILE AO CLICAR FORA
-========================================================= */
-
-document.addEventListener(
-    "click",
-    evento => {
-
-        if (
-            window.innerWidth >
-            900
-        ) {
-            return;
-        }
-
-
-        const sidebar =
-            document.querySelector(
-                ".sidebar"
-            );
-
-
-        const botao =
-            elemento(
-                "btnMenuMobile"
-            );
-
-
-        if (
-            !sidebar ||
-            !sidebar.classList.contains(
-                "aberta"
-            )
-        ) {
-            return;
-        }
-
-
-        if (
-            sidebar.contains(
-                evento.target
-            )
-        ) {
-            return;
-        }
-
-
-        if (
-            botao &&
-            botao.contains(
-                evento.target
-            )
-        ) {
-            return;
-        }
-
-
-        sidebar.classList.remove(
-            "aberta"
+            }
         );
 
-    }
-);
+    });
 
 
-/* =========================================================
-   INICIALIZAÇÃO
-========================================================= */
+document
+    .querySelectorAll(".modal-overlay")
+    .forEach(function (modal) {
+
+        modal.addEventListener(
+            "click",
+            function (event) {
+
+                if (
+                    event.target === modal
+                ) {
+
+                    modal.classList.add(
+                        "oculto"
+                    );
+
+                }
+
+            }
+        );
+
+    });
+
+
+// ======================================================
+// INICIALIZAÇÃO
+// ======================================================
 
 document.addEventListener(
     "DOMContentLoaded",
-    () => {
+    function () {
 
-        preencherDatas();
+        const dataHoje =
+            hoje();
+
+
+        const camposData = [
+
+            "ambulanciaData",
+
+            "transferenciaData",
+
+            "apoioData"
+
+        ];
+
+
+        camposData.forEach(
+            function (id) {
+
+                const campo =
+                    elemento(id);
+
+                if (campo) {
+                    campo.value =
+                        dataHoje;
+                }
+
+            }
+        );
+
 
         console.log(
-            "Caxiense LOG: sistema carregado."
+            "Caxiense Controle Operacional carregado."
         );
 
     }
