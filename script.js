@@ -1,13 +1,11 @@
-// ======================================================
-// CAXIENSE CONTROLE
-// SCRIPT PRINCIPAL
-// ======================================================
+/* =========================================================
+   FIREBASE
+========================================================= */
 
-// ======================================================
-// FIREBASE
-// ======================================================
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 
 import {
     getDatabase,
@@ -17,6 +15,7 @@ import {
     onValue,
     remove
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+
 
 import {
     getAuth,
@@ -30,24 +29,37 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 
 
-// ======================================================
-// CONFIGURAÇÃO FIREBASE
-// ======================================================
+/* =========================================================
+   CONFIGURAÇÃO FIREBASE
+========================================================= */
 
 const firebaseConfig = {
+
     apiKey: "AIzaSyCZ3xorH3D9Z0vmIfd_zafyceLJekXJPaY",
-    authDomain: "amb-e-trans-caxiense-log.firebaseapp.com",
-    databaseURL: "https://amb-e-trans-caxiense-log-default-rtdb.firebaseio.com",
-    projectId: "amb-e-trans-caxiense-log",
-    storageBucket: "amb-e-trans-caxiense-log.firebasestorage.app",
-    messagingSenderId: "194048564958",
-    appId: "1:194048564958:web:af334ffd5d248ec9d76c4f"
+
+    authDomain:
+        "amb-e-trans-caxiense-log.firebaseapp.com",
+
+    databaseURL:
+        "https://amb-e-trans-caxiense-log-default-rtdb.firebaseio.com",
+
+    projectId:
+        "amb-e-trans-caxiense-log",
+
+    storageBucket:
+        "amb-e-trans-caxiense-log.firebasestorage.app",
+
+    messagingSenderId:
+        "194048564958",
+
+    appId:
+        "1:194048564958:web:af334ffd5d248ec9d76c4f"
 };
 
 
-// ======================================================
-// INICIALIZAÇÃO
-// ======================================================
+/* =========================================================
+   INICIALIZAÇÃO
+========================================================= */
 
 const app = initializeApp(firebaseConfig);
 
@@ -55,166 +67,306 @@ const db = getDatabase(app);
 
 const auth = getAuth(app);
 
+
 let usuario = null;
 
 let todosRegistros = [];
 
 
-// ======================================================
-// MENU MOBILE
-// CORREÇÃO PARA CELULAR
-// ======================================================
+/* =========================================================
+   FUNÇÕES AUXILIARES
+========================================================= */
 
-window.alternarSidebar = function () {
+function hojeISO() {
 
-    const sidebar = document.querySelector(".sidebar");
+    const agora = new Date();
 
-    if (!sidebar) return;
+    const ano = agora.getFullYear();
 
-    sidebar.classList.toggle("aberta");
+    const mes = String(
+        agora.getMonth() + 1
+    ).padStart(2, "0");
 
-};
+    const dia = String(
+        agora.getDate()
+    ).padStart(2, "0");
 
-
-// ======================================================
-// FECHAR SIDEBAR NO CELULAR
-// ======================================================
-
-function fecharSidebarMobile() {
-
-    const sidebar = document.querySelector(".sidebar");
-
-    if (!sidebar) return;
-
-    sidebar.classList.remove("aberta");
-
+    return `${ano}-${mes}-${dia}`;
 }
 
 
-// ======================================================
-// LOGIN
-// ======================================================
+function formatarData(data) {
 
-const formLogin = document.getElementById("formLogin");
+    if (!data) {
+        return "-";
+    }
 
-if (formLogin) {
+    const partes = data.split("-");
 
-    formLogin.addEventListener("submit", async function (event) {
+    if (partes.length !== 3) {
+        return data;
+    }
 
-        event.preventDefault();
-
-        const email =
-            document.getElementById("loginEmail").value.trim();
-
-        const senha =
-            document.getElementById("loginSenha").value;
-
-        const mensagem =
-            document.getElementById("mensagemLogin");
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
 
 
-        mensagem.className = "mensagem";
+function formatarMoeda(valor) {
 
-        mensagem.textContent = "";
+    return Number(valor || 0).toLocaleString(
+        "pt-BR",
+        {
+            style: "currency",
+            currency: "BRL"
+        }
+    );
+}
 
 
-        try {
+function escaparHTML(texto) {
 
-            await signInWithEmailAndPassword(
-                auth,
-                email,
-                senha
-            );
+    if (texto === null || texto === undefined) {
+        return "";
+    }
 
-        } catch (erro) {
+    return String(texto)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
-            console.error(erro);
 
-            mensagem.className = "mensagem erro";
+function mostrarMensagem(elemento, mensagem, tipo = "") {
 
-            if (
-                erro.code === "auth/invalid-credential" ||
-                erro.code === "auth/wrong-password" ||
-                erro.code === "auth/user-not-found"
-            ) {
+    if (!elemento) {
+        return;
+    }
 
-                mensagem.textContent =
-                    "E-mail ou senha incorretos.";
+    elemento.textContent = mensagem;
 
-            } else {
+    elemento.className = "mensagem";
 
-                mensagem.textContent =
-                    "Não foi possível entrar. Verifique seus dados.";
+    if (tipo) {
+        elemento.classList.add(tipo);
+    }
+}
 
-            }
 
+/* =========================================================
+   DATA PADRÃO DOS FORMULÁRIOS
+========================================================= */
+
+function preencherDatas() {
+
+    const hoje = hojeISO();
+
+    const campos = [
+        "dataAmbulancia",
+        "dataTransferencia",
+        "dataApoio"
+    ];
+
+    campos.forEach(id => {
+
+        const campo = document.getElementById(id);
+
+        if (campo && !campo.value) {
+            campo.value = hoje;
         }
 
     });
 
+    const dataDashboard =
+        document.getElementById("dataDashboard");
+
+    if (dataDashboard) {
+
+        const data = new Date();
+
+        dataDashboard.textContent =
+            data.toLocaleDateString(
+                "pt-BR",
+                {
+                    weekday: "long",
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric"
+                }
+            );
+    }
 }
 
 
-// ======================================================
-// VERIFICAR LOGIN
-// ======================================================
+/* =========================================================
+   LOGIN
+========================================================= */
 
-onAuthStateChanged(auth, function (user) {
-
-    usuario = user;
-
-    const telaLogin =
-        document.getElementById("telaLogin");
-
-    const sistema =
-        document.getElementById("sistema");
-
-    const nomeUsuario =
-        document.getElementById("nomeUsuario");
+const formLogin =
+    document.getElementById("formLogin");
 
 
-    if (user) {
+if (formLogin) {
 
-        if (telaLogin) {
-            telaLogin.classList.add("escondida");
+    formLogin.addEventListener(
+        "submit",
+        async function (event) {
+
+            event.preventDefault();
+
+            const email =
+                document.getElementById("loginEmail")
+                    .value
+                    .trim();
+
+            const senha =
+                document.getElementById("loginSenha")
+                    .value;
+
+            const mensagem =
+                document.getElementById("mensagemLogin");
+
+
+            mostrarMensagem(
+                mensagem,
+                "Entrando..."
+            );
+
+
+            try {
+
+                await signInWithEmailAndPassword(
+                    auth,
+                    email,
+                    senha
+                );
+
+                mostrarMensagem(
+                    mensagem,
+                    "Login realizado com sucesso!",
+                    "sucesso"
+                );
+
+            } catch (erro) {
+
+                console.error(erro);
+
+                let texto =
+                    "Não foi possível realizar o login.";
+
+                if (
+                    erro.code ===
+                    "auth/invalid-credential"
+                ) {
+
+                    texto =
+                        "E-mail ou senha incorretos.";
+
+                } else if (
+                    erro.code ===
+                    "auth/user-not-found"
+                ) {
+
+                    texto =
+                        "Usuário não encontrado.";
+
+                } else if (
+                    erro.code ===
+                    "auth/wrong-password"
+                ) {
+
+                    texto =
+                        "Senha incorreta.";
+
+                } else if (
+                    erro.code ===
+                    "auth/invalid-email"
+                ) {
+
+                    texto =
+                        "E-mail inválido.";
+                }
+
+                mostrarMensagem(
+                    mensagem,
+                    texto,
+                    "erro"
+                );
+            }
+
         }
-
-        if (sistema) {
-            sistema.classList.remove("escondida");
-        }
-
-        if (nomeUsuario) {
-
-            nomeUsuario.textContent =
-                user.email || "Usuário";
-
-        }
+    );
+}
 
 
-        definirDatas();
+/* =========================================================
+   ESTADO DE AUTENTICAÇÃO
+========================================================= */
 
-        carregarDashboard();
+onAuthStateChanged(
+    auth,
+    function (user) {
 
-        carregarRegistros();
+        usuario = user;
 
-    } else {
+        const telaLogin =
+            document.getElementById("telaLogin");
 
-        if (telaLogin) {
-            telaLogin.classList.remove("escondida");
-        }
+        const sistema =
+            document.getElementById("sistema");
 
-        if (sistema) {
-            sistema.classList.add("escondida");
+        const nomeUsuario =
+            document.getElementById("nomeUsuario");
+
+        const usuarioTopbar =
+            document.getElementById("usuarioTopbar");
+
+
+        if (user) {
+
+            if (telaLogin) {
+                telaLogin.style.display = "none";
+            }
+
+            if (sistema) {
+                sistema.style.display = "block";
+            }
+
+            if (nomeUsuario) {
+                nomeUsuario.textContent =
+                    user.email;
+            }
+
+            if (usuarioTopbar) {
+                usuarioTopbar.textContent =
+                    user.email;
+            }
+
+            preencherDatas();
+
+            carregarDashboard();
+
+            carregarRegistros();
+
+        } else {
+
+            if (telaLogin) {
+                telaLogin.style.display = "flex";
+            }
+
+            if (sistema) {
+                sistema.style.display = "none";
+            }
         }
 
     }
+);
 
-});
 
-
-// ======================================================
-// SAIR
-// ======================================================
+/* =========================================================
+   SAIR
+========================================================= */
 
 window.sairSistema = async function () {
 
@@ -230,259 +382,178 @@ window.sairSistema = async function () {
         );
 
     }
-
 };
 
 
-// ======================================================
-// MOSTRAR PÁGINA
-// ======================================================
+/* =========================================================
+   MENU MOBILE
+========================================================= */
+
+window.alternarSidebar = function () {
+
+    const sidebar =
+        document.querySelector(".sidebar");
+
+    if (!sidebar) {
+        return;
+    }
+
+    sidebar.classList.toggle("aberta");
+};
+
+
+/* Fecha sidebar ao clicar em uma página no celular */
+
+function fecharSidebarMobile() {
+
+    const sidebar =
+        document.querySelector(".sidebar");
+
+    if (!sidebar) {
+        return;
+    }
+
+    if (window.innerWidth <= 900) {
+
+        sidebar.classList.remove("aberta");
+
+    }
+}
+
+
+/* =========================================================
+   NAVEGAÇÃO
+========================================================= */
 
 window.mostrarPagina = function (pagina) {
 
-    const paginas = {
+    const paginas = document.querySelectorAll(".pagina");
 
-        dashboard:
-            document.getElementById("paginaDashboard"),
-
-        ambulancia:
-            document.getElementById("paginaAmbulancia"),
-
-        transferencia:
-            document.getElementById("paginaTransferencia"),
-
-        apoio:
-            document.getElementById("paginaApoio"),
-
-        registros:
-            document.getElementById("paginaRegistros")
-
-    };
-
-
-    // Esconde todas
-
-    Object.values(paginas).forEach(function (elemento) {
-
-        if (elemento) {
-
-            elemento.classList.add("escondida");
-
-        }
-
+    paginas.forEach(item => {
+        item.classList.remove("ativa");
     });
 
 
-    // Mostra selecionada
+    const botoes =
+        document.querySelectorAll(".menu-item");
 
-    if (paginas[pagina]) {
-
-        paginas[pagina].classList.remove("escondida");
-
-    }
-
-
-    // Menu ativo
-
-    document
-        .querySelectorAll(".menu-item")
-        .forEach(function (item) {
-
-            item.classList.remove("ativo");
-
-        });
+    botoes.forEach(item => {
+        item.classList.remove("ativo");
+    });
 
 
-    const menus = {
+    let elementoPagina = null;
 
-        dashboard:
-            document.getElementById("menuDashboard"),
+    let elementoMenu = null;
 
-        ambulancia:
-            document.getElementById("menuAmbulancia"),
+    let titulo = "Dashboard";
 
-        transferencia:
-            document.getElementById("menuTransferencia"),
-
-        apoio:
-            document.getElementById("menuApoio"),
-
-        registros:
-            document.getElementById("menuRegistros")
-
-    };
-
-
-    if (menus[pagina]) {
-
-        menus[pagina].classList.add("ativo");
-
-    }
-
-
-    // Título
-
-    const titulo =
-        document.getElementById("tituloPagina");
-
-    const titulos = {
-
-        dashboard: "Dashboard",
-
-        ambulancia: "Ambulância",
-
-        transferencia: "Transferência",
-
-        apoio: "Apoio de Rota",
-
-        registros: "Registros"
-
-    };
-
-
-    if (titulo) {
-
-        titulo.textContent =
-            titulos[pagina] || "Dashboard";
-
-    }
-
-
-    // IMPORTANTE:
-    // fecha o menu no celular
-
-    fecharSidebarMobile();
-
-
-    // Atualiza registros quando abrir
-
-    if (pagina === "registros") {
-
-        carregarRegistros();
-
-    }
-
-
-    // Atualiza dashboard
 
     if (pagina === "dashboard") {
 
-        carregarDashboard();
+        elementoPagina =
+            document.getElementById(
+                "paginaDashboard"
+            );
 
+        elementoMenu =
+            document.getElementById(
+                "menuDashboard"
+            );
+
+        titulo = "Dashboard";
+
+    } else if (pagina === "ambulancia") {
+
+        elementoPagina =
+            document.getElementById(
+                "paginaAmbulancia"
+            );
+
+        elementoMenu =
+            document.getElementById(
+                "menuAmbulancia"
+            );
+
+        titulo = "Lançar Ambulância";
+
+    } else if (pagina === "transferencia") {
+
+        elementoPagina =
+            document.getElementById(
+                "paginaTransferencia"
+            );
+
+        elementoMenu =
+            document.getElementById(
+                "menuTransferencia"
+            );
+
+        titulo = "Lançar Transferência";
+
+    } else if (pagina === "apoio") {
+
+        elementoPagina =
+            document.getElementById(
+                "paginaApoio"
+            );
+
+        elementoMenu =
+            document.getElementById(
+                "menuApoio"
+            );
+
+        titulo = "Apoio de Rota";
+
+    } else if (pagina === "registros") {
+
+        elementoPagina =
+            document.getElementById(
+                "paginaRegistros"
+            );
+
+        elementoMenu =
+            document.getElementById(
+                "menuRegistros"
+            );
+
+        titulo = "Registros";
     }
+
+
+    if (elementoPagina) {
+        elementoPagina.classList.add("ativa");
+    }
+
+    if (elementoMenu) {
+        elementoMenu.classList.add("ativo");
+    }
+
+
+    const tituloPagina =
+        document.getElementById(
+            "tituloPagina"
+        );
+
+    if (tituloPagina) {
+        tituloPagina.textContent =
+            titulo;
+    }
+
+
+    fecharSidebarMobile();
 
 };
 
 
-// ======================================================
-// DATAS
-// ======================================================
-
-function obterDataHoje() {
-
-    const agora = new Date();
-
-    const ano =
-        agora.getFullYear();
-
-    const mes =
-        String(agora.getMonth() + 1)
-            .padStart(2, "0");
-
-    const dia =
-        String(agora.getDate())
-            .padStart(2, "0");
-
-    return `${ano}-${mes}-${dia}`;
-
-}
-
-
-function formatarData(data) {
-
-    if (!data) return "-";
-
-    const partes =
-        data.split("-");
-
-    if (partes.length !== 3) {
-
-        return data;
-
-    }
-
-    return `${partes[2]}/${partes[1]}/${partes[0]}`;
-
-}
-
-
-function definirDatas() {
-
-    const hoje =
-        obterDataHoje();
-
-
-    const campos = [
-
-        "dataAmbulancia",
-
-        "dataTransferencia",
-
-        "dataApoio"
-
-    ];
-
-
-    campos.forEach(function (id) {
-
-        const campo =
-            document.getElementById(id);
-
-        if (campo) {
-
-            campo.value = hoje;
-
-        }
-
-    });
-
-
-    const dataTopbar =
-        document.getElementById("dataAtualTopbar");
-
-    if (dataTopbar) {
-
-        const partes =
-            hoje.split("-");
-
-        dataTopbar.textContent =
-            `${partes[2]}/${partes[1]}/${partes[0]}`;
-
-    }
-
-
-    const dataDashboard =
-        document.getElementById("dataDashboard");
-
-    if (dataDashboard) {
-
-        const partes =
-            hoje.split("-");
-
-        dataDashboard.textContent =
-            `${partes[2]}/${partes[1]}/${partes[0]}`;
-
-    }
-
-}
-
-
-// ======================================================
-// AMBULÂNCIA
-// ======================================================
+/* =========================================================
+   SALVAR AMBULÂNCIA
+========================================================= */
 
 const formAmbulancia =
-    document.getElementById("formAmbulancia");
+    document.getElementById(
+        "formAmbulancia"
+    );
 
 
 if (formAmbulancia) {
@@ -493,13 +564,13 @@ if (formAmbulancia) {
 
             event.preventDefault();
 
-
             if (!usuario) {
 
-                alert("Usuário não autenticado.");
+                alert(
+                    "Você precisa estar logado."
+                );
 
                 return;
-
             }
 
 
@@ -531,7 +602,7 @@ if (formAmbulancia) {
                     Number(
                         document.getElementById(
                             "pacotesAmbulancia"
-                        ).value
+                        ).value || 0
                     ),
 
                 motivo:
@@ -553,8 +624,7 @@ if (formAmbulancia) {
                     usuario.email,
 
                 criadoEm:
-                    new Date().toISOString()
-
+                    Date.now()
             };
 
 
@@ -562,7 +632,10 @@ if (formAmbulancia) {
 
                 const novaReferencia =
                     push(
-                        ref(db, "ambulancias")
+                        ref(
+                            db,
+                            "ambulancias"
+                        )
                     );
 
 
@@ -573,13 +646,13 @@ if (formAmbulancia) {
 
 
                 alert(
-                    "🚑 Ambulância registrada com sucesso!"
+                    "Ambulância lançada com sucesso!"
                 );
 
 
                 formAmbulancia.reset();
 
-                definirDatas();
+                preencherDatas();
 
                 carregarDashboard();
 
@@ -591,21 +664,19 @@ if (formAmbulancia) {
                 console.error(erro);
 
                 alert(
-                    "Erro ao registrar ambulância."
+                    "Erro ao lançar ambulância."
                 );
 
             }
 
         }
-
     );
-
 }
 
 
-// ======================================================
-// TRANSFERÊNCIA
-// ======================================================
+/* =========================================================
+   SALVAR TRANSFERÊNCIA
+========================================================= */
 
 const formTransferencia =
     document.getElementById(
@@ -625,11 +696,10 @@ if (formTransferencia) {
             if (!usuario) {
 
                 alert(
-                    "Usuário não autenticado."
+                    "Você precisa estar logado."
                 );
 
                 return;
-
             }
 
 
@@ -653,6 +723,11 @@ if (formTransferencia) {
                     ).value.trim(),
 
                 driverSubstituto:
+                    document.getElementById(
+                        "driverSubstituto"
+                    ).value.trim(),
+
+                driver:
                     document.getElementById(
                         "driverSubstituto"
                     ).value.trim(),
@@ -681,8 +756,7 @@ if (formTransferencia) {
                     usuario.email,
 
                 criadoEm:
-                    new Date().toISOString()
-
+                    Date.now()
             };
 
 
@@ -690,7 +764,10 @@ if (formTransferencia) {
 
                 const novaReferencia =
                     push(
-                        ref(db, "transferencias")
+                        ref(
+                            db,
+                            "transferencias"
+                        )
                     );
 
 
@@ -701,13 +778,13 @@ if (formTransferencia) {
 
 
                 alert(
-                    "🔄 Transferência registrada com sucesso!"
+                    "Transferência lançada com sucesso!"
                 );
 
 
                 formTransferencia.reset();
 
-                definirDatas();
+                preencherDatas();
 
                 carregarDashboard();
 
@@ -719,21 +796,19 @@ if (formTransferencia) {
                 console.error(erro);
 
                 alert(
-                    "Erro ao registrar transferência."
+                    "Erro ao lançar transferência."
                 );
 
             }
 
         }
-
     );
-
 }
 
 
-// ======================================================
-// APOIO
-// ======================================================
+/* =========================================================
+   SALVAR APOIO
+========================================================= */
 
 const formApoio =
     document.getElementById(
@@ -753,11 +828,10 @@ if (formApoio) {
             if (!usuario) {
 
                 alert(
-                    "Usuário não autenticado."
+                    "Você precisa estar logado."
                 );
 
                 return;
-
             }
 
 
@@ -779,17 +853,22 @@ if (formApoio) {
                     Number(
                         document.getElementById(
                             "valorApoio"
-                        ).value
+                        ).value || 0
                     ),
 
-                driverRealiza:
+                driverRealizaApoio:
                     document.getElementById(
                         "driverRealizaApoio"
                     ).value.trim(),
 
-                driverPrecisa:
+                driverPrecisaApoio:
                     document.getElementById(
                         "driverPrecisaApoio"
+                    ).value.trim(),
+
+                driver:
+                    document.getElementById(
+                        "driverRealizaApoio"
                     ).value.trim(),
 
                 quemLiberou:
@@ -806,8 +885,7 @@ if (formApoio) {
                     usuario.email,
 
                 criadoEm:
-                    new Date().toISOString()
-
+                    Date.now()
             };
 
 
@@ -815,7 +893,10 @@ if (formApoio) {
 
                 const novaReferencia =
                     push(
-                        ref(db, "apoios")
+                        ref(
+                            db,
+                            "apoios"
+                        )
                     );
 
 
@@ -826,13 +907,13 @@ if (formApoio) {
 
 
                 alert(
-                    "🤝 Apoio registrado com sucesso!"
+                    "Apoio lançado com sucesso!"
                 );
 
 
                 formApoio.reset();
 
-                definirDatas();
+                preencherDatas();
 
                 carregarDashboard();
 
@@ -844,323 +925,387 @@ if (formApoio) {
                 console.error(erro);
 
                 alert(
-                    "Erro ao registrar apoio."
+                    "Erro ao lançar apoio."
                 );
 
             }
 
         }
-
     );
-
 }
 
 
-// ======================================================
-// CARREGAR DASHBOARD
-// ======================================================
+/* =========================================================
+   CARREGAR DASHBOARD
+========================================================= */
 
-async function carregarDashboard() {
+function carregarDashboard() {
 
-    try {
+    let ambulancias = [];
 
-        const registros = [];
+    let transferencias = [];
 
-        const caminhos = [
-
-            {
-                caminho: "ambulancias",
-                tipo: "ambulancia"
-            },
-
-            {
-                caminho: "transferencias",
-                tipo: "transferencia"
-            },
-
-            {
-                caminho: "apoios",
-                tipo: "apoio"
-            }
-
-        ];
+    let apoios = [];
 
 
-        for (const item of caminhos) {
+    onValue(
+        ref(db, "ambulancias"),
+        snapshot => {
 
-            await new Promise(function (resolve) {
+            ambulancias = [];
 
-                onValue(
-                    ref(db, item.caminho),
-                    function (snapshot) {
+            snapshot.forEach(item => {
 
-                        const dados =
-                            snapshot.val();
+                ambulancias.push({
 
-                        if (dados) {
+                    id: item.key,
 
-                            Object.entries(dados)
-                                .forEach(
-                                    function (
-                                        [id, registro]
-                                    ) {
+                    ...item.val(),
 
-                                        registros.push({
+                    tipo: "ambulancia"
 
-                                            ...registro,
-
-                                            id: id,
-
-                                            tipo:
-                                                item.tipo
-
-                                        });
-
-                                    }
-                                );
-
-                        }
-
-                        resolve();
-
-                    },
-                    {
-                        onlyOnce: true
-                    }
-                );
+                });
 
             });
 
-        }
-
-
-        const totalAmbulancias =
-            registros.filter(
-                r => r.tipo === "ambulancia"
-            ).length;
-
-
-        const totalTransferencias =
-            registros.filter(
-                r => r.tipo === "transferencia"
-            ).length;
-
-
-        const totalApoios =
-            registros.filter(
-                r => r.tipo === "apoio"
-            ).length;
-
-
-        const valorTotal =
-            registros
-                .filter(
-                    r => r.tipo === "apoio"
-                )
-                .reduce(
-                    (total, r) =>
-                        total + Number(r.valor || 0),
-                    0
-                );
-
-
-        // CARDS
-
-        atualizarTexto(
-            "totalAmbulancias",
-            totalAmbulancias
-        );
-
-        atualizarTexto(
-            "totalTransferencias",
-            totalTransferencias
-        );
-
-        atualizarTexto(
-            "totalApoios",
-            totalApoios
-        );
-
-
-        atualizarTexto(
-            "valorTotalApoios",
-            formatarMoeda(valorTotal)
-        );
-
-
-        // HOJE
-
-        const hoje =
-            obterDataHoje();
-
-
-        const registrosHoje =
-            registros.filter(
-                r => r.data === hoje
+            atualizarDashboard(
+                ambulancias,
+                transferencias,
+                apoios
             );
 
-
-        const hojeAmbulancias =
-            registrosHoje.filter(
-                r => r.tipo === "ambulancia"
-            ).length;
-
-
-        const hojeTransferencias =
-            registrosHoje.filter(
-                r => r.tipo === "transferencia"
-            ).length;
+        },
+        {
+            onlyOnce: true
+        }
+    );
 
 
-        const hojeApoios =
-            registrosHoje.filter(
-                r => r.tipo === "apoio"
-            ).length;
+    onValue(
+        ref(db, "transferencias"),
+        snapshot => {
 
+            transferencias = [];
 
-        const hojeValorApoios =
-            registrosHoje
-                .filter(
-                    r => r.tipo === "apoio"
-                )
-                .reduce(
-                    (total, r) =>
-                        total + Number(r.valor || 0),
-                    0
-                );
+            snapshot.forEach(item => {
 
+                transferencias.push({
 
-        atualizarTexto(
-            "hojeAmbulancias",
-            hojeAmbulancias
-        );
+                    id: item.key,
 
-        atualizarTexto(
-            "hojeTransferencias",
-            hojeTransferencias
-        );
+                    ...item.val(),
 
-        atualizarTexto(
-            "hojeApoios",
-            hojeApoios
-        );
+                    tipo: "transferencia"
 
-        atualizarTexto(
-            "hojeValorApoios",
-            formatarMoeda(
-                hojeValorApoios
-            )
-        );
+                });
 
+            });
 
-        // BARRAS
-
-        atualizarTexto(
-            "barraAmbulanciasTexto",
-            totalAmbulancias
-        );
-
-        atualizarTexto(
-            "barraTransferenciasTexto",
-            totalTransferencias
-        );
-
-        atualizarTexto(
-            "barraApoiosTexto",
-            totalApoios
-        );
-
-
-        const totalGeral =
-            totalAmbulancias +
-            totalTransferencias +
-            totalApoios;
-
-
-        const porcentagemAmbulancia =
-            totalGeral
-                ? (totalAmbulancias / totalGeral) * 100
-                : 0;
-
-
-        const porcentagemTransferencia =
-            totalGeral
-                ? (totalTransferencias / totalGeral) * 100
-                : 0;
-
-
-        const porcentagemApoio =
-            totalGeral
-                ? (totalApoios / totalGeral) * 100
-                : 0;
-
-
-        const barraAmbulancias =
-            document.getElementById(
-                "barraAmbulancias"
+            atualizarDashboard(
+                ambulancias,
+                transferencias,
+                apoios
             );
 
-        const barraTransferencias =
-            document.getElementById(
-                "barraTransferencias"
+        },
+        {
+            onlyOnce: true
+        }
+    );
+
+
+    onValue(
+        ref(db, "apoios"),
+        snapshot => {
+
+            apoios = [];
+
+            snapshot.forEach(item => {
+
+                apoios.push({
+
+                    id: item.key,
+
+                    ...item.val(),
+
+                    tipo: "apoio"
+
+                });
+
+            });
+
+            atualizarDashboard(
+                ambulancias,
+                transferencias,
+                apoios
             );
 
-        const barraApoios =
-            document.getElementById(
-                "barraApoios"
-            );
-
-
-        if (barraAmbulancias) {
-
-            barraAmbulancias.style.width =
-                porcentagemAmbulancia + "%";
-
+        },
+        {
+            onlyOnce: true
         }
-
-
-        if (barraTransferencias) {
-
-            barraTransferencias.style.width =
-                porcentagemTransferencia + "%";
-
-        }
-
-
-        if (barraApoios) {
-
-            barraApoios.style.width =
-                porcentagemApoio + "%";
-
-        }
-
-
-        // ÚLTIMOS LANÇAMENTOS
-
-        mostrarUltimosLancamentos(
-            registros
-        );
-
-
-    } catch (erro) {
-
-        console.error(
-            "Erro ao carregar dashboard:",
-            erro
-        );
-
-    }
-
+    );
 }
 
 
-// ======================================================
-// ÚLTIMOS LANÇAMENTOS
-// ======================================================
-
-function mostrarUltimosLancamentos(
-    registros
+function atualizarDashboard(
+    ambulancias,
+    transferencias,
+    apoios
 ) {
+
+    const totalA =
+        ambulancias.length;
+
+    const totalT =
+        transferencias.length;
+
+    const totalP =
+        apoios.length;
+
+    const total =
+        totalA +
+        totalT +
+        totalP;
+
+
+    const elementoA =
+        document.getElementById(
+            "totalAmbulancias"
+        );
+
+    const elementoT =
+        document.getElementById(
+            "totalTransferencias"
+        );
+
+    const elementoP =
+        document.getElementById(
+            "totalApoios"
+        );
+
+    const elementoGeral =
+        document.getElementById(
+            "totalGeral"
+        );
+
+
+    if (elementoA) {
+        elementoA.textContent = totalA;
+    }
+
+    if (elementoT) {
+        elementoT.textContent = totalT;
+    }
+
+    if (elementoP) {
+        elementoP.textContent = totalP;
+    }
+
+    if (elementoGeral) {
+        elementoGeral.textContent = total;
+    }
+
+
+    const valorTotal =
+        apoios.reduce(
+            (soma, item) =>
+                soma + Number(item.valor || 0),
+            0
+        );
+
+
+    const valorElemento =
+        document.getElementById(
+            "valorTotalApoios"
+        );
+
+    if (valorElemento) {
+
+        valorElemento.textContent =
+            formatarMoeda(valorTotal);
+    }
+
+
+    /* =========================
+       HOJE
+    ========================== */
+
+    const hoje = hojeISO();
+
+
+    const hojeA =
+        ambulancias.filter(
+            item => item.data === hoje
+        ).length;
+
+
+    const hojeT =
+        transferencias.filter(
+            item => item.data === hoje
+        ).length;
+
+
+    const apoiosHoje =
+        apoios.filter(
+            item => item.data === hoje
+        );
+
+
+    const hojeP =
+        apoiosHoje.length;
+
+
+    const valorHoje =
+        apoiosHoje.reduce(
+            (soma, item) =>
+                soma + Number(item.valor || 0),
+            0
+        );
+
+
+    const hA =
+        document.getElementById(
+            "hojeAmbulancias"
+        );
+
+    const hT =
+        document.getElementById(
+            "hojeTransferencias"
+        );
+
+    const hP =
+        document.getElementById(
+            "hojeApoios"
+        );
+
+    const hValor =
+        document.getElementById(
+            "hojeValorApoios"
+        );
+
+
+    if (hA) {
+        hA.textContent = hojeA;
+    }
+
+    if (hT) {
+        hT.textContent = hojeT;
+    }
+
+    if (hP) {
+        hP.textContent = hojeP;
+    }
+
+    if (hValor) {
+        hValor.textContent =
+            formatarMoeda(valorHoje);
+    }
+
+
+    /* =========================
+       BARRAS
+    ========================== */
+
+    const barraA =
+        document.getElementById(
+            "barraAmbulancias"
+        );
+
+    const barraT =
+        document.getElementById(
+            "barraTransferencias"
+        );
+
+    const barraP =
+        document.getElementById(
+            "barraApoios"
+        );
+
+
+    const textoA =
+        document.getElementById(
+            "barraAmbulanciasTexto"
+        );
+
+    const textoT =
+        document.getElementById(
+            "barraTransferenciasTexto"
+        );
+
+    const textoP =
+        document.getElementById(
+            "barraApoiosTexto"
+        );
+
+
+    if (textoA) {
+        textoA.textContent = totalA;
+    }
+
+    if (textoT) {
+        textoT.textContent = totalT;
+    }
+
+    if (textoP) {
+        textoP.textContent = totalP;
+    }
+
+
+    if (total > 0) {
+
+        if (barraA) {
+            barraA.style.width =
+                `${(totalA / total) * 100}%`;
+        }
+
+        if (barraT) {
+            barraT.style.width =
+                `${(totalT / total) * 100}%`;
+        }
+
+        if (barraP) {
+            barraP.style.width =
+                `${(totalP / total) * 100}%`;
+        }
+
+    } else {
+
+        if (barraA) {
+            barraA.style.width = "0%";
+        }
+
+        if (barraT) {
+            barraT.style.width = "0%";
+        }
+
+        if (barraP) {
+            barraP.style.width = "0%";
+        }
+    }
+
+
+    /* =========================
+       ÚLTIMOS LANÇAMENTOS
+    ========================== */
+
+    const todos = [
+        ...ambulancias,
+        ...transferencias,
+        ...apoios
+    ];
+
+
+    todos.sort(
+        (a, b) =>
+            Number(b.criadoEm || 0) -
+            Number(a.criadoEm || 0)
+    );
+
+
+    const ultimos =
+        todos.slice(0, 5);
+
 
     const container =
         document.getElementById(
@@ -1168,268 +1313,293 @@ function mostrarUltimosLancamentos(
         );
 
 
-    if (!container) return;
+    if (!container) {
+        return;
+    }
 
 
-    const ultimos =
-        [...registros]
-            .sort(
-                (a, b) =>
-                    new Date(
-                        b.criadoEm || 0
-                    ) -
-                    new Date(
-                        a.criadoEm || 0
-                    )
-            )
-            .slice(0, 5);
-
-
-    if (!ultimos.length) {
+    if (ultimos.length === 0) {
 
         container.innerHTML = `
-
-            <div class="sem-registros-dashboard">
-
-                <div>📋</div>
-
-                Nenhum lançamento encontrado.
-
+            <div class="estado-vazio">
+                Nenhum registro encontrado.
             </div>
-
         `;
 
         return;
-
     }
 
 
     container.innerHTML =
         ultimos.map(
-            function (registro) {
-
-                let icone = "📋";
-
-                let nomeTipo = "Registro";
-
-                let classe =
-                    "lancamento-dashboard";
-
-
-                if (
-                    registro.tipo ===
-                    "ambulancia"
-                ) {
-
-                    icone = "🚑";
-
-                    nomeTipo =
-                        "Ambulância";
-
-                    classe +=
-                        " lancamento-ambulancia";
-
-                }
-
-
-                if (
-                    registro.tipo ===
-                    "transferencia"
-                ) {
-
-                    icone = "🔄";
-
-                    nomeTipo =
-                        "Transferência";
-
-                    classe +=
-                        " lancamento-transferencia";
-
-                }
-
-
-                if (
-                    registro.tipo ===
-                    "apoio"
-                ) {
-
-                    icone = "🤝";
-
-                    nomeTipo =
-                        "Apoio";
-
-                    classe +=
-                        " lancamento-apoio";
-
-                }
-
-
-                return `
-
-                    <div class="${classe}">
-
-                        <div class="lancamento-esquerda">
-
-                            <div class="lancamento-icone">
-                                ${icone}
-                            </div>
-
-                            <div class="lancamento-info">
-
-                                <strong>
-                                    ${nomeTipo}
-                                </strong>
-
-                                <span>
-                                    Rota:
-                                    ${escapeHtml(
-                                        registro.rota || "-"
-                                    )}
-                                </span>
-
-                            </div>
-
-                        </div>
-
-                        <div class="lancamento-data">
-
-                            ${formatarData(
-                                registro.data
-                            )}
-
-                        </div>
-
-                    </div>
-
-                `;
-
-            }
+            registro =>
+                criarMiniRegistro(
+                    registro
+                )
         ).join("");
-
 }
 
 
-// ======================================================
-// CARREGAR REGISTROS
-// ======================================================
+function criarMiniRegistro(registro) {
 
-async function carregarRegistros() {
+    let tipoTexto = "";
 
-    try {
+    let classe = "";
 
-        todosRegistros = [];
+    let icone = "";
 
 
-        const caminhos = [
+    if (registro.tipo === "ambulancia") {
 
-            {
-                caminho: "ambulancias",
+        tipoTexto = "Ambulância";
+
+        classe =
+            "tipo-ambulancia";
+
+        icone = "🚑";
+
+    } else if (
+        registro.tipo === "transferencia"
+    ) {
+
+        tipoTexto = "Transferência";
+
+        classe =
+            "tipo-transferencia";
+
+        icone = "🔄";
+
+    } else {
+
+        tipoTexto = "Apoio";
+
+        classe =
+            "tipo-apoio";
+
+        icone = "🤝";
+    }
+
+
+    return `
+
+        <div class="registro-card">
+
+            <div class="registro-cabecalho">
+
+                <span class="registro-tipo ${classe}">
+                    ${icone}
+                    ${tipoTexto}
+                </span>
+
+                <span class="registro-data">
+                    ${formatarData(registro.data)}
+                </span>
+
+            </div>
+
+            <div class="registro-grid">
+
+                <div class="registro-info">
+
+                    <span>Rota</span>
+
+                    <strong>
+                        ${escaparHTML(registro.rota || "-")}
+                    </strong>
+
+                </div>
+
+
+                <div class="registro-info">
+
+                    <span>Cidade</span>
+
+                    <strong>
+                        ${escaparHTML(registro.cidade || "-")}
+                    </strong>
+
+                </div>
+
+
+                <div class="registro-info">
+
+                    <span>Driver</span>
+
+                    <strong>
+                        ${escaparHTML(
+                            registro.driver ||
+                            registro.driverRealizaApoio ||
+                            registro.driverSubstituto ||
+                            "-"
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div class="registro-info">
+
+                    <span>Valor</span>
+
+                    <strong>
+                        ${
+                            registro.tipo === "apoio"
+                                ? formatarMoeda(registro.valor)
+                                : "-"
+                        }
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+}
+
+
+/* =========================================================
+   CARREGAR REGISTROS
+========================================================= */
+
+function carregarRegistros() {
+
+    let ambulancias = [];
+
+    let transferencias = [];
+
+    let apoios = [];
+
+
+    function atualizarLista() {
+
+        todosRegistros = [
+
+            ...ambulancias.map(item => ({
+                ...item,
                 tipo: "ambulancia"
-            },
+            })),
 
-            {
-                caminho: "transferencias",
+            ...transferencias.map(item => ({
+                ...item,
                 tipo: "transferencia"
-            },
+            })),
 
-            {
-                caminho: "apoios",
+            ...apoios.map(item => ({
+                ...item,
                 tipo: "apoio"
-            }
+            }))
 
         ];
 
 
-        for (const item of caminhos) {
-
-            await new Promise(function (resolve) {
-
-                onValue(
-                    ref(db, item.caminho),
-                    function (snapshot) {
-
-                        const dados =
-                            snapshot.val();
-
-                        if (dados) {
-
-                            Object.entries(dados)
-                                .forEach(
-                                    function (
-                                        [id, registro]
-                                    ) {
-
-                                        todosRegistros.push({
-
-                                            ...registro,
-
-                                            id: id,
-
-                                            tipo:
-                                                item.tipo,
-
-                                            caminho:
-                                                item.caminho
-
-                                        });
-
-                                    }
-                                );
-
-                        }
-
-                        resolve();
-
-                    },
-                    {
-                        onlyOnce: true
-                    }
-                );
-
-            });
-
-        }
-
-
         todosRegistros.sort(
             (a, b) =>
-                new Date(
-                    b.criadoEm || 0
-                ) -
-                new Date(
-                    a.criadoEm || 0
-                )
+                Number(b.criadoEm || 0) -
+                Number(a.criadoEm || 0)
         );
 
 
         aplicarFiltros();
-
-
-    } catch (erro) {
-
-        console.error(
-            "Erro ao carregar registros:",
-            erro
-        );
-
     }
 
+
+    onValue(
+        ref(db, "ambulancias"),
+        snapshot => {
+
+            ambulancias = [];
+
+            snapshot.forEach(item => {
+
+                ambulancias.push({
+
+                    id: item.key,
+
+                    ...item.val()
+
+                });
+
+            });
+
+            atualizarLista();
+
+        },
+        {
+            onlyOnce: true
+        }
+    );
+
+
+    onValue(
+        ref(db, "transferencias"),
+        snapshot => {
+
+            transferencias = [];
+
+            snapshot.forEach(item => {
+
+                transferencias.push({
+
+                    id: item.key,
+
+                    ...item.val()
+
+                });
+
+            });
+
+            atualizarLista();
+
+        },
+        {
+            onlyOnce: true
+        }
+    );
+
+
+    onValue(
+        ref(db, "apoios"),
+        snapshot => {
+
+            apoios = [];
+
+            snapshot.forEach(item => {
+
+                apoios.push({
+
+                    id: item.key,
+
+                    ...item.val()
+
+                });
+
+            });
+
+            atualizarLista();
+
+        },
+        {
+            onlyOnce: true
+        }
+    );
 }
 
 
-// ======================================================
-// FILTROS
-// ======================================================
+/* =========================================================
+   FILTROS
+========================================================= */
 
 function aplicarFiltros() {
 
-    const data =
+    const filtroData =
         document.getElementById(
             "filtroData"
         )?.value || "";
 
 
-    const rota =
+    const filtroRota =
         document.getElementById(
             "filtroRota"
         )?.value
@@ -1437,7 +1607,7 @@ function aplicarFiltros() {
             .trim() || "";
 
 
-    const driver =
+    const filtroDriver =
         document.getElementById(
             "filtroDriver"
         )?.value
@@ -1445,7 +1615,7 @@ function aplicarFiltros() {
             .trim() || "";
 
 
-    const tipo =
+    const filtroTipo =
         document.getElementById(
             "filtroTipo"
         )?.value || "";
@@ -1453,112 +1623,120 @@ function aplicarFiltros() {
 
     const filtrados =
         todosRegistros.filter(
-            function (registro) {
+            registro => {
 
-                if (
-                    data &&
-                    registro.data !== data
-                ) {
-
-                    return false;
-
-                }
-
-
-                if (
-                    rota &&
-                    !String(
+                const rota =
+                    String(
                         registro.rota || ""
-                    )
-                        .toLowerCase()
-                        .includes(rota)
-                ) {
-
-                    return false;
-
-                }
+                    ).toLowerCase();
 
 
-                if (driver) {
-
-                    const textoDriver =
-                        [
-
-                            registro.driver,
-
-                            registro.driverInicial,
-
-                            registro.driverSubstituto,
-
-                            registro.driverRealiza,
-
-                            registro.driverPrecisa
-
-                        ]
-                            .filter(Boolean)
-                            .join(" ")
-                            .toLowerCase();
+                const driver =
+                    String(
+                        registro.driver ||
+                        registro.driverRealizaApoio ||
+                        registro.driverSubstituto ||
+                        registro.driverInicial ||
+                        ""
+                    ).toLowerCase();
 
 
-                    if (
-                        !textoDriver.includes(
-                            driver
-                        )
-                    ) {
-
-                        return false;
-
-                    }
-
-                }
+                const atendeData =
+                    !filtroData ||
+                    registro.data === filtroData;
 
 
-                if (
-                    tipo &&
-                    registro.tipo !== tipo
-                ) {
-
-                    return false;
-
-                }
+                const atendeRota =
+                    !filtroRota ||
+                    rota.includes(filtroRota);
 
 
-                return true;
+                const atendeDriver =
+                    !filtroDriver ||
+                    driver.includes(filtroDriver);
 
+
+                const atendeTipo =
+                    !filtroTipo ||
+                    registro.tipo === filtroTipo;
+
+
+                return (
+                    atendeData &&
+                    atendeRota &&
+                    atendeDriver &&
+                    atendeTipo
+                );
             }
         );
 
 
-    renderizarRegistros(
-        filtrados
-    );
-
+    renderizarRegistros(filtrados);
 }
 
 
-// ======================================================
-// EVENTOS DOS FILTROS
-// ======================================================
+window.limparFiltros = function () {
+
+    const filtroData =
+        document.getElementById(
+            "filtroData"
+        );
+
+    const filtroRota =
+        document.getElementById(
+            "filtroRota"
+        );
+
+    const filtroDriver =
+        document.getElementById(
+            "filtroDriver"
+        );
+
+    const filtroTipo =
+        document.getElementById(
+            "filtroTipo"
+        );
+
+
+    if (filtroData) {
+        filtroData.value = "";
+    }
+
+    if (filtroRota) {
+        filtroRota.value = "";
+    }
+
+    if (filtroDriver) {
+        filtroDriver.value = "";
+    }
+
+    if (filtroTipo) {
+        filtroTipo.value = "";
+    }
+
+
+    aplicarFiltros();
+};
+
 
 [
     "filtroData",
     "filtroRota",
     "filtroDriver",
     "filtroTipo"
-].forEach(function (id) {
+].forEach(id => {
 
     const elemento =
         document.getElementById(id);
 
-
-    if (!elemento) return;
-
+    if (!elemento) {
+        return;
+    }
 
     elemento.addEventListener(
         "input",
         aplicarFiltros
     );
-
 
     elemento.addEventListener(
         "change",
@@ -1568,13 +1746,11 @@ function aplicarFiltros() {
 });
 
 
-// ======================================================
-// RENDERIZAR REGISTROS
-// ======================================================
+/* =========================================================
+   RENDERIZAR REGISTROS
+========================================================= */
 
-function renderizarRegistros(
-    registros
-) {
+function renderizarRegistros(registros) {
 
     const container =
         document.getElementById(
@@ -1582,144 +1758,118 @@ function renderizarRegistros(
         );
 
 
-    if (!container) return;
+    if (!container) {
+        return;
+    }
 
 
-    if (!registros.length) {
+    if (registros.length === 0) {
 
         container.innerHTML = `
 
-            <div class="registro-card">
+            <div class="estado-vazio">
 
-                <div class="sem-registros-dashboard">
-
-                    <div>📋</div>
-
-                    Nenhum registro encontrado.
-
-                </div>
+                Nenhum registro encontrado
+                com os filtros selecionados.
 
             </div>
 
         `;
 
         return;
-
     }
 
 
     container.innerHTML =
         registros.map(
-            function (registro) {
-
-                return criarCardRegistro(
+            registro =>
+                criarRegistroHTML(
                     registro
-                );
-
-            }
+                )
         ).join("");
-
 }
 
 
-// ======================================================
-// CARD DE REGISTRO
-// ======================================================
+function criarRegistroHTML(registro) {
 
-function criarCardRegistro(
-    registro
-) {
+    let tipoTexto = "";
 
-    let tipoTexto = "Registro";
+    let classe = "";
 
-    let tipoClasse = "";
-
-    let icone = "📋";
-
-    let detalhes = "";
+    let icone = "";
 
 
-    if (
-        registro.tipo ===
-        "ambulancia"
-    ) {
+    if (registro.tipo === "ambulancia") {
 
-        tipoTexto =
-            "Ambulância";
+        tipoTexto = "Ambulância";
 
-        tipoClasse =
+        classe =
             "tipo-ambulancia";
 
         icone = "🚑";
 
+    } else if (
+        registro.tipo === "transferencia"
+    ) {
+
+        tipoTexto = "Transferência";
+
+        classe =
+            "tipo-transferencia";
+
+        icone = "🔄";
+
+    } else {
+
+        tipoTexto = "Apoio";
+
+        classe =
+            "tipo-apoio";
+
+        icone = "🤝";
+    }
+
+
+    let detalhes = "";
+
+
+    if (registro.tipo === "ambulancia") {
 
         detalhes = `
 
-            <div class="registro-dado">
-
-                <span>Driver</span>
-
-                <strong>
-                    ${escapeHtml(
-                        registro.driver || "-"
-                    )}
-                </strong>
-
-            </div>
-
-            <div class="registro-dado">
-
-                <span>Cidade</span>
-
-                <strong>
-                    ${escapeHtml(
-                        registro.cidade || "-"
-                    )}
-                </strong>
-
-            </div>
-
-            <div class="registro-dado">
+            <div class="registro-info">
 
                 <span>Pacotes</span>
 
                 <strong>
-                    ${registro.pacotes ?? 0}
+                    ${escaparHTML(
+                        registro.pacotes ?? "-"
+                    )}
                 </strong>
 
             </div>
 
-            <div class="registro-dado">
 
-                <span>Meli que liberou</span>
+            <div class="registro-info">
+
+                <span>Quem liberou Meli</span>
 
                 <strong>
-                    ${escapeHtml(
+                    ${escaparHTML(
                         registro.meliLiberou || "-"
                     )}
                 </strong>
 
             </div>
 
-            <div class="registro-dado">
+
+            <div class="registro-info">
 
                 <span>Motivo</span>
 
                 <strong>
-                    ${escapeHtml(
+                    ${escaparHTML(
                         registro.motivo || "-"
-                    )}
-                </strong>
-
-            </div>
-
-            <div class="registro-dado">
-
-                <span>Lançado por</span>
-
-                <strong>
-                    ${escapeHtml(
-                        registro.lancadoPor || "-"
                     )}
                 </strong>
 
@@ -1727,194 +1877,108 @@ function criarCardRegistro(
 
         `;
 
-    }
-
-
-    if (
-        registro.tipo ===
-        "transferencia"
+    } else if (
+        registro.tipo === "transferencia"
     ) {
-
-        tipoTexto =
-            "Transferência";
-
-        tipoClasse =
-            "tipo-transferencia";
-
-        icone = "🔄";
-
 
         detalhes = `
 
-            <div class="registro-dado">
+            <div class="registro-info">
 
                 <span>Driver inicial</span>
 
                 <strong>
-                    ${escapeHtml(
+                    ${escaparHTML(
                         registro.driverInicial || "-"
                     )}
                 </strong>
 
             </div>
 
-            <div class="registro-dado">
 
-                <span>Driver substituto</span>
+            <div class="registro-info">
+
+                <span>Substituto</span>
 
                 <strong>
-                    ${escapeHtml(
+                    ${escaparHTML(
                         registro.driverSubstituto || "-"
                     )}
                 </strong>
 
             </div>
 
-            <div class="registro-dado">
 
-                <span>Cidade</span>
+            <div class="registro-info">
 
-                <strong>
-                    ${escapeHtml(
-                        registro.cidade || "-"
-                    )}
-                </strong>
-
-            </div>
-
-            <div class="registro-dado">
-
-                <span>Meli que liberou</span>
+                <span>Quem liberou Meli</span>
 
                 <strong>
-                    ${escapeHtml(
+                    ${escaparHTML(
                         registro.meliLiberou || "-"
                     )}
                 </strong>
 
             </div>
 
-            <div class="registro-dado">
-
-                <span>Motivo</span>
-
-                <strong>
-                    ${escapeHtml(
-                        registro.motivo || "-"
-                    )}
-                </strong>
-
-            </div>
-
-            <div class="registro-dado">
-
-                <span>Lançado por</span>
-
-                <strong>
-                    ${escapeHtml(
-                        registro.lancadoPor || "-"
-                    )}
-                </strong>
-
-            </div>
-
         `;
 
-    }
-
-
-    if (
-        registro.tipo ===
-        "apoio"
-    ) {
-
-        tipoTexto =
-            "Apoio de Rota";
-
-        tipoClasse =
-            "tipo-apoio";
-
-        icone = "🤝";
-
+    } else {
 
         detalhes = `
 
-            <div class="registro-dado">
+            <div class="registro-info">
 
                 <span>Valor</span>
 
                 <strong>
                     ${formatarMoeda(
-                        Number(
-                            registro.valor || 0
-                        )
+                        registro.valor
                     )}
                 </strong>
 
             </div>
 
-            <div class="registro-dado">
 
-                <span>Realiza apoio</span>
+            <div class="registro-info">
+
+                <span>Driver que realiza</span>
 
                 <strong>
-                    ${escapeHtml(
-                        registro.driverRealiza || "-"
+                    ${escaparHTML(
+                        registro.driverRealizaApoio || "-"
                     )}
                 </strong>
 
             </div>
 
-            <div class="registro-dado">
 
-                <span>Precisa apoio</span>
+            <div class="registro-info">
+
+                <span>Driver que precisa</span>
 
                 <strong>
-                    ${escapeHtml(
-                        registro.driverPrecisa || "-"
+                    ${escaparHTML(
+                        registro.driverPrecisaApoio || "-"
                     )}
                 </strong>
 
             </div>
 
-            <div class="registro-dado">
+
+            <div class="registro-info">
 
                 <span>Quem liberou</span>
 
                 <strong>
-                    ${escapeHtml(
+                    ${escaparHTML(
                         registro.quemLiberou || "-"
                     )}
                 </strong>
 
             </div>
 
-            <div class="registro-dado">
-
-                <span>Observações</span>
-
-                <strong>
-                    ${escapeHtml(
-                        registro.observacoes || "-"
-                    )}
-                </strong>
-
-            </div>
-
-            <div class="registro-dado">
-
-                <span>Lançado por</span>
-
-                <strong>
-                    ${escapeHtml(
-                        registro.lancadoPor || "-"
-                    )}
-                </strong>
-
-            </div>
-
         `;
-
     }
 
 
@@ -1922,187 +1986,242 @@ function criarCardRegistro(
 
         <div class="registro-card">
 
-            <div class="registro-topo">
+            <div class="registro-cabecalho">
 
-                <div>
+                <span class="registro-tipo ${classe}">
+                    ${icone}
+                    ${tipoTexto}
+                </span>
 
-                    <span
-                        class="registro-tipo ${tipoClasse}"
-                    >
-
-                        ${icone}
-
-                        ${tipoTexto}
-
-                    </span>
-
-                </div>
-
-                <div
-                    style="
-                        display:flex;
-                        align-items:center;
-                        gap:8px;
-                    "
-                >
-
-                    <span class="registro-data">
-
-                        ${formatarData(
-                            registro.data
-                        )}
-
-                    </span>
-
-                    <button
-                        class="btn-excluir"
-                        onclick="excluirRegistro(
-                            '${registro.tipo}',
-                            '${registro.caminho}',
-                            '${registro.id}'
-                        )"
-                    >
-                        Excluir
-                    </button>
-
-                </div>
+                <span class="registro-data">
+                    ${formatarData(
+                        registro.data
+                    )}
+                </span>
 
             </div>
 
 
-            <div
-                class="registro-dados"
-            >
+            <div class="registro-grid">
 
-                <div class="registro-dado">
+                <div class="registro-info">
 
                     <span>Rota</span>
 
                     <strong>
-                        ${escapeHtml(
+                        ${escaparHTML(
                             registro.rota || "-"
                         )}
                     </strong>
 
                 </div>
 
+
+                <div class="registro-info">
+
+                    <span>Cidade</span>
+
+                    <strong>
+                        ${escaparHTML(
+                            registro.cidade || "-"
+                        )}
+                    </strong>
+
+                </div>
+
+
                 ${detalhes}
+
+            </div>
+
+
+            ${
+                registro.observacoes
+                    ? `
+                        <div class="registro-observacao">
+
+                            <strong>
+                                Observações:
+                            </strong>
+
+                            ${escaparHTML(
+                                registro.observacoes
+                            )}
+
+                        </div>
+                    `
+                    : ""
+            }
+
+
+            <div class="registro-rodape">
+
+                <span class="registro-lancado">
+
+                    Lançado por:
+                    ${escaparHTML(
+                        registro.lancadoPor || "-"
+                    )}
+
+                </span>
+
+
+                <button
+                    type="button"
+                    class="btn-excluir"
+                    onclick="excluirRegistro(
+                        '${registro.tipo}',
+                        '${registro.id}'
+                    )"
+                >
+                    🗑 Excluir
+                </button>
 
             </div>
 
         </div>
 
     `;
-
 }
 
 
-// ======================================================
-// EXCLUIR REGISTRO
-// ======================================================
+/* =========================================================
+   EXCLUIR REGISTRO
+========================================================= */
 
-window.excluirRegistro = async function (
-    tipo,
-    caminho,
-    id
-) {
+window.excluirRegistro =
+    async function (
+        tipo,
+        id
+    ) {
 
-    const confirmar =
-        confirm(
-            "Tem certeza que deseja excluir este registro?"
-        );
+        if (!usuario) {
 
+            alert(
+                "Você precisa estar logado."
+            );
 
-    if (!confirmar) return;
-
-
-    try {
-
-        await remove(
-            ref(
-                db,
-                `${caminho}/${id}`
-            )
-        );
+            return;
+        }
 
 
-        alert(
-            "Registro excluído com sucesso."
-        );
+        const confirmar =
+            confirm(
+                "Tem certeza que deseja excluir este registro?"
+            );
 
 
-        carregarDashboard();
-
-        carregarRegistros();
-
-
-    } catch (erro) {
-
-        console.error(erro);
-
-        alert(
-            "Erro ao excluir registro."
-        );
-
-    }
-
-};
+        if (!confirmar) {
+            return;
+        }
 
 
-// ======================================================
-// ALTERAR SENHA
-// ======================================================
-
-window.abrirAlterarSenha = function () {
-
-    const modal =
-        document.getElementById(
-            "modalSenha"
-        );
+        let caminho = "";
 
 
-    if (!modal) return;
+        if (tipo === "ambulancia") {
+
+            caminho = "ambulancias";
+
+        } else if (
+            tipo === "transferencia"
+        ) {
+
+            caminho = "transferencias";
+
+        } else if (
+            tipo === "apoio"
+        ) {
+
+            caminho = "apoios";
+
+        } else {
+
+            return;
+        }
 
 
-    modal.classList.remove(
-        "escondida"
-    );
+        try {
+
+            await remove(
+                ref(
+                    db,
+                    `${caminho}/${id}`
+                )
+            );
 
 
-    const mensagem =
-        document.getElementById(
-            "mensagemSenha"
-        );
+            alert(
+                "Registro excluído com sucesso!"
+            );
 
 
-    if (mensagem) {
+            carregarDashboard();
 
-        mensagem.className =
-            "mensagem";
-
-        mensagem.textContent = "";
-
-    }
-
-};
+            carregarRegistros();
 
 
-window.fecharAlterarSenha = function () {
+        } catch (erro) {
 
-    const modal =
-        document.getElementById(
-            "modalSenha"
-        );
+            console.error(erro);
+
+            alert(
+                "Não foi possível excluir o registro."
+            );
+
+        }
+
+    };
 
 
-    if (!modal) return;
+/* =========================================================
+   ALTERAR SENHA
+========================================================= */
+
+window.abrirAlterarSenha =
+    function () {
+
+        const modal =
+            document.getElementById(
+                "modalSenha"
+            );
+
+        if (modal) {
+            modal.classList.add("aberto");
+        }
+    };
 
 
-    modal.classList.add(
-        "escondida"
-    );
+window.fecharAlterarSenha =
+    function () {
 
-};
+        const modal =
+            document.getElementById(
+                "modalSenha"
+            );
+
+        if (modal) {
+            modal.classList.remove("aberto");
+        }
+
+        const form =
+            document.getElementById(
+                "formAlterarSenha"
+            );
+
+        if (form) {
+            form.reset();
+        }
+
+        const mensagem =
+            document.getElementById(
+                "mensagemSenha"
+            );
+
+        if (mensagem) {
+            mensagem.textContent = "";
+        }
+    };
 
 
 const formAlterarSenha =
@@ -2123,7 +2242,6 @@ if (formAlterarSenha) {
             if (!usuario) {
 
                 return;
-
             }
 
 
@@ -2151,36 +2269,37 @@ if (formAlterarSenha) {
                 );
 
 
-            if (
-                novaSenha !==
-                confirmarSenha
-            ) {
+            if (novaSenha !== confirmarSenha) {
 
-                mensagem.className =
-                    "mensagem erro";
-
-                mensagem.textContent =
-                    "As novas senhas não são iguais.";
+                mostrarMensagem(
+                    mensagem,
+                    "As novas senhas não são iguais.",
+                    "erro"
+                );
 
                 return;
-
             }
 
 
             if (novaSenha.length < 6) {
 
-                mensagem.className =
-                    "mensagem erro";
-
-                mensagem.textContent =
-                    "A nova senha deve ter pelo menos 6 caracteres.";
+                mostrarMensagem(
+                    mensagem,
+                    "A nova senha precisa ter pelo menos 6 caracteres.",
+                    "erro"
+                );
 
                 return;
-
             }
 
 
             try {
+
+                mostrarMensagem(
+                    mensagem,
+                    "Alterando senha..."
+                );
+
 
                 const credencial =
                     EmailAuthProvider.credential(
@@ -2201,14 +2320,21 @@ if (formAlterarSenha) {
                 );
 
 
-                mensagem.className =
-                    "mensagem sucesso";
+                mostrarMensagem(
+                    mensagem,
+                    "Senha alterada com sucesso!",
+                    "sucesso"
+                );
 
-                mensagem.textContent =
-                    "Senha alterada com sucesso!";
 
+                setTimeout(
+                    () => {
 
-                formAlterarSenha.reset();
+                        fecharAlterarSenha();
+
+                    },
+                    1500
+                );
 
 
             } catch (erro) {
@@ -2216,18 +2342,24 @@ if (formAlterarSenha) {
                 console.error(erro);
 
 
-                mensagem.className =
-                    "mensagem erro";
+                let texto =
+                    "Não foi possível alterar a senha.";
 
 
                 if (
                     erro.code ===
-                    "auth/wrong-password" ||
+                    "auth/wrong-password"
+                ) {
+
+                    texto =
+                        "A senha atual está incorreta.";
+
+                } else if (
                     erro.code ===
                     "auth/invalid-credential"
                 ) {
 
-                    mensagem.textContent =
+                    texto =
                         "A senha atual está incorreta.";
 
                 } else if (
@@ -2235,7 +2367,7 @@ if (formAlterarSenha) {
                     "auth/weak-password"
                 ) {
 
-                    mensagem.textContent =
+                    texto =
                         "A nova senha é muito fraca.";
 
                 } else if (
@@ -2243,67 +2375,63 @@ if (formAlterarSenha) {
                     "auth/requires-recent-login"
                 ) {
 
-                    mensagem.textContent =
-                        "Faça login novamente antes de alterar a senha.";
-
-                } else {
-
-                    mensagem.textContent =
-                        "Não foi possível alterar a senha.";
-
+                    texto =
+                        "Por segurança, saia e entre novamente antes de alterar a senha.";
                 }
 
+
+                mostrarMensagem(
+                    mensagem,
+                    texto,
+                    "erro"
+                );
             }
 
         }
     );
-
 }
 
 
-// ======================================================
-// RECUPERAR SENHA
-// ======================================================
+/* =========================================================
+   RECUPERAR SENHA
+========================================================= */
 
-window.abrirRecuperarSenha = function () {
+window.abrirRecuperarSenha =
+    function () {
 
-    const modal =
-        document.getElementById(
-            "modalRecuperarSenha"
-        );
+        const modal =
+            document.getElementById(
+                "modalRecuperarSenha"
+            );
 
+        if (modal) {
 
-    if (!modal) return;
+            modal.classList.add(
+                "aberto"
+            );
 
+            const emailLogin =
+                document.getElementById(
+                    "loginEmail"
+                );
 
-    modal.classList.remove(
-        "escondida"
-    );
-
-
-    const emailLogin =
-        document.getElementById(
-            "loginEmail"
-        )?.value || "";
-
-
-    const campoEmail =
-        document.getElementById(
-            "emailRecuperacao"
-        );
+            const emailRecuperacao =
+                document.getElementById(
+                    "emailRecuperacao"
+                );
 
 
-    if (
-        campoEmail &&
-        emailLogin
-    ) {
+            if (
+                emailLogin &&
+                emailRecuperacao &&
+                emailLogin.value
+            ) {
 
-        campoEmail.value =
-            emailLogin;
-
-    }
-
-};
+                emailRecuperacao.value =
+                    emailLogin.value;
+            }
+        }
+    };
 
 
 window.fecharRecuperarSenha =
@@ -2314,14 +2442,21 @@ window.fecharRecuperarSenha =
                 "modalRecuperarSenha"
             );
 
+        if (modal) {
+            modal.classList.remove(
+                "aberto"
+            );
+        }
 
-        if (!modal) return;
 
+        const mensagem =
+            document.getElementById(
+                "mensagemRecuperacao"
+            );
 
-        modal.classList.add(
-            "escondida"
-        );
-
+        if (mensagem) {
+            mensagem.textContent = "";
+        }
     };
 
 
@@ -2352,13 +2487,13 @@ if (formRecuperarSenha) {
                 );
 
 
-            mensagem.className =
-                "mensagem";
-
-            mensagem.textContent = "";
-
-
             try {
+
+                mostrarMensagem(
+                    mensagem,
+                    "Enviando e-mail..."
+                );
+
 
                 await sendPasswordResetEmail(
                     auth,
@@ -2366,20 +2501,20 @@ if (formRecuperarSenha) {
                 );
 
 
-                mensagem.className =
-                    "mensagem sucesso";
+                mostrarMensagem(
+                    mensagem,
+                    "E-mail de recuperação enviado! Verifique também a caixa de spam.",
+                    "sucesso"
+                );
 
-
-                mensagem.textContent =
-                    "E-mail de recuperação enviado! Verifique também a pasta Spam.";
 
             } catch (erro) {
 
                 console.error(erro);
 
 
-                mensagem.className =
-                    "mensagem erro";
+                let texto =
+                    "Não foi possível enviar o e-mail.";
 
 
                 if (
@@ -2387,27 +2522,34 @@ if (formRecuperarSenha) {
                     "auth/user-not-found"
                 ) {
 
-                    mensagem.textContent =
-                        "Não encontramos uma conta com esse e-mail.";
+                    texto =
+                        "Não encontramos um usuário com esse e-mail.";
 
-                } else {
+                } else if (
+                    erro.code ===
+                    "auth/invalid-email"
+                ) {
 
-                    mensagem.textContent =
-                        "Não foi possível enviar o e-mail de recuperação.";
-
+                    texto =
+                        "Digite um e-mail válido.";
                 }
 
+
+                mostrarMensagem(
+                    mensagem,
+                    texto,
+                    "erro"
+                );
             }
 
         }
     );
-
 }
 
 
-// ======================================================
-// FECHAR MODAIS CLICANDO FORA
-// ======================================================
+/* =========================================================
+   FECHAR MODAIS CLICANDO FORA
+========================================================= */
 
 document.addEventListener(
     "click",
@@ -2419,14 +2561,13 @@ document.addEventListener(
             );
 
 
-        const modalRecuperar =
+        const modalRecuperacao =
             document.getElementById(
                 "modalRecuperarSenha"
             );
 
 
         if (
-            modalSenha &&
             event.target === modalSenha
         ) {
 
@@ -2436,8 +2577,8 @@ document.addEventListener(
 
 
         if (
-            modalRecuperar &&
-            event.target === modalRecuperar
+            event.target ===
+            modalRecuperacao
         ) {
 
             fecharRecuperarSenha();
@@ -2448,71 +2589,65 @@ document.addEventListener(
 );
 
 
-// ======================================================
-// UTILITÁRIOS
-// ======================================================
+/* =========================================================
+   FECHAR SIDEBAR AO CLICAR FORA NO CELULAR
+========================================================= */
 
-function atualizarTexto(
-    id,
-    valor
-) {
+document.addEventListener(
+    "click",
+    function (event) {
 
-    const elemento =
-        document.getElementById(id);
+        if (window.innerWidth > 900) {
+            return;
+        }
 
 
-    if (elemento) {
+        const sidebar =
+            document.querySelector(
+                ".sidebar"
+            );
 
-        elemento.textContent =
-            valor;
+
+        const botao =
+            document.getElementById(
+                "btnMenuMobile"
+            );
+
+
+        if (!sidebar || !botao) {
+            return;
+        }
+
+
+        if (
+            sidebar.classList.contains(
+                "aberta"
+            ) &&
+            !sidebar.contains(event.target) &&
+            !botao.contains(event.target)
+        ) {
+
+            sidebar.classList.remove(
+                "aberta"
+            );
+        }
 
     }
-
-}
-
-
-function formatarMoeda(
-    valor
-) {
-
-    return Number(valor || 0)
-        .toLocaleString(
-            "pt-BR",
-            {
-                style: "currency",
-                currency: "BRL"
-            }
-        );
-
-}
+);
 
 
-function escapeHtml(
-    texto
-) {
-
-    return String(texto ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-
-}
-
-
-// ======================================================
-// INICIALIZAÇÃO
-// ======================================================
+/* =========================================================
+   INICIALIZAÇÃO
+========================================================= */
 
 document.addEventListener(
     "DOMContentLoaded",
     function () {
 
-        definirDatas();
+        preencherDatas();
 
         console.log(
-            "Caxiense Controle iniciado."
+            "Caxiense LOG - Sistema carregado."
         );
 
     }
