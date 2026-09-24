@@ -19,207 +19,686 @@
 
 <body>
 
-    <!-- =========================
+    <!-- ==========================================
          LOGIN
-    ========================== -->
+    =========================================== -->
 
-    <section id="telaLogin" class="tela-login">
+    <div id="telaLogin" class="tela-login">
 
-        <div class="caixa-login">
+        <div class="login-background"></div>
 
-            <h1>🚚 Caxiense Controle</h1>
+        <div class="login-card">
 
-            <p class="subtitulo-login">
-                Ambulâncias, transferências e apoios
+            <div class="login-logo">
+                <div class="logo-circulo">
+                    🚚
+                </div>
+            </div>
+
+            <h1>Caxiense</h1>
+
+            <p class="login-subtitulo">
+                Controle Operacional
             </p>
+
+            <div class="linha-login"></div>
 
             <form id="formLogin">
 
-                <label for="loginEmail">
-                    E-mail
-                </label>
+                <div class="campo">
 
-                <input
-                    type="email"
-                    id="loginEmail"
-                    placeholder="Digite seu e-mail"
-                    required
-                >
+                    <label for="loginEmail">
+                        E-mail
+                    </label>
 
-                <label for="loginSenha">
-                    Senha
-                </label>
+                    <input
+                        type="email"
+                        id="loginEmail"
+                        placeholder="Digite seu e-mail"
+                        required
+                    >
 
-                <input
-                    type="password"
-                    id="loginSenha"
-                    placeholder="Digite sua senha"
-                    required
-                >
+                </div>
+
+                <div class="campo">
+
+                    <label for="loginSenha">
+                        Senha
+                    </label>
+
+                    <input
+                        type="password"
+                        id="loginSenha"
+                        placeholder="Digite sua senha"
+                        required
+                    >
+
+                </div>
 
                 <button
                     type="submit"
-                    class="botao-principal"
+                    class="btn-login"
                 >
-                    ENTRAR
+                    Entrar no sistema
                 </button>
-
-                <button
-                    type="button"
-                    onclick="abrirRecuperarSenha()"
-                    class="esqueci-senha"
-                >
-                    🔑 Esqueci minha senha
-                </button>
-
-                <p
-                    id="mensagemLogin"
-                    class="mensagem-login"
-                ></p>
 
             </form>
 
+            <button
+                type="button"
+                class="esqueci-senha"
+                onclick="abrirRecuperarSenha()"
+            >
+                🔑 Esqueci minha senha
+            </button>
+
+            <div
+                id="mensagemLogin"
+                class="mensagem"
+            ></div>
+
+            <div class="login-footer">
+                Caxiense LOG • Controle Operacional
+            </div>
+
         </div>
 
-    </section>
+    </div>
 
 
-    <!-- =========================
+    <!-- ==========================================
          SISTEMA
-    ========================== -->
+    =========================================== -->
 
-    <section
+    <div
         id="sistema"
-        class="escondida"
+        class="sistema escondida"
     >
 
-        <!-- CABEÇALHO -->
+        <!-- SIDEBAR -->
 
-        <header class="cabecalho">
+        <aside class="sidebar">
 
-            <div>
-                <h1>🚚 Caxiense Controle</h1>
+            <div class="sidebar-logo">
 
-                <span id="nomeUsuario">
-                    Usuário
-                </span>
+                <div class="sidebar-logo-icon">
+                    🚚
+                </div>
+
+                <div>
+                    <strong>CAXIENSE</strong>
+                    <span>CONTROLE</span>
+                </div>
+
             </div>
 
-            <div class="acoes-header">
+
+            <div class="usuario-sidebar">
+
+                <div class="avatar">
+                    👤
+                </div>
+
+                <div class="usuario-info">
+
+                    <strong id="nomeUsuario">
+                        Usuário
+                    </strong>
+
+                    <span>
+                        Operacional
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <nav class="menu">
 
                 <button
+                    class="menu-item ativo"
+                    onclick="mostrarPagina('dashboard')"
+                    id="menuDashboard"
+                >
+                    <span>📊</span>
+                    <span>Dashboard</span>
+                </button>
+
+                <button
+                    class="menu-item"
+                    onclick="mostrarPagina('ambulancia')"
+                    id="menuAmbulancia"
+                >
+                    <span>🚑</span>
+                    <span>Ambulância</span>
+                </button>
+
+                <button
+                    class="menu-item"
+                    onclick="mostrarPagina('transferencia')"
+                    id="menuTransferencia"
+                >
+                    <span>🔄</span>
+                    <span>Transferência</span>
+                </button>
+
+                <button
+                    class="menu-item"
+                    onclick="mostrarPagina('apoio')"
+                    id="menuApoio"
+                >
+                    <span>🤝</span>
+                    <span>Apoio de Rota</span>
+                </button>
+
+                <button
+                    class="menu-item"
+                    onclick="mostrarPagina('registros')"
+                    id="menuRegistros"
+                >
+                    <span>📋</span>
+                    <span>Registros</span>
+                </button>
+
+            </nav>
+
+
+            <div class="sidebar-bottom">
+
+                <button
+                    class="menu-item"
                     onclick="abrirAlterarSenha()"
-                    class="botao-senha"
                 >
-                    🔐 Alterar senha
+                    <span>🔒</span>
+                    <span>Alterar senha</span>
                 </button>
 
                 <button
+                    class="menu-item menu-sair"
                     onclick="sairSistema()"
-                    class="botao-sair"
                 >
-                    🚪 Sair
+                    <span>🚪</span>
+                    <span>Sair</span>
                 </button>
 
             </div>
 
-        </header>
+        </aside>
 
 
-        <!-- MENU -->
-
-        <nav class="menu">
-
-            <button
-                onclick="mostrarPagina('dashboard')"
-                class="menu-btn"
-            >
-                📊 Dashboard
-            </button>
-
-            <button
-                onclick="mostrarPagina('ambulancia')"
-                class="menu-btn"
-            >
-                🚑 Ambulância
-            </button>
-
-            <button
-                onclick="mostrarPagina('transferencia')"
-                class="menu-btn"
-            >
-                🔄 Transferência
-            </button>
-
-            <button
-                onclick="mostrarPagina('apoio')"
-                class="menu-btn"
-            >
-                🚚 Apoio de Rota
-            </button>
-
-            <button
-                onclick="mostrarPagina('registros')"
-                class="menu-btn"
-            >
-                📋 Registros
-            </button>
-
-        </nav>
-
+        <!-- ÁREA PRINCIPAL -->
 
         <main class="conteudo">
 
+            <!-- HEADER -->
 
-            <!-- =========================
+            <header class="topbar">
+
+                <div class="topbar-esquerda">
+
+                    <button
+                        class="btn-menu-mobile"
+                        onclick="alternarSidebar()"
+                    >
+                        ☰
+                    </button>
+
+                    <div>
+
+                        <span class="topbar-label">
+                            CONTROLE OPERACIONAL
+                        </span>
+
+                        <h1 id="tituloPagina">
+                            Dashboard
+                        </h1>
+
+                    </div>
+
+                </div>
+
+
+                <div class="topbar-direita">
+
+                    <div class="status-online">
+
+                        <span class="bolinha-online"></span>
+
+                        Sistema online
+
+                    </div>
+
+                    <div class="data-topbar">
+                        📅
+                        <span id="dataAtualTopbar"></span>
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <!-- ======================================
                  DASHBOARD
-            ========================== -->
+            ======================================= -->
 
             <section
                 id="paginaDashboard"
                 class="pagina"
             >
 
-                <h2>📊 Dashboard</h2>
+                <div class="dashboard-boas-vindas">
 
-                <div class="cards-dashboard">
+                    <div>
 
-                    <div class="card-dashboard">
-                        <span>🚑</span>
+                        <span class="dashboard-label">
+                            VISÃO GERAL
+                        </span>
 
-                        <strong id="totalAmbulancias">
-                            0
-                        </strong>
+                        <h2>
+                            Olá! 👋
+                        </h2>
 
                         <p>
-                            Ambulâncias
+                            Acompanhe as movimentações da operação
+                            em um só lugar.
                         </p>
+
+                    </div>
+
+                    <div class="dashboard-data">
+
+                        <span>Hoje</span>
+
+                        <strong id="dataDashboard">
+                            --
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <!-- CARDS -->
+
+                <div class="dashboard-cards">
+
+                    <div class="dashboard-card card-ambulancia">
+
+                        <div class="card-icon">
+                            🚑
+                        </div>
+
+                        <div class="card-conteudo">
+
+                            <span>
+                                Ambulâncias
+                            </span>
+
+                            <strong id="totalAmbulancias">
+                                0
+                            </strong>
+
+                            <small>
+                                total registrado
+                            </small>
+
+                        </div>
+
                     </div>
 
 
-                    <div class="card-dashboard">
-                        <span>🔄</span>
+                    <div class="dashboard-card card-transferencia">
 
-                        <strong id="totalTransferencias">
-                            0
-                        </strong>
+                        <div class="card-icon">
+                            🔄
+                        </div>
 
-                        <p>
-                            Transferências
-                        </p>
+                        <div class="card-conteudo">
+
+                            <span>
+                                Transferências
+                            </span>
+
+                            <strong id="totalTransferencias">
+                                0
+                            </strong>
+
+                            <small>
+                                total registrado
+                            </small>
+
+                        </div>
+
                     </div>
 
 
-                    <div class="card-dashboard">
-                        <span>🚚</span>
+                    <div class="dashboard-card card-apoio">
 
-                        <strong id="totalApoios">
-                            0
-                        </strong>
+                        <div class="card-icon">
+                            🤝
+                        </div>
 
-                        <p>
-                            Apoios de rota
-                        </p>
+                        <div class="card-conteudo">
+
+                            <span>
+                                Apoios de rota
+                            </span>
+
+                            <strong id="totalApoios">
+                                0
+                            </strong>
+
+                            <small>
+                                total registrado
+                            </small>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="dashboard-card card-valor">
+
+                        <div class="card-icon">
+                            💰
+                        </div>
+
+                        <div class="card-conteudo">
+
+                            <span>
+                                Valor em apoios
+                            </span>
+
+                            <strong id="valorTotalApoios">
+                                R$ 0,00
+                            </strong>
+
+                            <small>
+                                valor acumulado
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- RESUMO -->
+
+                <div class="dashboard-grid">
+
+
+                    <div class="dashboard-box">
+
+                        <div class="box-header">
+
+                            <div>
+
+                                <span class="box-label">
+                                    MOVIMENTAÇÃO
+                                </span>
+
+                                <h3>
+                                    Hoje
+                                </h3>
+
+                            </div>
+
+                            <div class="box-icon">
+                                📅
+                            </div>
+
+                        </div>
+
+
+                        <div class="resumo-hoje">
+
+                            <div class="resumo-item">
+
+                                <div class="resumo-icon vermelho">
+                                    🚑
+                                </div>
+
+                                <div>
+
+                                    <span>
+                                        Ambulâncias
+                                    </span>
+
+                                    <strong id="hojeAmbulancias">
+                                        0
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="resumo-item">
+
+                                <div class="resumo-icon azul">
+                                    🔄
+                                </div>
+
+                                <div>
+
+                                    <span>
+                                        Transferências
+                                    </span>
+
+                                    <strong id="hojeTransferencias">
+                                        0
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="resumo-item">
+
+                                <div class="resumo-icon verde">
+                                    🤝
+                                </div>
+
+                                <div>
+
+                                    <span>
+                                        Apoios
+                                    </span>
+
+                                    <strong id="hojeApoios">
+                                        0
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="resumo-item">
+
+                                <div class="resumo-icon amarelo">
+                                    💰
+                                </div>
+
+                                <div>
+
+                                    <span>
+                                        Valor dos apoios
+                                    </span>
+
+                                    <strong id="hojeValorApoios">
+                                        R$ 0,00
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- DISTRIBUIÇÃO -->
+
+                    <div class="dashboard-box">
+
+                        <div class="box-header">
+
+                            <div>
+
+                                <span class="box-label">
+                                    DISTRIBUIÇÃO
+                                </span>
+
+                                <h3>
+                                    Registros
+                                </h3>
+
+                            </div>
+
+                            <div class="box-icon">
+                                📊
+                            </div>
+
+                        </div>
+
+
+                        <div class="barras-dashboard">
+
+
+                            <div class="barra-item">
+
+                                <div class="barra-topo">
+
+                                    <span>
+                                        🚑 Ambulâncias
+                                    </span>
+
+                                    <strong id="barraAmbulanciasTexto">
+                                        0
+                                    </strong>
+
+                                </div>
+
+                                <div class="barra-fundo">
+
+                                    <div
+                                        id="barraAmbulancias"
+                                        class="barra barra-vermelha"
+                                    ></div>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="barra-item">
+
+                                <div class="barra-topo">
+
+                                    <span>
+                                        🔄 Transferências
+                                    </span>
+
+                                    <strong id="barraTransferenciasTexto">
+                                        0
+                                    </strong>
+
+                                </div>
+
+                                <div class="barra-fundo">
+
+                                    <div
+                                        id="barraTransferencias"
+                                        class="barra barra-azul"
+                                    ></div>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="barra-item">
+
+                                <div class="barra-topo">
+
+                                    <span>
+                                        🤝 Apoios
+                                    </span>
+
+                                    <strong id="barraApoiosTexto">
+                                        0
+                                    </strong>
+
+                                </div>
+
+                                <div class="barra-fundo">
+
+                                    <div
+                                        id="barraApoios"
+                                        class="barra barra-verde"
+                                    ></div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ÚLTIMOS LANÇAMENTOS -->
+
+                <div class="dashboard-box ultimos-box">
+
+                    <div class="box-header">
+
+                        <div>
+
+                            <span class="box-label">
+                                ATIVIDADE RECENTE
+                            </span>
+
+                            <h3>
+                                Últimos lançamentos
+                            </h3>
+
+                        </div>
+
+                        <button
+                            class="btn-secundario"
+                            onclick="mostrarPagina('registros')"
+                        >
+                            Ver todos →
+                        </button>
+
+                    </div>
+
+
+                    <div
+                        id="ultimosLancamentos"
+                        class="ultimos-lancamentos"
+                    >
+
+                        <div class="sem-registros-dashboard">
+
+                            <div>
+                                📋
+                            </div>
+
+                            Nenhum lançamento encontrado.
+
+                        </div>
+
                     </div>
 
                 </div>
@@ -227,429 +706,569 @@
             </section>
 
 
-            <!-- =========================
+            <!-- ======================================
                  AMBULÂNCIA
-            ========================== -->
+            ======================================= -->
 
             <section
                 id="paginaAmbulancia"
                 class="pagina escondida"
             >
 
-                <div class="titulo-pagina">
-                    <h2>🚑 Registrar Ambulância</h2>
-                </div>
+                <div class="pagina-titulo">
 
+                    <div>
 
-                <form id="formAmbulancia">
+                        <span>
+                            OPERAÇÃO
+                        </span>
 
-                    <div class="grid-form">
+                        <h2>
+                            🚑 Ambulância
+                        </h2>
 
-                        <div>
-                            <label for="dataAmbulancia">
-                                Data
-                            </label>
-
-                            <input
-                                type="date"
-                                id="dataAmbulancia"
-                                required
-                            >
-                        </div>
-
-
-                        <div>
-                            <label for="rotaAmbulancia">
-                                Rota ID
-                            </label>
-
-                            <input
-                                type="text"
-                                id="rotaAmbulancia"
-                                placeholder="Ex.: 503671540002"
-                                required
-                            >
-                        </div>
-
-
-                        <div>
-                            <label for="driverAmbulancia">
-                                Driver
-                            </label>
-
-                            <input
-                                type="text"
-                                id="driverAmbulancia"
-                                placeholder="Nome do driver"
-                                required
-                            >
-                        </div>
-
-
-                        <div>
-                            <label for="cidadeAmbulancia">
-                                Cidade
-                            </label>
-
-                            <input
-                                type="text"
-                                id="cidadeAmbulancia"
-                                placeholder="Cidade"
-                                required
-                            >
-                        </div>
-
-
-                        <div>
-                            <label for="pacotesAmbulancia">
-                                Quantidade de pacotes
-                            </label>
-
-                            <input
-                                type="number"
-                                id="pacotesAmbulancia"
-                                min="0"
-                                placeholder="Quantidade"
-                                required
-                            >
-                        </div>
-
-
-                        <div>
-                            <label for="meliAmbulancia">
-                                Quem liberou / autorizou
-                            </label>
-
-                            <input
-                                type="text"
-                                id="meliAmbulancia"
-                                placeholder="Nome"
-                                required
-                            >
-                        </div>
+                        <p>
+                            Registre uma ambulância utilizada na operação.
+                        </p>
 
                     </div>
 
-
-                    <label for="motivoAmbulancia">
-                        Motivo
-                    </label>
-
-                    <textarea
-                        id="motivoAmbulancia"
-                        placeholder="Informe o motivo da ambulância"
-                        required
-                    ></textarea>
+                </div>
 
 
-                    <label for="obsAmbulancia">
-                        Observações
-                    </label>
+                <div class="form-card">
 
-                    <textarea
-                        id="obsAmbulancia"
-                        placeholder="Observações adicionais"
-                    ></textarea>
+                    <form id="formAmbulancia">
+
+                        <div class="form-grid">
+
+                            <div class="campo">
+
+                                <label>
+                                    Data
+                                </label>
+
+                                <input
+                                    type="date"
+                                    id="dataAmbulancia"
+                                    required
+                                >
+
+                            </div>
 
 
-                    <button
-                        type="submit"
-                        class="botao-principal"
-                    >
-                        💾 SALVAR AMBULÂNCIA
-                    </button>
+                            <div class="campo">
 
-                    <p id="mensagemAmbulancia"></p>
+                                <label>
+                                    ID da rota
+                                </label>
 
-                </form>
+                                <input
+                                    type="text"
+                                    id="rotaAmbulancia"
+                                    placeholder="Ex.: AM1_23"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Driver
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="driverAmbulancia"
+                                    placeholder="Nome do motorista"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Cidade
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="cidadeAmbulancia"
+                                    placeholder="Cidade"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Quantidade de pacotes
+                                </label>
+
+                                <input
+                                    type="number"
+                                    id="pacotesAmbulancia"
+                                    min="0"
+                                    placeholder="0"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Meli que liberou
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="meliAmbulancia"
+                                    placeholder="Nome"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="campo">
+
+                            <label>
+                                Motivo
+                            </label>
+
+                            <textarea
+                                id="motivoAmbulancia"
+                                placeholder="Informe o motivo da ambulância..."
+                                required
+                            ></textarea>
+
+                        </div>
+
+
+                        <div class="campo">
+
+                            <label>
+                                Observações
+                            </label>
+
+                            <textarea
+                                id="obsAmbulancia"
+                                placeholder="Observações adicionais..."
+                            ></textarea>
+
+                        </div>
+
+
+                        <div class="form-acoes">
+
+                            <button
+                                type="submit"
+                                class="btn-principal"
+                            >
+                                🚑 Registrar ambulância
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
 
             </section>
 
 
-            <!-- =========================
+            <!-- ======================================
                  TRANSFERÊNCIA
-            ========================== -->
+            ======================================= -->
 
             <section
                 id="paginaTransferencia"
                 class="pagina escondida"
             >
 
-                <h2>🔄 Registrar Transferência</h2>
+                <div class="pagina-titulo">
 
+                    <div>
 
-                <form id="formTransferencia">
+                        <span>
+                            OPERAÇÃO
+                        </span>
 
-                    <div class="grid-form">
+                        <h2>
+                            🔄 Transferência
+                        </h2>
 
-                        <div>
-                            <label for="dataTransferencia">
-                                Data
-                            </label>
-
-                            <input
-                                type="date"
-                                id="dataTransferencia"
-                                required
-                            >
-                        </div>
-
-
-                        <div>
-                            <label for="rotaTransferencia">
-                                Rota ID
-                            </label>
-
-                            <input
-                                type="text"
-                                id="rotaTransferencia"
-                                placeholder="Rota ID"
-                                required
-                            >
-                        </div>
-
-
-                        <div>
-                            <label for="driverInicial">
-                                Driver que iniciou
-                            </label>
-
-                            <input
-                                type="text"
-                                id="driverInicial"
-                                placeholder="Nome do driver"
-                                required
-                            >
-                        </div>
-
-
-                        <div>
-                            <label for="driverSubstituto">
-                                Driver substituto
-                            </label>
-
-                            <input
-                                type="text"
-                                id="driverSubstituto"
-                                placeholder="Nome do substituto"
-                                required
-                            >
-                        </div>
-
-
-                        <div>
-                            <label for="cidadeTransferencia">
-                                Cidade
-                            </label>
-
-                            <input
-                                type="text"
-                                id="cidadeTransferencia"
-                                placeholder="Cidade"
-                                required
-                            >
-                        </div>
-
-
-                        <div>
-                            <label for="meliTransferencia">
-                                Quem liberou / autorizou
-                            </label>
-
-                            <input
-                                type="text"
-                                id="meliTransferencia"
-                                placeholder="Nome"
-                                required
-                            >
-                        </div>
+                        <p>
+                            Registre a transferência de uma rota.
+                        </p>
 
                     </div>
 
-
-                    <label for="motivoTransferencia">
-                        Motivo
-                    </label>
-
-                    <textarea
-                        id="motivoTransferencia"
-                        placeholder="Informe o motivo"
-                        required
-                    ></textarea>
+                </div>
 
 
-                    <label for="obsTransferencia">
-                        Observações
-                    </label>
+                <div class="form-card">
 
-                    <textarea
-                        id="obsTransferencia"
-                        placeholder="Observações adicionais"
-                    ></textarea>
+                    <form id="formTransferencia">
+
+                        <div class="form-grid">
+
+                            <div class="campo">
+
+                                <label>
+                                    Data
+                                </label>
+
+                                <input
+                                    type="date"
+                                    id="dataTransferencia"
+                                    required
+                                >
+
+                            </div>
 
 
-                    <button
-                        type="submit"
-                        class="botao-principal"
-                    >
-                        💾 SALVAR TRANSFERÊNCIA
-                    </button>
+                            <div class="campo">
 
-                    <p id="mensagemTransferencia"></p>
+                                <label>
+                                    ID da rota
+                                </label>
 
-                </form>
+                                <input
+                                    type="text"
+                                    id="rotaTransferencia"
+                                    placeholder="Ex.: AM1_23"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Driver inicial
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="driverInicial"
+                                    placeholder="Motorista inicial"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Driver substituto
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="driverSubstituto"
+                                    placeholder="Motorista substituto"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Cidade
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="cidadeTransferencia"
+                                    placeholder="Cidade"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Meli que liberou
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="meliTransferencia"
+                                    placeholder="Nome"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="campo">
+
+                            <label>
+                                Motivo
+                            </label>
+
+                            <textarea
+                                id="motivoTransferencia"
+                                placeholder="Informe o motivo da transferência..."
+                                required
+                            ></textarea>
+
+                        </div>
+
+
+                        <div class="campo">
+
+                            <label>
+                                Observações
+                            </label>
+
+                            <textarea
+                                id="obsTransferencia"
+                                placeholder="Observações adicionais..."
+                            ></textarea>
+
+                        </div>
+
+
+                        <div class="form-acoes">
+
+                            <button
+                                type="submit"
+                                class="btn-principal"
+                            >
+                                🔄 Registrar transferência
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
 
             </section>
 
 
-            <!-- =========================
+            <!-- ======================================
                  APOIO
-            ========================== -->
+            ======================================= -->
 
             <section
                 id="paginaApoio"
                 class="pagina escondida"
             >
 
-                <h2>🚚 Registrar Apoio de Rota</h2>
+                <div class="pagina-titulo">
 
-                <p class="descricao-pagina">
-                    Registre quando um driver realiza apoio
-                    para outra rota.
-                </p>
+                    <div>
 
+                        <span>
+                            OPERAÇÃO
+                        </span>
 
-                <form id="formApoio">
+                        <h2>
+                            🤝 Apoio de Rota
+                        </h2>
 
-                    <div class="grid-form">
-
-                        <div>
-                            <label for="dataApoio">
-                                Data
-                            </label>
-
-                            <input
-                                type="date"
-                                id="dataApoio"
-                                required
-                            >
-                        </div>
-
-
-                        <div>
-                            <label for="rotaApoio">
-                                Rota ID que precisa do apoio
-                            </label>
-
-                            <input
-                                type="text"
-                                id="rotaApoio"
-                                placeholder="Ex.: 503671540002"
-                                required
-                            >
-                        </div>
-
-
-                        <div>
-                            <label for="valorApoio">
-                                Valor do apoio
-                            </label>
-
-                            <input
-                                type="number"
-                                id="valorApoio"
-                                min="0"
-                                step="0.01"
-                                placeholder="Ex.: 50,00"
-                                required
-                            >
-                        </div>
-
-
-                        <div>
-                            <label for="driverRealizaApoio">
-                                Driver que realiza o apoio
-                            </label>
-
-                            <input
-                                type="text"
-                                id="driverRealizaApoio"
-                                placeholder="Nome do driver"
-                                required
-                            >
-                        </div>
-
-
-                        <div>
-                            <label for="driverPrecisaApoio">
-                                Driver que precisa do apoio
-                            </label>
-
-                            <input
-                                type="text"
-                                id="driverPrecisaApoio"
-                                placeholder="Nome do driver"
-                                required
-                            >
-                        </div>
-
-
-                        <div>
-                            <label for="quemLiberouApoio">
-                                Quem liberou o apoio
-                            </label>
-
-                            <input
-                                type="text"
-                                id="quemLiberouApoio"
-                                placeholder="Nome de quem autorizou"
-                                required
-                            >
-                        </div>
+                        <p>
+                            Registre valores e motoristas envolvidos no apoio.
+                        </p>
 
                     </div>
 
-
-                    <label for="obsApoio">
-                        Observações
-                    </label>
-
-                    <textarea
-                        id="obsApoio"
-                        placeholder="Informe detalhes do apoio, motivo, quantidade de pacotes etc."
-                    ></textarea>
+                </div>
 
 
-                    <button
-                        type="submit"
-                        class="botao-principal"
-                    >
-                        💾 SALVAR APOIO
-                    </button>
+                <div class="form-card">
 
-                    <p id="mensagemApoio"></p>
+                    <form id="formApoio">
 
-                </form>
+                        <div class="form-grid">
+
+                            <div class="campo">
+
+                                <label>
+                                    Data
+                                </label>
+
+                                <input
+                                    type="date"
+                                    id="dataApoio"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="campo">
+
+                                <label>
+                                    ID da rota
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="rotaApoio"
+                                    placeholder="Ex.: AM1_23"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Valor do apoio
+                                </label>
+
+                                <input
+                                    type="number"
+                                    id="valorApoio"
+                                    step="0.01"
+                                    min="0"
+                                    placeholder="R$ 0,00"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Driver que realiza o apoio
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="driverRealizaApoio"
+                                    placeholder="Nome do motorista"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Driver que precisa do apoio
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="driverPrecisaApoio"
+                                    placeholder="Nome do motorista"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Quem liberou
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="quemLiberouApoio"
+                                    placeholder="Nome"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="campo">
+
+                            <label>
+                                Observações
+                            </label>
+
+                            <textarea
+                                id="obsApoio"
+                                placeholder="Observações sobre o apoio..."
+                            ></textarea>
+
+                        </div>
+
+
+                        <div class="form-acoes">
+
+                            <button
+                                type="submit"
+                                class="btn-principal"
+                            >
+                                🤝 Registrar apoio
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
 
             </section>
 
 
-            <!-- =========================
+            <!-- ======================================
                  REGISTROS
-            ========================== -->
+            ======================================= -->
 
             <section
                 id="paginaRegistros"
                 class="pagina escondida"
             >
 
-                <h2>📋 Registros</h2>
-
-
-                <div class="filtros">
+                <div class="pagina-titulo">
 
                     <div>
-                        <label for="filtroData">
+
+                        <span>
+                            CONSULTA
+                        </span>
+
+                        <h2>
+                            📋 Registros
+                        </h2>
+
+                        <p>
+                            Consulte todos os lançamentos realizados.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="filtros-card">
+
+                    <div class="campo">
+
+                        <label>
                             Data
                         </label>
 
@@ -657,12 +1276,14 @@
                             type="date"
                             id="filtroData"
                         >
+
                     </div>
 
 
-                    <div>
-                        <label for="filtroRota">
-                            Rota ID
+                    <div class="campo">
+
+                        <label>
+                            Rota
                         </label>
 
                         <input
@@ -670,24 +1291,28 @@
                             id="filtroRota"
                             placeholder="Buscar rota"
                         >
+
                     </div>
 
 
-                    <div>
-                        <label for="filtroDriver">
+                    <div class="campo">
+
+                        <label>
                             Driver
                         </label>
 
                         <input
                             type="text"
                             id="filtroDriver"
-                            placeholder="Buscar driver"
+                            placeholder="Buscar motorista"
                         >
+
                     </div>
 
 
-                    <div>
-                        <label for="filtroTipo">
+                    <div class="campo">
+
+                        <label>
                             Tipo
                         </label>
 
@@ -698,182 +1323,199 @@
                             </option>
 
                             <option value="ambulancia">
-                                Ambulância
+                                🚑 Ambulância
                             </option>
 
                             <option value="transferencia">
-                                Transferência
+                                🔄 Transferência
                             </option>
 
                             <option value="apoio">
-                                Apoio de Rota
+                                🤝 Apoio
                             </option>
 
                         </select>
+
                     </div>
-
-
-                    <button
-                        type="button"
-                        onclick="limparFiltros()"
-                        class="botao-limpar"
-                    >
-                        Limpar filtros
-                    </button>
 
                 </div>
 
 
-                <div id="listaRegistros"></div>
+                <div
+                    id="listaRegistros"
+                    class="lista-registros"
+                ></div>
 
             </section>
 
         </main>
 
-    </section>
+    </div>
 
 
-    <!-- =========================
+    <!-- ==========================================
          MODAL ALTERAR SENHA
-    ========================== -->
+    =========================================== -->
 
     <div
         id="modalSenha"
-        class="modal-senha escondida"
+        class="modal escondida"
     >
 
-        <div class="caixa-senha">
+        <div class="modal-card">
 
-            <h2>🔐 Alterar senha</h2>
+            <button
+                class="modal-fechar"
+                onclick="fecharAlterarSenha()"
+            >
+                ×
+            </button>
+
+            <div class="modal-icon">
+                🔒
+            </div>
+
+            <h2>
+                Alterar senha
+            </h2>
+
+            <p>
+                Digite sua senha atual e escolha uma nova senha.
+            </p>
+
 
             <form id="formAlterarSenha">
 
-                <label for="senhaAtual">
-                    Senha atual
-                </label>
+                <div class="campo">
 
-                <input
-                    type="password"
-                    id="senhaAtual"
-                    required
-                >
+                    <label>
+                        Senha atual
+                    </label>
 
-
-                <label for="novaSenha">
-                    Nova senha
-                </label>
-
-                <input
-                    type="password"
-                    id="novaSenha"
-                    minlength="6"
-                    required
-                >
-
-
-                <label for="confirmarSenha">
-                    Confirmar nova senha
-                </label>
-
-                <input
-                    type="password"
-                    id="confirmarSenha"
-                    minlength="6"
-                    required
-                >
-
-
-                <p
-                    id="mensagemSenha"
-                    class="mensagem-senha"
-                ></p>
-
-
-                <div class="botoes-senha">
-
-                    <button
-                        type="submit"
-                        class="botao-confirmar-senha"
+                    <input
+                        type="password"
+                        id="senhaAtual"
+                        required
                     >
-                        Alterar senha
-                    </button>
-
-                    <button
-                        type="button"
-                        onclick="fecharAlterarSenha()"
-                        class="botao-cancelar-senha"
-                    >
-                        Cancelar
-                    </button>
 
                 </div>
 
+
+                <div class="campo">
+
+                    <label>
+                        Nova senha
+                    </label>
+
+                    <input
+                        type="password"
+                        id="novaSenha"
+                        minlength="6"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="campo">
+
+                    <label>
+                        Confirmar nova senha
+                    </label>
+
+                    <input
+                        type="password"
+                        id="confirmarSenha"
+                        minlength="6"
+                        required
+                    >
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="btn-principal"
+                >
+                    Alterar senha
+                </button>
+
             </form>
+
+
+            <div
+                id="mensagemSenha"
+                class="mensagem"
+            ></div>
 
         </div>
 
     </div>
 
 
-    <!-- =========================
+    <!-- ==========================================
          MODAL RECUPERAR SENHA
-    ========================== -->
+    =========================================== -->
 
     <div
         id="modalRecuperarSenha"
-        class="modal-senha escondida"
+        class="modal escondida"
     >
 
-        <div class="caixa-senha">
+        <div class="modal-card">
 
-            <h2>🔑 Recuperar senha</h2>
+            <button
+                class="modal-fechar"
+                onclick="fecharRecuperarSenha()"
+            >
+                ×
+            </button>
 
-            <p class="texto-senha">
-                Digite seu e-mail. Enviaremos um link
-                para você criar uma nova senha.
+            <div class="modal-icon">
+                🔑
+            </div>
+
+            <h2>
+                Recuperar senha
+            </h2>
+
+            <p>
+                Informe seu e-mail para receber o link de recuperação.
             </p>
 
 
             <form id="formRecuperarSenha">
 
-                <label for="emailRecuperacao">
-                    E-mail
-                </label>
+                <div class="campo">
 
-                <input
-                    type="email"
-                    id="emailRecuperacao"
-                    placeholder="Digite seu e-mail"
-                    required
-                >
+                    <label>
+                        E-mail
+                    </label>
 
-
-                <p
-                    id="mensagemRecuperacao"
-                    class="mensagem-senha"
-                ></p>
-
-
-                <div class="botoes-senha">
-
-                    <button
-                        type="submit"
-                        class="botao-confirmar-senha"
+                    <input
+                        type="email"
+                        id="emailRecuperacao"
+                        placeholder="seu@email.com"
+                        required
                     >
-                        📧 ENVIAR LINK
-                    </button>
-
-                    <button
-                        type="button"
-                        onclick="fecharRecuperarSenha()"
-                        class="botao-cancelar-senha"
-                    >
-                        Cancelar
-                    </button>
 
                 </div>
 
+
+                <button
+                    type="submit"
+                    class="btn-principal"
+                >
+                    Enviar recuperação
+                </button>
+
             </form>
+
+
+            <div
+                id="mensagemRecuperacao"
+                class="mensagem"
+            ></div>
 
         </div>
 
