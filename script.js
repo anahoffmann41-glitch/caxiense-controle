@@ -1,21 +1,14 @@
-/* =========================================================
-   FIREBASE
-========================================================= */
-
 import {
     initializeApp
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-
 
 import {
     getDatabase,
     ref,
     push,
-    set,
     onValue,
     remove
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
-
 
 import {
     getAuth,
@@ -30,36 +23,19 @@ import {
 
 
 /* =========================================================
-   CONFIGURAÇÃO FIREBASE
+   FIREBASE
 ========================================================= */
 
 const firebaseConfig = {
-
     apiKey: "AIzaSyCZ3xorH3D9Z0vmIfd_zafyceLJekXJPaY",
-
-    authDomain:
-        "amb-e-trans-caxiense-log.firebaseapp.com",
-
-    databaseURL:
-        "https://amb-e-trans-caxiense-log-default-rtdb.firebaseio.com",
-
-    projectId:
-        "amb-e-trans-caxiense-log",
-
-    storageBucket:
-        "amb-e-trans-caxiense-log.firebasestorage.app",
-
-    messagingSenderId:
-        "194048564958",
-
-    appId:
-        "1:194048564958:web:af334ffd5d248ec9d76c4f"
+    authDomain: "amb-e-trans-caxiense-log.firebaseapp.com",
+    databaseURL: "https://amb-e-trans-caxiense-log-default-rtdb.firebaseio.com",
+    projectId: "amb-e-trans-caxiense-log",
+    storageBucket: "amb-e-trans-caxiense-log.firebasestorage.app",
+    messagingSenderId: "194048564958",
+    appId: "1:194048564958:web:af334ffd5d248ec9d76c4f"
 };
 
-
-/* =========================================================
-   INICIALIZAÇÃO
-========================================================= */
 
 const app = initializeApp(firebaseConfig);
 
@@ -68,13 +44,18 @@ const db = getDatabase(app);
 const auth = getAuth(app);
 
 
-let usuario = null;
+/* =========================================================
+   VARIÁVEIS
+========================================================= */
 
+let usuario = null;
 let todosRegistros = [];
+
+let toastTimeout;
 
 
 /* =========================================================
-   FUNÇÕES AUXILIARES
+   HELPERS
 ========================================================= */
 
 function hojeISO() {
@@ -98,10 +79,10 @@ function hojeISO() {
 function formatarData(data) {
 
     if (!data) {
-        return "-";
+        return "—";
     }
 
-    const partes = data.split("-");
+    const partes = String(data).split("-");
 
     if (partes.length !== 3) {
         return data;
@@ -113,7 +94,9 @@ function formatarData(data) {
 
 function formatarMoeda(valor) {
 
-    return Number(valor || 0).toLocaleString(
+    const numero = Number(valor) || 0;
+
+    return numero.toLocaleString(
         "pt-BR",
         {
             style: "currency",
@@ -123,22 +106,22 @@ function formatarMoeda(valor) {
 }
 
 
-function escaparHTML(texto) {
+function escaparHTML(valor) {
 
-    if (texto === null || texto === undefined) {
-        return "";
-    }
-
-    return String(texto)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    return String(valor ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 }
 
 
-function mostrarMensagem(elemento, mensagem, tipo = "") {
+function mostrarMensagem(
+    elemento,
+    mensagem,
+    tipo = "erro"
+) {
 
     if (!elemento) {
         return;
@@ -146,16 +129,40 @@ function mostrarMensagem(elemento, mensagem, tipo = "") {
 
     elemento.textContent = mensagem;
 
-    elemento.className = "mensagem";
+    elemento.className =
+        `mensagem ${tipo}`;
+}
 
-    if (tipo) {
-        elemento.classList.add(tipo);
+
+function mostrarToast(
+    mensagem,
+    tipo = "normal"
+) {
+
+    const toast =
+        document.getElementById("toast");
+
+    if (!toast) {
+        return;
     }
+
+    clearTimeout(toastTimeout);
+
+    toast.textContent = mensagem;
+
+    toast.className =
+        `toast mostrar ${tipo}`;
+
+    toastTimeout = setTimeout(() => {
+
+        toast.classList.remove("mostrar");
+
+    }, 3500);
 }
 
 
 /* =========================================================
-   DATA PADRÃO DOS FORMULÁRIOS
+   DATAS
 ========================================================= */
 
 function preencherDatas() {
@@ -170,31 +177,37 @@ function preencherDatas() {
 
     campos.forEach(id => {
 
-        const campo = document.getElementById(id);
+        const campo =
+            document.getElementById(id);
 
-        if (campo && !campo.value) {
+        if (campo) {
             campo.value = hoje;
         }
 
     });
 
+
     const dataDashboard =
-        document.getElementById("dataDashboard");
+        document.getElementById(
+            "dataDashboard"
+        );
 
     if (dataDashboard) {
 
-        const data = new Date();
-
         dataDashboard.textContent =
-            data.toLocaleDateString(
-                "pt-BR",
-                {
-                    weekday: "long",
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric"
-                }
-            );
+            formatarData(hoje);
+    }
+
+
+    const dataTopbar =
+        document.getElementById(
+            "dataTopbar"
+        );
+
+    if (dataTopbar) {
+
+        dataTopbar.textContent =
+            formatarData(hoje);
     }
 }
 
@@ -211,26 +224,30 @@ if (formLogin) {
 
     formLogin.addEventListener(
         "submit",
-        async function (event) {
+        async evento => {
 
-            event.preventDefault();
+            evento.preventDefault();
 
             const email =
-                document.getElementById("loginEmail")
-                    .value
-                    .trim();
+                document.getElementById(
+                    "loginEmail"
+                ).value.trim();
 
             const senha =
-                document.getElementById("loginSenha")
-                    .value;
+                document.getElementById(
+                    "loginSenha"
+                ).value;
 
             const mensagem =
-                document.getElementById("mensagemLogin");
+                document.getElementById(
+                    "mensagemLogin"
+                );
 
 
             mostrarMensagem(
                 mensagem,
-                "Entrando..."
+                "Entrando...",
+                "sucesso"
             );
 
 
@@ -242,18 +259,17 @@ if (formLogin) {
                     senha
                 );
 
-                mostrarMensagem(
-                    mensagem,
-                    "Login realizado com sucesso!",
-                    "sucesso"
-                );
+                mensagem.textContent = "";
+
+                mensagem.className =
+                    "mensagem";
 
             } catch (erro) {
 
                 console.error(erro);
 
                 let texto =
-                    "Não foi possível realizar o login.";
+                    "Não foi possível entrar. Verifique o e-mail e a senha.";
 
                 if (
                     erro.code ===
@@ -281,11 +297,20 @@ if (formLogin) {
 
                 } else if (
                     erro.code ===
-                    "auth/invalid-email"
+                    "auth/too-many-requests"
                 ) {
 
                     texto =
-                        "E-mail inválido.";
+                        "Muitas tentativas. Aguarde alguns minutos.";
+
+                } else if (
+                    erro.code ===
+                    "auth/invalid-api-key"
+                ) {
+
+                    texto =
+                        "Erro de configuração da autenticação.";
+
                 }
 
                 mostrarMensagem(
@@ -297,51 +322,44 @@ if (formLogin) {
 
         }
     );
+
 }
 
 
 /* =========================================================
-   ESTADO DE AUTENTICAÇÃO
+   AUTENTICAÇÃO
 ========================================================= */
 
 onAuthStateChanged(
     auth,
-    function (user) {
+    usuarioAtual => {
 
-        usuario = user;
+        usuario = usuarioAtual;
+
 
         const telaLogin =
-            document.getElementById("telaLogin");
+            document.getElementById(
+                "telaLogin"
+            );
 
         const sistema =
-            document.getElementById("sistema");
-
-        const nomeUsuario =
-            document.getElementById("nomeUsuario");
-
-        const usuarioTopbar =
-            document.getElementById("usuarioTopbar");
+            document.getElementById(
+                "sistema"
+            );
 
 
-        if (user) {
+        if (usuarioAtual) {
 
-            if (telaLogin) {
-                telaLogin.style.display = "none";
-            }
+            telaLogin.classList.add(
+                "oculto"
+            );
 
-            if (sistema) {
-                sistema.style.display = "block";
-            }
+            sistema.classList.remove(
+                "oculto"
+            );
 
-            if (nomeUsuario) {
-                nomeUsuario.textContent =
-                    user.email;
-            }
 
-            if (usuarioTopbar) {
-                usuarioTopbar.textContent =
-                    user.email;
-            }
+            atualizarUsuario();
 
             preencherDatas();
 
@@ -349,19 +367,85 @@ onAuthStateChanged(
 
             carregarRegistros();
 
+            mostrarPagina(
+                "dashboard"
+            );
+
         } else {
 
-            if (telaLogin) {
-                telaLogin.style.display = "flex";
-            }
+            telaLogin.classList.remove(
+                "oculto"
+            );
 
-            if (sistema) {
-                sistema.style.display = "none";
-            }
+            sistema.classList.add(
+                "oculto"
+            );
+
         }
 
     }
 );
+
+
+/* =========================================================
+   USUÁRIO
+========================================================= */
+
+function atualizarUsuario() {
+
+    if (!usuario) {
+        return;
+    }
+
+    const email =
+        usuario.email || "Usuário";
+
+
+    const nome =
+        email.includes("@")
+            ? email.split("@")[0]
+            : email;
+
+
+    const nomeUsuario =
+        document.getElementById(
+            "nomeUsuario"
+        );
+
+    const emailUsuario =
+        document.getElementById(
+            "emailUsuario"
+        );
+
+
+    if (nomeUsuario) {
+
+        nomeUsuario.textContent =
+            nome;
+    }
+
+
+    if (emailUsuario) {
+
+        emailUsuario.textContent =
+            email;
+    }
+
+
+    const avatar =
+        document.querySelector(
+            ".avatar"
+        );
+
+    if (avatar) {
+
+        avatar.textContent =
+            nome
+                .charAt(0)
+                .toUpperCase();
+    }
+
+}
 
 
 /* =========================================================
@@ -376,48 +460,61 @@ window.sairSistema = async function () {
 
     } catch (erro) {
 
-        console.error(
-            "Erro ao sair:",
-            erro
-        );
+        console.error(erro);
 
+        mostrarToast(
+            "Não foi possível sair do sistema."
+        );
     }
+
 };
 
 
 /* =========================================================
-   MENU MOBILE
+   SIDEBAR MOBILE
 ========================================================= */
 
 window.alternarSidebar = function () {
 
     const sidebar =
-        document.querySelector(".sidebar");
+        document.querySelector(
+            ".sidebar"
+        );
+
 
     if (!sidebar) {
         return;
     }
 
-    sidebar.classList.toggle("aberta");
+
+    sidebar.classList.toggle(
+        "aberta"
+    );
+
 };
 
-
-/* Fecha sidebar ao clicar em uma página no celular */
 
 function fecharSidebarMobile() {
 
     const sidebar =
-        document.querySelector(".sidebar");
+        document.querySelector(
+            ".sidebar"
+        );
+
 
     if (!sidebar) {
         return;
     }
 
+
     if (window.innerWidth <= 900) {
 
-        sidebar.classList.remove("aberta");
+        sidebar.classList.remove(
+            "aberta"
+        );
 
     }
+
 }
 
 
@@ -425,129 +522,163 @@ function fecharSidebarMobile() {
    NAVEGAÇÃO
 ========================================================= */
 
-window.mostrarPagina = function (pagina) {
+window.mostrarPagina = function (
+    pagina
+) {
 
-    const paginas = document.querySelectorAll(".pagina");
-
-    paginas.forEach(item => {
-        item.classList.remove("ativa");
-    });
-
-
-    const botoes =
-        document.querySelectorAll(".menu-item");
-
-    botoes.forEach(item => {
-        item.classList.remove("ativo");
-    });
+    const paginas =
+        document.querySelectorAll(
+            ".pagina"
+        );
 
 
-    let elementoPagina = null;
+    paginas.forEach(
+        elemento => {
 
-    let elementoMenu = null;
-
-    let titulo = "Dashboard";
-
-
-    if (pagina === "dashboard") {
-
-        elementoPagina =
-            document.getElementById(
-                "paginaDashboard"
+            elemento.classList.remove(
+                "ativa"
             );
 
-        elementoMenu =
-            document.getElementById(
-                "menuDashboard"
-            );
+        }
+    );
 
-        titulo = "Dashboard";
 
-    } else if (pagina === "ambulancia") {
+    const paginaAtual =
+        document.getElementById(
+            `pagina${pagina.charAt(0).toUpperCase()}${pagina.slice(1)}`
+        );
 
-        elementoPagina =
-            document.getElementById(
-                "paginaAmbulancia"
-            );
 
-        elementoMenu =
-            document.getElementById(
-                "menuAmbulancia"
-            );
+    if (paginaAtual) {
 
-        titulo = "Lançar Ambulância";
+        paginaAtual.classList.add(
+            "ativa"
+        );
 
-    } else if (pagina === "transferencia") {
-
-        elementoPagina =
-            document.getElementById(
-                "paginaTransferencia"
-            );
-
-        elementoMenu =
-            document.getElementById(
-                "menuTransferencia"
-            );
-
-        titulo = "Lançar Transferência";
-
-    } else if (pagina === "apoio") {
-
-        elementoPagina =
-            document.getElementById(
-                "paginaApoio"
-            );
-
-        elementoMenu =
-            document.getElementById(
-                "menuApoio"
-            );
-
-        titulo = "Apoio de Rota";
-
-    } else if (pagina === "registros") {
-
-        elementoPagina =
-            document.getElementById(
-                "paginaRegistros"
-            );
-
-        elementoMenu =
-            document.getElementById(
-                "menuRegistros"
-            );
-
-        titulo = "Registros";
     }
 
 
-    if (elementoPagina) {
-        elementoPagina.classList.add("ativa");
+    const menus = {
+
+        dashboard:
+            "menuDashboard",
+
+        ambulancia:
+            "menuAmbulancia",
+
+        transferencia:
+            "menuTransferencia",
+
+        apoio:
+            "menuApoio",
+
+        registros:
+            "menuRegistros"
+
+    };
+
+
+    Object.values(menus).forEach(
+        id => {
+
+            const elemento =
+                document.getElementById(id);
+
+            if (elemento) {
+
+                elemento.classList.remove(
+                    "ativo"
+                );
+
+            }
+
+        }
+    );
+
+
+    const menuAtual =
+        document.getElementById(
+            menus[pagina]
+        );
+
+
+    if (menuAtual) {
+
+        menuAtual.classList.add(
+            "ativo"
+        );
+
     }
 
-    if (elementoMenu) {
-        elementoMenu.classList.add("ativo");
-    }
+
+    const nomes = {
+
+        dashboard: "Dashboard",
+
+        ambulancia:
+            "Lançar ambulância",
+
+        transferencia:
+            "Lançar transferência",
+
+        apoio:
+            "Lançar apoio de rota",
+
+        registros:
+            "Registros operacionais"
+
+    };
 
 
-    const tituloPagina =
+    const titulo =
         document.getElementById(
             "tituloPagina"
         );
 
-    if (tituloPagina) {
-        tituloPagina.textContent =
-            titulo;
+
+    if (titulo) {
+
+        titulo.textContent =
+            nomes[pagina] || "Dashboard";
+
+    }
+
+
+    const breadcrumb =
+        document.getElementById(
+            "breadcrumb"
+        );
+
+
+    if (breadcrumb) {
+
+        breadcrumb.textContent =
+            `Principal / ${nomes[pagina] || "Dashboard"}`;
+
     }
 
 
     fecharSidebarMobile();
 
+
+    if (pagina === "dashboard") {
+
+        atualizarDashboard();
+
+    }
+
+
+    if (pagina === "registros") {
+
+        aplicarFiltros();
+
+    }
+
 };
 
 
 /* =========================================================
-   SALVAR AMBULÂNCIA
+   AMBULÂNCIA
 ========================================================= */
 
 const formAmbulancia =
@@ -560,16 +691,12 @@ if (formAmbulancia) {
 
     formAmbulancia.addEventListener(
         "submit",
-        async function (event) {
+        async evento => {
 
-            event.preventDefault();
+            evento.preventDefault();
+
 
             if (!usuario) {
-
-                alert(
-                    "Você precisa estar logado."
-                );
-
                 return;
             }
 
@@ -602,15 +729,15 @@ if (formAmbulancia) {
                     Number(
                         document.getElementById(
                             "pacotesAmbulancia"
-                        ).value || 0
-                    ),
+                        ).value
+                    ) || 0,
 
                 motivo:
                     document.getElementById(
                         "motivoAmbulancia"
                     ).value.trim(),
 
-                meliLiberou:
+                meli:
                     document.getElementById(
                         "meliAmbulancia"
                     ).value.trim(),
@@ -625,28 +752,15 @@ if (formAmbulancia) {
 
                 criadoEm:
                     Date.now()
+
             };
 
 
             try {
 
-                const novaReferencia =
-                    push(
-                        ref(
-                            db,
-                            "ambulancias"
-                        )
-                    );
-
-
-                await set(
-                    novaReferencia,
+                await push(
+                    ref(db, "ambulancias"),
                     registro
-                );
-
-
-                alert(
-                    "Ambulância lançada com sucesso!"
                 );
 
 
@@ -654,28 +768,34 @@ if (formAmbulancia) {
 
                 preencherDatas();
 
+
+                mostrarToast(
+                    "Ambulância registrada com sucesso."
+                );
+
+
                 carregarDashboard();
 
                 carregarRegistros();
-
 
             } catch (erro) {
 
                 console.error(erro);
 
-                alert(
-                    "Erro ao lançar ambulância."
+                mostrarToast(
+                    "Erro ao registrar a ambulância."
                 );
 
             }
 
         }
     );
+
 }
 
 
 /* =========================================================
-   SALVAR TRANSFERÊNCIA
+   TRANSFERÊNCIA
 ========================================================= */
 
 const formTransferencia =
@@ -688,17 +808,12 @@ if (formTransferencia) {
 
     formTransferencia.addEventListener(
         "submit",
-        async function (event) {
+        async evento => {
 
-            event.preventDefault();
+            evento.preventDefault();
 
 
             if (!usuario) {
-
-                alert(
-                    "Você precisa estar logado."
-                );
-
                 return;
             }
 
@@ -742,7 +857,7 @@ if (formTransferencia) {
                         "motivoTransferencia"
                     ).value.trim(),
 
-                meliLiberou:
+                meli:
                     document.getElementById(
                         "meliTransferencia"
                     ).value.trim(),
@@ -757,28 +872,15 @@ if (formTransferencia) {
 
                 criadoEm:
                     Date.now()
+
             };
 
 
             try {
 
-                const novaReferencia =
-                    push(
-                        ref(
-                            db,
-                            "transferencias"
-                        )
-                    );
-
-
-                await set(
-                    novaReferencia,
+                await push(
+                    ref(db, "transferencias"),
                     registro
-                );
-
-
-                alert(
-                    "Transferência lançada com sucesso!"
                 );
 
 
@@ -786,28 +888,34 @@ if (formTransferencia) {
 
                 preencherDatas();
 
+
+                mostrarToast(
+                    "Transferência registrada com sucesso."
+                );
+
+
                 carregarDashboard();
 
                 carregarRegistros();
-
 
             } catch (erro) {
 
                 console.error(erro);
 
-                alert(
-                    "Erro ao lançar transferência."
+                mostrarToast(
+                    "Erro ao registrar a transferência."
                 );
 
             }
 
         }
     );
+
 }
 
 
 /* =========================================================
-   SALVAR APOIO
+   APOIO
 ========================================================= */
 
 const formApoio =
@@ -820,17 +928,12 @@ if (formApoio) {
 
     formApoio.addEventListener(
         "submit",
-        async function (event) {
+        async evento => {
 
-            event.preventDefault();
+            evento.preventDefault();
 
 
             if (!usuario) {
-
-                alert(
-                    "Você precisa estar logado."
-                );
-
                 return;
             }
 
@@ -853,15 +956,15 @@ if (formApoio) {
                     Number(
                         document.getElementById(
                             "valorApoio"
-                        ).value || 0
-                    ),
+                        ).value
+                    ) || 0,
 
-                driverRealizaApoio:
+                driverRealiza:
                     document.getElementById(
                         "driverRealizaApoio"
                     ).value.trim(),
 
-                driverPrecisaApoio:
+                driverPrecisa:
                     document.getElementById(
                         "driverPrecisaApoio"
                     ).value.trim(),
@@ -886,28 +989,15 @@ if (formApoio) {
 
                 criadoEm:
                     Date.now()
+
             };
 
 
             try {
 
-                const novaReferencia =
-                    push(
-                        ref(
-                            db,
-                            "apoios"
-                        )
-                    );
-
-
-                await set(
-                    novaReferencia,
+                await push(
+                    ref(db, "apoios"),
                     registro
-                );
-
-
-                alert(
-                    "Apoio lançado com sucesso!"
                 );
 
 
@@ -915,23 +1005,29 @@ if (formApoio) {
 
                 preencherDatas();
 
+
+                mostrarToast(
+                    "Apoio registrado com sucesso."
+                );
+
+
                 carregarDashboard();
 
                 carregarRegistros();
-
 
             } catch (erro) {
 
                 console.error(erro);
 
-                alert(
-                    "Erro ao lançar apoio."
+                mostrarToast(
+                    "Erro ao registrar o apoio."
                 );
 
             }
 
         }
     );
+
 }
 
 
@@ -941,371 +1037,309 @@ if (formApoio) {
 
 function carregarDashboard() {
 
-    let ambulancias = [];
+    const dados = [];
 
-    let transferencias = [];
-
-    let apoios = [];
+    let finalizados = 0;
 
 
-    onValue(
-        ref(db, "ambulancias"),
-        snapshot => {
-
-            ambulancias = [];
-
-            snapshot.forEach(item => {
-
-                ambulancias.push({
-
-                    id: item.key,
-
-                    ...item.val(),
-
-                    tipo: "ambulancia"
-
-                });
-
-            });
-
-            atualizarDashboard(
-                ambulancias,
-                transferencias,
-                apoios
-            );
-
+    const caminhos = [
+        {
+            tipo: "ambulancia",
+            caminho: "ambulancias"
         },
         {
-            onlyOnce: true
-        }
-    );
-
-
-    onValue(
-        ref(db, "transferencias"),
-        snapshot => {
-
-            transferencias = [];
-
-            snapshot.forEach(item => {
-
-                transferencias.push({
-
-                    id: item.key,
-
-                    ...item.val(),
-
-                    tipo: "transferencia"
-
-                });
-
-            });
-
-            atualizarDashboard(
-                ambulancias,
-                transferencias,
-                apoios
-            );
-
+            tipo: "transferencia",
+            caminho: "transferencias"
         },
         {
-            onlyOnce: true
+            tipo: "apoio",
+            caminho: "apoios"
         }
-    );
+    ];
 
 
-    onValue(
-        ref(db, "apoios"),
-        snapshot => {
+    caminhos.forEach(item => {
 
-            apoios = [];
+        onValue(
+            ref(db, item.caminho),
+            snapshot => {
 
-            snapshot.forEach(item => {
+                const valor =
+                    snapshot.val() || {};
 
-                apoios.push({
 
-                    id: item.key,
+                Object.entries(valor)
+                    .forEach(
+                        ([id, registro]) => {
 
-                    ...item.val(),
+                            dados.push({
+                                ...registro,
+                                id,
+                                tipo: item.tipo
+                            });
 
-                    tipo: "apoio"
+                        }
+                    );
 
-                });
 
-            });
+                finalizados++;
 
-            atualizarDashboard(
-                ambulancias,
-                transferencias,
-                apoios
-            );
 
-        },
-        {
-            onlyOnce: true
-        }
-    );
+                if (
+                    finalizados ===
+                    caminhos.length
+                ) {
+
+                    todosRegistros =
+                        dados.sort(
+                            (a, b) =>
+                                Number(
+                                    b.criadoEm || 0
+                                ) -
+                                Number(
+                                    a.criadoEm || 0
+                                )
+                        );
+
+
+                    atualizarDashboard();
+
+                    renderizarRegistros(
+                        todosRegistros
+                    );
+
+                }
+
+            },
+            {
+                onlyOnce: true
+            }
+        );
+
+    });
+
 }
 
 
-function atualizarDashboard(
-    ambulancias,
-    transferencias,
-    apoios
-) {
+/* =========================================================
+   ATUALIZAR DASHBOARD
+========================================================= */
 
-    const totalA =
-        ambulancias.length;
+function atualizarDashboard() {
 
-    const totalT =
-        transferencias.length;
+    const registros =
+        todosRegistros || [];
 
-    const totalP =
-        apoios.length;
+
+    const ambulancias =
+        registros.filter(
+            r =>
+                r.tipo ===
+                "ambulancia"
+        );
+
+
+    const transferencias =
+        registros.filter(
+            r =>
+                r.tipo ===
+                "transferencia"
+        );
+
+
+    const apoios =
+        registros.filter(
+            r =>
+                r.tipo ===
+                "apoio"
+        );
+
 
     const total =
-        totalA +
-        totalT +
-        totalP;
-
-
-    const elementoA =
-        document.getElementById(
-            "totalAmbulancias"
-        );
-
-    const elementoT =
-        document.getElementById(
-            "totalTransferencias"
-        );
-
-    const elementoP =
-        document.getElementById(
-            "totalApoios"
-        );
-
-    const elementoGeral =
-        document.getElementById(
-            "totalGeral"
-        );
-
-
-    if (elementoA) {
-        elementoA.textContent = totalA;
-    }
-
-    if (elementoT) {
-        elementoT.textContent = totalT;
-    }
-
-    if (elementoP) {
-        elementoP.textContent = totalP;
-    }
-
-    if (elementoGeral) {
-        elementoGeral.textContent = total;
-    }
+        registros.length;
 
 
     const valorTotal =
         apoios.reduce(
-            (soma, item) =>
-                soma + Number(item.valor || 0),
+            (soma, registro) =>
+                soma +
+                (Number(
+                    registro.valor
+                ) || 0),
             0
         );
 
 
-    const valorElemento =
-        document.getElementById(
-            "valorTotalApoios"
-        );
+    definirTexto(
+        "totalAmbulancias",
+        ambulancias.length
+    );
 
-    if (valorElemento) {
+    definirTexto(
+        "totalTransferencias",
+        transferencias.length
+    );
 
-        valorElemento.textContent =
-            formatarMoeda(valorTotal);
-    }
+    definirTexto(
+        "totalApoios",
+        apoios.length
+    );
 
+    definirTexto(
+        "totalGeral",
+        total
+    );
 
-    /* =========================
-       HOJE
-    ========================== */
-
-    const hoje = hojeISO();
-
-
-    const hojeA =
-        ambulancias.filter(
-            item => item.data === hoje
-        ).length;
-
-
-    const hojeT =
-        transferencias.filter(
-            item => item.data === hoje
-        ).length;
-
-
-    const apoiosHoje =
-        apoios.filter(
-            item => item.data === hoje
-        );
-
-
-    const hojeP =
-        apoiosHoje.length;
-
-
-    const valorHoje =
-        apoiosHoje.reduce(
-            (soma, item) =>
-                soma + Number(item.valor || 0),
-            0
-        );
-
-
-    const hA =
-        document.getElementById(
-            "hojeAmbulancias"
-        );
-
-    const hT =
-        document.getElementById(
-            "hojeTransferencias"
-        );
-
-    const hP =
-        document.getElementById(
-            "hojeApoios"
-        );
-
-    const hValor =
-        document.getElementById(
-            "hojeValorApoios"
-        );
-
-
-    if (hA) {
-        hA.textContent = hojeA;
-    }
-
-    if (hT) {
-        hT.textContent = hojeT;
-    }
-
-    if (hP) {
-        hP.textContent = hojeP;
-    }
-
-    if (hValor) {
-        hValor.textContent =
-            formatarMoeda(valorHoje);
-    }
-
-
-    /* =========================
-       BARRAS
-    ========================== */
-
-    const barraA =
-        document.getElementById(
-            "barraAmbulancias"
-        );
-
-    const barraT =
-        document.getElementById(
-            "barraTransferencias"
-        );
-
-    const barraP =
-        document.getElementById(
-            "barraApoios"
-        );
-
-
-    const textoA =
-        document.getElementById(
-            "barraAmbulanciasTexto"
-        );
-
-    const textoT =
-        document.getElementById(
-            "barraTransferenciasTexto"
-        );
-
-    const textoP =
-        document.getElementById(
-            "barraApoiosTexto"
-        );
-
-
-    if (textoA) {
-        textoA.textContent = totalA;
-    }
-
-    if (textoT) {
-        textoT.textContent = totalT;
-    }
-
-    if (textoP) {
-        textoP.textContent = totalP;
-    }
-
-
-    if (total > 0) {
-
-        if (barraA) {
-            barraA.style.width =
-                `${(totalA / total) * 100}%`;
-        }
-
-        if (barraT) {
-            barraT.style.width =
-                `${(totalT / total) * 100}%`;
-        }
-
-        if (barraP) {
-            barraP.style.width =
-                `${(totalP / total) * 100}%`;
-        }
-
-    } else {
-
-        if (barraA) {
-            barraA.style.width = "0%";
-        }
-
-        if (barraT) {
-            barraT.style.width = "0%";
-        }
-
-        if (barraP) {
-            barraP.style.width = "0%";
-        }
-    }
-
-
-    /* =========================
-       ÚLTIMOS LANÇAMENTOS
-    ========================== */
-
-    const todos = [
-        ...ambulancias,
-        ...transferencias,
-        ...apoios
-    ];
-
-
-    todos.sort(
-        (a, b) =>
-            Number(b.criadoEm || 0) -
-            Number(a.criadoEm || 0)
+    definirTexto(
+        "valorTotalApoios",
+        formatarMoeda(valorTotal)
     );
 
 
-    const ultimos =
-        todos.slice(0, 5);
+    const hoje =
+        hojeISO();
 
+
+    const hojeAmb =
+        ambulancias.filter(
+            r => r.data === hoje
+        ).length;
+
+
+    const hojeTrans =
+        transferencias.filter(
+            r => r.data === hoje
+        ).length;
+
+
+    const hojeApoio =
+        apoios.filter(
+            r => r.data === hoje
+        );
+
+
+    const hojeValor =
+        hojeApoio.reduce(
+            (soma, r) =>
+                soma +
+                (Number(
+                    r.valor
+                ) || 0),
+            0
+        );
+
+
+    definirTexto(
+        "hojeAmbulancias",
+        hojeAmb
+    );
+
+    definirTexto(
+        "hojeTransferencias",
+        hojeTrans
+    );
+
+    definirTexto(
+        "hojeApoios",
+        hojeApoio.length
+    );
+
+    definirTexto(
+        "hojeValorApoios",
+        formatarMoeda(hojeValor)
+    );
+
+
+    definirTexto(
+        "barraAmbulanciasTexto",
+        ambulancias.length
+    );
+
+    definirTexto(
+        "barraTransferenciasTexto",
+        transferencias.length
+    );
+
+    definirTexto(
+        "barraApoiosTexto",
+        apoios.length
+    );
+
+
+    const maior =
+        Math.max(
+            ambulancias.length,
+            transferencias.length,
+            apoios.length,
+            1
+        );
+
+
+    definirLargura(
+        "barraAmbulancias",
+        ambulancias.length / maior * 100
+    );
+
+    definirLargura(
+        "barraTransferencias",
+        transferencias.length / maior * 100
+    );
+
+    definirLargura(
+        "barraApoios",
+        apoios.length / maior * 100
+    );
+
+
+    criarUltimosLancamentos(
+        registros.slice(0, 6)
+    );
+
+}
+
+
+function definirTexto(
+    id,
+    valor
+) {
+
+    const elemento =
+        document.getElementById(id);
+
+    if (elemento) {
+
+        elemento.textContent =
+            valor;
+    }
+
+}
+
+
+function definirLargura(
+    id,
+    valor
+) {
+
+    const elemento =
+        document.getElementById(id);
+
+    if (!elemento) {
+        return;
+    }
+
+    elemento.style.width =
+        `${Math.max(0, Math.min(100, valor))}%`;
+
+}
+
+
+/* =========================================================
+   MINI REGISTROS
+========================================================= */
+
+function criarUltimosLancamentos(
+    registros
+) {
 
     const container =
         document.getElementById(
@@ -1318,11 +1352,11 @@ function atualizarDashboard(
     }
 
 
-    if (ultimos.length === 0) {
+    if (!registros.length) {
 
         container.innerHTML = `
-            <div class="estado-vazio">
-                Nenhum registro encontrado.
+            <div class="empty-state">
+                Nenhum lançamento encontrado.
             </div>
         `;
 
@@ -1331,259 +1365,155 @@ function atualizarDashboard(
 
 
     container.innerHTML =
-        ultimos.map(
-            registro =>
-                criarMiniRegistro(
-                    registro
-                )
+        registros.map(
+            criarMiniRegistro
         ).join("");
+
 }
 
 
-function criarMiniRegistro(registro) {
+function criarMiniRegistro(
+    registro
+) {
 
-    let tipoTexto = "";
+    const config =
+        obterConfigTipo(
+            registro.tipo
+        );
 
-    let classe = "";
 
-    let icone = "";
+    const identificacao =
+        registro.rota ||
+        registro.cidade ||
+        "Sem identificação";
 
 
-    if (registro.tipo === "ambulancia") {
-
-        tipoTexto = "Ambulância";
-
-        classe =
-            "tipo-ambulancia";
-
-        icone = "🚑";
-
-    } else if (
-        registro.tipo === "transferencia"
-    ) {
-
-        tipoTexto = "Transferência";
-
-        classe =
-            "tipo-transferencia";
-
-        icone = "🔄";
-
-    } else {
-
-        tipoTexto = "Apoio";
-
-        classe =
-            "tipo-apoio";
-
-        icone = "🤝";
-    }
+    const pessoa =
+        registro.driver ||
+        registro.driverSubstituto ||
+        registro.driverRealiza ||
+        "—";
 
 
     return `
+        <div class="mini-registro">
 
-        <div class="registro-card">
+            <div
+                class="mini-icon"
+                style="
+                    background:${config.fundo};
+                    color:${config.cor};
+                "
+            >
+                ${config.icone}
+            </div>
 
-            <div class="registro-cabecalho">
+            <div class="mini-info">
 
-                <span class="registro-tipo ${classe}">
-                    ${icone}
-                    ${tipoTexto}
-                </span>
+                <strong>
+                    ${escaparHTML(config.nome)}
+                    • ${escaparHTML(identificacao)}
+                </strong>
 
-                <span class="registro-data">
-                    ${formatarData(registro.data)}
+                <span>
+                    ${escaparHTML(pessoa)}
                 </span>
 
             </div>
 
-            <div class="registro-grid">
-
-                <div class="registro-info">
-
-                    <span>Rota</span>
-
-                    <strong>
-                        ${escaparHTML(registro.rota || "-")}
-                    </strong>
-
-                </div>
-
-
-                <div class="registro-info">
-
-                    <span>Cidade</span>
-
-                    <strong>
-                        ${escaparHTML(registro.cidade || "-")}
-                    </strong>
-
-                </div>
-
-
-                <div class="registro-info">
-
-                    <span>Driver</span>
-
-                    <strong>
-                        ${escaparHTML(
-                            registro.driver ||
-                            registro.driverRealizaApoio ||
-                            registro.driverSubstituto ||
-                            "-"
-                        )}
-                    </strong>
-
-                </div>
-
-
-                <div class="registro-info">
-
-                    <span>Valor</span>
-
-                    <strong>
-                        ${
-                            registro.tipo === "apoio"
-                                ? formatarMoeda(registro.valor)
-                                : "-"
-                        }
-                    </strong>
-
-                </div>
-
+            <div class="mini-data">
+                ${formatarData(registro.data)}
             </div>
 
         </div>
-
     `;
+
 }
 
 
 /* =========================================================
-   CARREGAR REGISTROS
+   REGISTROS
 ========================================================= */
 
 function carregarRegistros() {
 
-    let ambulancias = [];
-
-    let transferencias = [];
-
-    let apoios = [];
-
-
-    function atualizarLista() {
-
-        todosRegistros = [
-
-            ...ambulancias.map(item => ({
-                ...item,
-                tipo: "ambulancia"
-            })),
-
-            ...transferencias.map(item => ({
-                ...item,
-                tipo: "transferencia"
-            })),
-
-            ...apoios.map(item => ({
-                ...item,
-                tipo: "apoio"
-            }))
-
-        ];
+    const caminhos = [
+        {
+            tipo: "ambulancia",
+            caminho: "ambulancias"
+        },
+        {
+            tipo: "transferencia",
+            caminho: "transferencias"
+        },
+        {
+            tipo: "apoio",
+            caminho: "apoios"
+        }
+    ];
 
 
-        todosRegistros.sort(
-            (a, b) =>
-                Number(b.criadoEm || 0) -
-                Number(a.criadoEm || 0)
+    const resultados = [];
+
+    let carregados = 0;
+
+
+    caminhos.forEach(item => {
+
+        onValue(
+            ref(db, item.caminho),
+            snapshot => {
+
+                const valor =
+                    snapshot.val() || {};
+
+
+                resultados.push(
+                    ...Object.entries(valor)
+                        .map(
+                            ([id, registro]) => ({
+                                ...registro,
+                                id,
+                                tipo: item.tipo
+                            })
+                        )
+                );
+
+
+                carregados++;
+
+
+                if (
+                    carregados ===
+                    caminhos.length
+                ) {
+
+                    todosRegistros =
+                        resultados.sort(
+                            (a, b) =>
+                                Number(
+                                    b.criadoEm || 0
+                                ) -
+                                Number(
+                                    a.criadoEm || 0
+                                )
+                        );
+
+
+                    atualizarDashboard();
+
+                    aplicarFiltros();
+
+                }
+
+            },
+            {
+                onlyOnce: true
+            }
         );
 
+    });
 
-        aplicarFiltros();
-    }
-
-
-    onValue(
-        ref(db, "ambulancias"),
-        snapshot => {
-
-            ambulancias = [];
-
-            snapshot.forEach(item => {
-
-                ambulancias.push({
-
-                    id: item.key,
-
-                    ...item.val()
-
-                });
-
-            });
-
-            atualizarLista();
-
-        },
-        {
-            onlyOnce: true
-        }
-    );
-
-
-    onValue(
-        ref(db, "transferencias"),
-        snapshot => {
-
-            transferencias = [];
-
-            snapshot.forEach(item => {
-
-                transferencias.push({
-
-                    id: item.key,
-
-                    ...item.val()
-
-                });
-
-            });
-
-            atualizarLista();
-
-        },
-        {
-            onlyOnce: true
-        }
-    );
-
-
-    onValue(
-        ref(db, "apoios"),
-        snapshot => {
-
-            apoios = [];
-
-            snapshot.forEach(item => {
-
-                apoios.push({
-
-                    id: item.key,
-
-                    ...item.val()
-
-                });
-
-            });
-
-            atualizarLista();
-
-        },
-        {
-            onlyOnce: true
-        }
-    );
 }
 
 
@@ -1593,29 +1523,29 @@ function carregarRegistros() {
 
 function aplicarFiltros() {
 
-    const filtroData =
+    const data =
         document.getElementById(
             "filtroData"
         )?.value || "";
 
 
-    const filtroRota =
+    const rota =
         document.getElementById(
             "filtroRota"
         )?.value
-            .toLowerCase()
-            .trim() || "";
+            .trim()
+            .toLowerCase() || "";
 
 
-    const filtroDriver =
+    const driver =
         document.getElementById(
             "filtroDriver"
         )?.value
-            .toLowerCase()
-            .trim() || "";
+            .trim()
+            .toLowerCase() || "";
 
 
-    const filtroTipo =
+    const tipo =
         document.getElementById(
             "filtroTipo"
         )?.value || "";
@@ -1625,99 +1555,96 @@ function aplicarFiltros() {
         todosRegistros.filter(
             registro => {
 
-                const rota =
+                const rotaRegistro =
                     String(
                         registro.rota || ""
                     ).toLowerCase();
 
 
-                const driver =
-                    String(
-                        registro.driver ||
-                        registro.driverRealizaApoio ||
-                        registro.driverSubstituto ||
-                        registro.driverInicial ||
-                        ""
-                    ).toLowerCase();
-
-
-                const atendeData =
-                    !filtroData ||
-                    registro.data === filtroData;
-
-
-                const atendeRota =
-                    !filtroRota ||
-                    rota.includes(filtroRota);
-
-
-                const atendeDriver =
-                    !filtroDriver ||
-                    driver.includes(filtroDriver);
-
-
-                const atendeTipo =
-                    !filtroTipo ||
-                    registro.tipo === filtroTipo;
+                const drivers =
+                    [
+                        registro.driver,
+                        registro.driverInicial,
+                        registro.driverSubstituto,
+                        registro.driverRealiza,
+                        registro.driverPrecisa
+                    ]
+                        .filter(Boolean)
+                        .join(" ")
+                        .toLowerCase();
 
 
                 return (
-                    atendeData &&
-                    atendeRota &&
-                    atendeDriver &&
-                    atendeTipo
+
+                    (!data ||
+                        registro.data === data)
+
+                    &&
+
+                    (!rota ||
+                        rotaRegistro.includes(rota))
+
+                    &&
+
+                    (!driver ||
+                        drivers.includes(driver))
+
+                    &&
+
+                    (!tipo ||
+                        registro.tipo === tipo)
+
                 );
+
             }
         );
 
 
-    renderizarRegistros(filtrados);
+    renderizarRegistros(
+        filtrados
+    );
+
 }
 
 
 window.limparFiltros = function () {
 
-    const filtroData =
-        document.getElementById(
-            "filtroData"
-        );
+    [
+        "filtroData",
+        "filtroRota",
+        "filtroDriver"
+    ].forEach(id => {
 
-    const filtroRota =
-        document.getElementById(
-            "filtroRota"
-        );
+        const campo =
+            document.getElementById(id);
 
-    const filtroDriver =
-        document.getElementById(
-            "filtroDriver"
-        );
+        if (campo) {
+            campo.value = "";
+        }
 
-    const filtroTipo =
+    });
+
+
+    const tipo =
         document.getElementById(
             "filtroTipo"
         );
 
-
-    if (filtroData) {
-        filtroData.value = "";
-    }
-
-    if (filtroRota) {
-        filtroRota.value = "";
-    }
-
-    if (filtroDriver) {
-        filtroDriver.value = "";
-    }
-
-    if (filtroTipo) {
-        filtroTipo.value = "";
+    if (tipo) {
+        tipo.value = "";
     }
 
 
-    aplicarFiltros();
+    renderizarRegistros(
+        todosRegistros
+    );
+
 };
 
+
+/* =========================================================
+   EVENTOS DOS FILTROS
+========================================================= */
 
 [
     "filtroData",
@@ -1726,20 +1653,18 @@ window.limparFiltros = function () {
     "filtroTipo"
 ].forEach(id => {
 
-    const elemento =
+    const campo =
         document.getElementById(id);
 
-    if (!elemento) {
+    if (!campo) {
         return;
     }
 
-    elemento.addEventListener(
-        "input",
-        aplicarFiltros
-    );
 
-    elemento.addEventListener(
-        "change",
+    campo.addEventListener(
+        campo.tagName === "SELECT"
+            ? "change"
+            : "input",
         aplicarFiltros
     );
 
@@ -1750,446 +1675,385 @@ window.limparFiltros = function () {
    RENDERIZAR REGISTROS
 ========================================================= */
 
-function renderizarRegistros(registros) {
+function renderizarRegistros(
+    registros
+) {
 
-    const container =
+    const lista =
         document.getElementById(
             "listaRegistros"
         );
 
 
-    if (!container) {
+    if (!lista) {
         return;
     }
 
 
-    if (registros.length === 0) {
+    if (!registros.length) {
 
-        container.innerHTML = `
-
-            <div class="estado-vazio">
-
-                Nenhum registro encontrado
-                com os filtros selecionados.
-
+        lista.innerHTML = `
+            <div class="empty-state">
+                Nenhum registro encontrado.
             </div>
-
         `;
 
         return;
     }
 
 
-    container.innerHTML =
-        registros.map(
-            registro =>
-                criarRegistroHTML(
-                    registro
-                )
-        ).join("");
+    lista.innerHTML =
+        registros
+            .map(criarRegistroHTML)
+            .join("");
+
 }
 
 
-function criarRegistroHTML(registro) {
+/* =========================================================
+   HTML DE REGISTRO
+========================================================= */
 
-    let tipoTexto = "";
+function criarRegistroHTML(
+    registro
+) {
 
-    let classe = "";
+    const config =
+        obterConfigTipo(
+            registro.tipo
+        );
 
-    let icone = "";
 
-
-    if (registro.tipo === "ambulancia") {
-
-        tipoTexto = "Ambulância";
-
-        classe =
-            "tipo-ambulancia";
-
-        icone = "🚑";
-
-    } else if (
-        registro.tipo === "transferencia"
-    ) {
-
-        tipoTexto = "Transferência";
-
-        classe =
-            "tipo-transferencia";
-
-        icone = "🔄";
-
-    } else {
-
-        tipoTexto = "Apoio";
-
-        classe =
-            "tipo-apoio";
-
-        icone = "🤝";
-    }
-
+    let titulo = "";
 
     let detalhes = "";
 
 
-    if (registro.tipo === "ambulancia") {
-
-        detalhes = `
-
-            <div class="registro-info">
-
-                <span>Pacotes</span>
-
-                <strong>
-                    ${escaparHTML(
-                        registro.pacotes ?? "-"
-                    )}
-                </strong>
-
-            </div>
-
-
-            <div class="registro-info">
-
-                <span>Quem liberou Meli</span>
-
-                <strong>
-                    ${escaparHTML(
-                        registro.meliLiberou || "-"
-                    )}
-                </strong>
-
-            </div>
-
-
-            <div class="registro-info">
-
-                <span>Motivo</span>
-
-                <strong>
-                    ${escaparHTML(
-                        registro.motivo || "-"
-                    )}
-                </strong>
-
-            </div>
-
-        `;
-
-    } else if (
-        registro.tipo === "transferencia"
+    if (
+        registro.tipo ===
+        "ambulancia"
     ) {
 
-        detalhes = `
+        titulo =
+            `Rota ${registro.rota || "—"}`;
 
-            <div class="registro-info">
+        detalhes =
+            `${registro.driver || "—"} • ${registro.cidade || "—"} • ${registro.pacotes || 0} pacotes`;
 
-                <span>Driver inicial</span>
-
-                <strong>
-                    ${escaparHTML(
-                        registro.driverInicial || "-"
-                    )}
-                </strong>
-
-            </div>
+    }
 
 
-            <div class="registro-info">
+    if (
+        registro.tipo ===
+        "transferencia"
+    ) {
 
-                <span>Substituto</span>
+        titulo =
+            `Rota ${registro.rota || "—"}`;
 
-                <strong>
-                    ${escaparHTML(
-                        registro.driverSubstituto || "-"
-                    )}
-                </strong>
+        detalhes =
+            `${registro.driverInicial || "—"} → ${registro.driverSubstituto || "—"} • ${registro.cidade || "—"}`;
 
-            </div>
-
-
-            <div class="registro-info">
-
-                <span>Quem liberou Meli</span>
-
-                <strong>
-                    ${escaparHTML(
-                        registro.meliLiberou || "-"
-                    )}
-                </strong>
-
-            </div>
-
-        `;
-
-    } else {
-
-        detalhes = `
-
-            <div class="registro-info">
-
-                <span>Valor</span>
-
-                <strong>
-                    ${formatarMoeda(
-                        registro.valor
-                    )}
-                </strong>
-
-            </div>
+    }
 
 
-            <div class="registro-info">
+    if (
+        registro.tipo ===
+        "apoio"
+    ) {
 
-                <span>Driver que realiza</span>
+        titulo =
+            `Rota ${registro.rota || "—"}`;
 
-                <strong>
-                    ${escaparHTML(
-                        registro.driverRealizaApoio || "-"
-                    )}
-                </strong>
+        detalhes =
+            `${registro.driverRealiza || "—"} apoiou ${registro.driverPrecisa || "—"} • ${formatarMoeda(registro.valor)}`;
 
-            </div>
-
-
-            <div class="registro-info">
-
-                <span>Driver que precisa</span>
-
-                <strong>
-                    ${escaparHTML(
-                        registro.driverPrecisaApoio || "-"
-                    )}
-                </strong>
-
-            </div>
-
-
-            <div class="registro-info">
-
-                <span>Quem liberou</span>
-
-                <strong>
-                    ${escaparHTML(
-                        registro.quemLiberou || "-"
-                    )}
-                </strong>
-
-            </div>
-
-        `;
     }
 
 
     return `
-
         <div class="registro-card">
 
-            <div class="registro-cabecalho">
+            <div class="registro-tipo">
 
-                <span class="registro-tipo ${classe}">
-                    ${icone}
-                    ${tipoTexto}
-                </span>
+                <div
+                    class="registro-tipo-icon"
+                    style="
+                        background:${config.fundo};
+                        color:${config.cor};
+                    "
+                >
+                    ${config.icone}
+                </div>
 
-                <span class="registro-data">
-                    ${formatarData(
-                        registro.data
-                    )}
-                </span>
+                <div class="registro-tipo-text">
+
+                    <strong>
+                        ${escaparHTML(config.nome)}
+                    </strong>
+
+                    <span>
+                        ${escaparHTML(
+                            registro.data
+                                ? formatarData(registro.data)
+                                : "Sem data"
+                        )}
+                    </span>
+
+                </div>
 
             </div>
 
 
-            <div class="registro-grid">
+            <div class="registro-info">
 
-                <div class="registro-info">
+                <strong>
+                    ${escaparHTML(titulo)}
+                </strong>
 
-                    <span>Rota</span>
+                <span>
+                    ${escaparHTML(detalhes)}
+                </span>
 
-                    <strong>
-                        ${escaparHTML(
-                            registro.rota || "-"
-                        )}
-                    </strong>
+                ${
+                    registro.motivo
+                        ? `
+                            <span>
+                                Motivo:
+                                ${escaparHTML(
+                                    registro.motivo
+                                )}
+                            </span>
+                        `
+                        : ""
+                }
 
-                </div>
+                ${
+                    registro.observacoes
+                        ? `
+                            <span>
+                                Obs.:
+                                ${escaparHTML(
+                                    registro.observacoes
+                                )}
+                            </span>
+                        `
+                        : ""
+                }
 
-
-                <div class="registro-info">
-
-                    <span>Cidade</span>
-
-                    <strong>
-                        ${escaparHTML(
-                            registro.cidade || "-"
-                        )}
-                    </strong>
-
-                </div>
-
-
-                ${detalhes}
-
-            </div>
-
-
-            ${
-                registro.observacoes
-                    ? `
-                        <div class="registro-observacao">
-
-                            <strong>
-                                Observações:
-                            </strong>
-
-                            ${escaparHTML(
-                                registro.observacoes
-                            )}
-
-                        </div>
-                    `
-                    : ""
-            }
-
-
-            <div class="registro-rodape">
-
-                <span class="registro-lancado">
-
+                <span>
                     Lançado por:
                     ${escaparHTML(
-                        registro.lancadoPor || "-"
+                        registro.lancadoPor || "—"
                     )}
-
                 </span>
 
+            </div>
+
+
+            <div class="registro-extra">
+
+                <span class="registro-data">
+                    ${
+                        registro.criadoEm
+                            ? new Date(
+                                registro.criadoEm
+                            ).toLocaleString(
+                                "pt-BR"
+                            )
+                            : "—"
+                    }
+                </span>
 
                 <button
                     type="button"
                     class="btn-excluir"
                     onclick="excluirRegistro(
-                        '${registro.tipo}',
-                        '${registro.id}'
+                        '${escaparHTML(
+                            registro.tipo
+                        )}',
+                        '${escaparHTML(
+                            registro.id
+                        )}'
                     )"
+                    title="Excluir registro"
                 >
-                    🗑 Excluir
+                    🗑
                 </button>
 
             </div>
 
         </div>
-
     `;
+
 }
 
 
 /* =========================================================
-   EXCLUIR REGISTRO
+   CONFIGURAÇÃO DOS TIPOS
 ========================================================= */
 
-window.excluirRegistro =
-    async function (
-        tipo,
-        id
-    ) {
+function obterConfigTipo(
+    tipo
+) {
 
-        if (!usuario) {
+    if (tipo === "ambulancia") {
 
-            alert(
-                "Você precisa estar logado."
-            );
+        return {
+            nome: "Ambulância",
+            icone: "🚑",
+            cor: "#16a34a",
+            fundo: "#dcfce7"
+        };
 
-            return;
-        }
-
-
-        const confirmar =
-            confirm(
-                "Tem certeza que deseja excluir este registro?"
-            );
+    }
 
 
-        if (!confirmar) {
-            return;
-        }
+    if (tipo === "transferencia") {
+
+        return {
+            nome: "Transferência",
+            icone: "⇄",
+            cor: "#2563eb",
+            fundo: "#dbeafe"
+        };
+
+    }
 
 
-        let caminho = "";
+    return {
+        nome: "Apoio de rota",
+        icone: "＋",
+        cor: "#ea580c",
+        fundo: "#ffedd5"
+    };
+
+}
 
 
-        if (tipo === "ambulancia") {
+/* =========================================================
+   EXCLUIR
+========================================================= */
 
-            caminho = "ambulancias";
+window.excluirRegistro = async function (
+    tipo,
+    id
+) {
 
-        } else if (
-            tipo === "transferencia"
-        ) {
-
-            caminho = "transferencias";
-
-        } else if (
-            tipo === "apoio"
-        ) {
-
-            caminho = "apoios";
-
-        } else {
-
-            return;
-        }
+    if (!tipo || !id) {
+        return;
+    }
 
 
-        try {
-
-            await remove(
-                ref(
-                    db,
-                    `${caminho}/${id}`
-                )
-            );
+    const confirmacao =
+        confirm(
+            "Tem certeza que deseja excluir este registro?"
+        );
 
 
-            alert(
-                "Registro excluído com sucesso!"
-            );
+    if (!confirmacao) {
+        return;
+    }
 
 
-            carregarDashboard();
+    const caminhos = {
 
-            carregarRegistros();
+        ambulancia:
+            "ambulancias",
 
+        transferencia:
+            "transferencias",
 
-        } catch (erro) {
-
-            console.error(erro);
-
-            alert(
-                "Não foi possível excluir o registro."
-            );
-
-        }
+        apoio:
+            "apoios"
 
     };
+
+
+    const caminho =
+        caminhos[tipo];
+
+
+    if (!caminho) {
+        return;
+    }
+
+
+    try {
+
+        await remove(
+            ref(
+                db,
+                `${caminho}/${id}`
+            )
+        );
+
+
+        mostrarToast(
+            "Registro excluído com sucesso."
+        );
+
+
+        carregarDashboard();
+
+        carregarRegistros();
+
+    } catch (erro) {
+
+        console.error(erro);
+
+        mostrarToast(
+            "Não foi possível excluir o registro."
+        );
+
+    }
+
+};
 
 
 /* =========================================================
    ALTERAR SENHA
 ========================================================= */
 
-window.abrirAlterarSenha =
-    function () {
+window.abrirAlterarSenha = function () {
 
-        const modal =
-            document.getElementById(
-                "modalSenha"
-            );
+    const modal =
+        document.getElementById(
+            "modalSenha"
+        );
 
-        if (modal) {
-            modal.classList.add("aberto");
-        }
-    };
+
+    if (!modal) {
+        return;
+    }
+
+
+    modal.classList.remove(
+        "oculto"
+    );
+
+
+    document.getElementById(
+        "formAlterarSenha"
+    )?.reset();
+
+
+    const mensagem =
+        document.getElementById(
+            "mensagemSenha"
+        );
+
+
+    if (mensagem) {
+
+        mensagem.textContent = "";
+
+        mensagem.className =
+            "mensagem";
+
+    }
+
+};
 
 
 window.fecharAlterarSenha =
@@ -2200,27 +2064,15 @@ window.fecharAlterarSenha =
                 "modalSenha"
             );
 
+
         if (modal) {
-            modal.classList.remove("aberto");
-        }
 
-        const form =
-            document.getElementById(
-                "formAlterarSenha"
+            modal.classList.add(
+                "oculto"
             );
 
-        if (form) {
-            form.reset();
         }
 
-        const mensagem =
-            document.getElementById(
-                "mensagemSenha"
-            );
-
-        if (mensagem) {
-            mensagem.textContent = "";
-        }
     };
 
 
@@ -2234,13 +2086,12 @@ if (formAlterarSenha) {
 
     formAlterarSenha.addEventListener(
         "submit",
-        async function (event) {
+        async evento => {
 
-            event.preventDefault();
+            evento.preventDefault();
 
 
             if (!usuario) {
-
                 return;
             }
 
@@ -2269,11 +2120,14 @@ if (formAlterarSenha) {
                 );
 
 
-            if (novaSenha !== confirmarSenha) {
+            if (
+                novaSenha !==
+                confirmarSenha
+            ) {
 
                 mostrarMensagem(
                     mensagem,
-                    "As novas senhas não são iguais.",
+                    "As novas senhas não coincidem.",
                     "erro"
                 );
 
@@ -2294,12 +2148,6 @@ if (formAlterarSenha) {
 
 
             try {
-
-                mostrarMensagem(
-                    mensagem,
-                    "Alterando senha..."
-                );
-
 
                 const credencial =
                     EmailAuthProvider.credential(
@@ -2322,19 +2170,19 @@ if (formAlterarSenha) {
 
                 mostrarMensagem(
                     mensagem,
-                    "Senha alterada com sucesso!",
+                    "Senha alterada com sucesso.",
                     "sucesso"
                 );
 
 
-                setTimeout(
-                    () => {
+                formAlterarSenha.reset();
 
-                        fecharAlterarSenha();
 
-                    },
-                    1500
-                );
+                setTimeout(() => {
+
+                    fecharAlterarSenha();
+
+                }, 1200);
 
 
             } catch (erro) {
@@ -2348,7 +2196,7 @@ if (formAlterarSenha) {
 
                 if (
                     erro.code ===
-                    "auth/wrong-password"
+                    "auth/invalid-credential"
                 ) {
 
                     texto =
@@ -2356,7 +2204,7 @@ if (formAlterarSenha) {
 
                 } else if (
                     erro.code ===
-                    "auth/invalid-credential"
+                    "auth/wrong-password"
                 ) {
 
                     texto =
@@ -2376,7 +2224,8 @@ if (formAlterarSenha) {
                 ) {
 
                     texto =
-                        "Por segurança, saia e entre novamente antes de alterar a senha.";
+                        "Faça login novamente e tente alterar a senha.";
+
                 }
 
 
@@ -2385,10 +2234,12 @@ if (formAlterarSenha) {
                     texto,
                     "erro"
                 );
+
             }
 
         }
     );
+
 }
 
 
@@ -2404,33 +2255,55 @@ window.abrirRecuperarSenha =
                 "modalRecuperarSenha"
             );
 
-        if (modal) {
 
-            modal.classList.add(
-                "aberto"
+        if (!modal) {
+            return;
+        }
+
+
+        modal.classList.remove(
+            "oculto"
+        );
+
+
+        const emailLogin =
+            document.getElementById(
+                "loginEmail"
+            )?.value.trim();
+
+
+        const emailRecuperacao =
+            document.getElementById(
+                "emailRecuperacao"
             );
 
-            const emailLogin =
-                document.getElementById(
-                    "loginEmail"
-                );
 
-            const emailRecuperacao =
-                document.getElementById(
-                    "emailRecuperacao"
-                );
+        if (
+            emailRecuperacao &&
+            emailLogin
+        ) {
 
+            emailRecuperacao.value =
+                emailLogin;
 
-            if (
-                emailLogin &&
-                emailRecuperacao &&
-                emailLogin.value
-            ) {
-
-                emailRecuperacao.value =
-                    emailLogin.value;
-            }
         }
+
+
+        const mensagem =
+            document.getElementById(
+                "mensagemRecuperacao"
+            );
+
+
+        if (mensagem) {
+
+            mensagem.textContent = "";
+
+            mensagem.className =
+                "mensagem";
+
+        }
+
     };
 
 
@@ -2442,21 +2315,15 @@ window.fecharRecuperarSenha =
                 "modalRecuperarSenha"
             );
 
+
         if (modal) {
-            modal.classList.remove(
-                "aberto"
-            );
-        }
 
-
-        const mensagem =
-            document.getElementById(
-                "mensagemRecuperacao"
+            modal.classList.add(
+                "oculto"
             );
 
-        if (mensagem) {
-            mensagem.textContent = "";
         }
+
     };
 
 
@@ -2470,9 +2337,9 @@ if (formRecuperarSenha) {
 
     formRecuperarSenha.addEventListener(
         "submit",
-        async function (event) {
+        async evento => {
 
-            event.preventDefault();
+            evento.preventDefault();
 
 
             const email =
@@ -2489,12 +2356,6 @@ if (formRecuperarSenha) {
 
             try {
 
-                mostrarMensagem(
-                    mensagem,
-                    "Enviando e-mail..."
-                );
-
-
                 await sendPasswordResetEmail(
                     auth,
                     email
@@ -2503,7 +2364,7 @@ if (formRecuperarSenha) {
 
                 mostrarMensagem(
                     mensagem,
-                    "E-mail de recuperação enviado! Verifique também a caixa de spam.",
+                    "E-mail de recuperação enviado. Verifique também a caixa de spam.",
                     "sucesso"
                 );
 
@@ -2514,7 +2375,7 @@ if (formRecuperarSenha) {
 
 
                 let texto =
-                    "Não foi possível enviar o e-mail.";
+                    "Não foi possível enviar o e-mail de recuperação.";
 
 
                 if (
@@ -2523,7 +2384,7 @@ if (formRecuperarSenha) {
                 ) {
 
                     texto =
-                        "Não encontramos um usuário com esse e-mail.";
+                        "Não encontramos uma conta com esse e-mail.";
 
                 } else if (
                     erro.code ===
@@ -2532,6 +2393,7 @@ if (formRecuperarSenha) {
 
                     texto =
                         "Digite um e-mail válido.";
+
                 }
 
 
@@ -2540,10 +2402,12 @@ if (formRecuperarSenha) {
                     texto,
                     "erro"
                 );
+
             }
 
         }
     );
+
 }
 
 
@@ -2551,15 +2415,14 @@ if (formRecuperarSenha) {
    FECHAR MODAIS CLICANDO FORA
 ========================================================= */
 
-document.addEventListener(
+window.addEventListener(
     "click",
-    function (event) {
+    evento => {
 
         const modalSenha =
             document.getElementById(
                 "modalSenha"
             );
-
 
         const modalRecuperacao =
             document.getElementById(
@@ -2568,7 +2431,8 @@ document.addEventListener(
 
 
         if (
-            event.target === modalSenha
+            evento.target ===
+            modalSenha
         ) {
 
             fecharAlterarSenha();
@@ -2577,7 +2441,7 @@ document.addEventListener(
 
 
         if (
-            event.target ===
+            evento.target ===
             modalRecuperacao
         ) {
 
@@ -2590,14 +2454,17 @@ document.addEventListener(
 
 
 /* =========================================================
-   FECHAR SIDEBAR AO CLICAR FORA NO CELULAR
+   FECHAR SIDEBAR AO CLICAR FORA
 ========================================================= */
 
 document.addEventListener(
     "click",
-    function (event) {
+    evento => {
 
-        if (window.innerWidth > 900) {
+        if (
+            window.innerWidth >
+            900
+        ) {
             return;
         }
 
@@ -2607,30 +2474,44 @@ document.addEventListener(
                 ".sidebar"
             );
 
-
         const botao =
             document.getElementById(
                 "btnMenuMobile"
             );
 
 
-        if (!sidebar || !botao) {
+        if (
+            !sidebar ||
+            !sidebar.classList.contains(
+                "aberta"
+            )
+        ) {
             return;
         }
 
 
         if (
-            sidebar.classList.contains(
-                "aberta"
-            ) &&
-            !sidebar.contains(event.target) &&
-            !botao.contains(event.target)
+            sidebar.contains(
+                evento.target
+            )
         ) {
-
-            sidebar.classList.remove(
-                "aberta"
-            );
+            return;
         }
+
+
+        if (
+            botao &&
+            botao.contains(
+                evento.target
+            )
+        ) {
+            return;
+        }
+
+
+        sidebar.classList.remove(
+            "aberta"
+        );
 
     }
 );
@@ -2642,13 +2523,9 @@ document.addEventListener(
 
 document.addEventListener(
     "DOMContentLoaded",
-    function () {
+    () => {
 
         preencherDatas();
-
-        console.log(
-            "Caxiense LOG - Sistema carregado."
-        );
 
     }
 );
