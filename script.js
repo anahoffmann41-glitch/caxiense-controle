@@ -1,18 +1,4 @@
 import {
-    initializeApp
-} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-
-
-import {
-    getDatabase,
-    ref,
-    push,
-    onValue,
-    remove
-} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
-
-
-import {
     getAuth,
     signInWithEmailAndPassword,
     onAuthStateChanged,
@@ -24,13 +10,34 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 
 
-// =====================================================
-// CONFIGURAÇÃO FIREBASE
-// =====================================================
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+
+
+import {
+    getDatabase,
+    ref,
+    push,
+    set,
+    onValue,
+    remove
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+
+
+
+/* =========================
+   FIREBASE
+========================= */
 
 const firebaseConfig = {
 
-    // 
+    /*
+     * IMPORTANTE:
+     * COLOQUE AQUI A MESMA API KEY
+     * QUE JÁ ESTÁ FUNCIONANDO NO SEU SITE.
+     */
+
     apiKey: "AIzaSyCZ3xorH3D9Z0vmIfd_zafyceLJekXJPaY",
 
     authDomain:
@@ -53,154 +60,115 @@ const firebaseConfig = {
 };
 
 
-// =====================================================
-// INICIALIZAR FIREBASE
-// =====================================================
+const app = initializeApp(firebaseConfig);
 
-const app =
-    initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-
-const db =
-    getDatabase(app);
+const database = getDatabase(app);
 
 
-const auth =
-    getAuth(app);
+
+/* =========================
+   VARIÁVEIS
+========================= */
+
+let usuario = null;
+
+let todosRegistros = [];
 
 
-let todosOsRegistros = [];
 
-
-// =====================================================
-// LOGIN
-// =====================================================
+/* =========================
+   LOGIN
+========================= */
 
 document
     .getElementById("formLogin")
-    .addEventListener(
-        "submit",
-        async function(event) {
+    .addEventListener("submit", async function(event) {
 
-            event.preventDefault();
+        event.preventDefault();
 
+        const email =
+            document
+                .getElementById("loginEmail")
+                .value
+                .trim();
 
-            const email =
-                document
-                    .getElementById("loginEmail")
-                    .value
-                    .trim();
+        const senha =
+            document
+                .getElementById("loginSenha")
+                .value;
 
-
-            const senha =
-                document
-                    .getElementById("loginSenha")
-                    .value;
-
-
-            const mensagem =
-                document
-                    .getElementById("mensagemLogin");
+        const mensagem =
+            document.getElementById("mensagemLogin");
 
 
-            mensagem.style.color =
-                "#2563eb";
+        mensagem.style.color = "#2563eb";
+
+        mensagem.textContent =
+            "⏳ Entrando...";
 
 
-            mensagem.textContent =
-                "⏳ Entrando...";
+        try {
 
+            await signInWithEmailAndPassword(
+                auth,
+                email,
+                senha
+            );
 
-            try {
+            mensagem.textContent = "";
 
-                await signInWithEmailAndPassword(
-                    auth,
-                    email,
-                    senha
-                );
+        } catch (erro) {
 
+            console.error(
+                "Erro no login:",
+                erro
+            );
 
-                mensagem.textContent = "";
+            mensagem.style.color = "#dc2626";
 
+            if (
+                erro.code ===
+                "auth/invalid-credential"
+            ) {
 
-            } catch (erro) {
+                mensagem.textContent =
+                    "❌ E-mail ou senha incorretos.";
 
-                console.error(
-                    "Erro no login:",
-                    erro
-                );
+            } else if (
+                erro.code ===
+                "auth/user-disabled"
+            ) {
 
+                mensagem.textContent =
+                    "❌ Esta conta foi desativada.";
 
-                mensagem.style.color =
-                    "#dc2626";
+            } else {
 
-
-                if (
-                    erro.code ===
-                    "auth/invalid-credential"
-                ) {
-
-                    mensagem.textContent =
-                        "❌ E-mail ou senha incorretos.";
-
-                }
-
-                else if (
-                    erro.code ===
-                    "auth/user-not-found"
-                ) {
-
-                    mensagem.textContent =
-                        "❌ Usuário não encontrado.";
-
-                }
-
-                else if (
-                    erro.code ===
-                    "auth/wrong-password"
-                ) {
-
-                    mensagem.textContent =
-                        "❌ Senha incorreta.";
-
-                }
-
-                else if (
-                    erro.code ===
-                    "auth/invalid-api-key"
-                ) {
-
-                    mensagem.textContent =
-                        "❌ API Key inválida.";
-
-                }
-
-                else {
-
-                    mensagem.textContent =
-                        "❌ Não foi possível fazer login.";
-
-                }
-
+                mensagem.textContent =
+                    "❌ Não foi possível entrar.";
             }
-
         }
-    );
+
+    });
 
 
-// =====================================================
-// USUÁRIO LOGADO
-// =====================================================
+
+/* =========================
+   ESTADO DO LOGIN
+========================= */
 
 onAuthStateChanged(
     auth,
-    function(usuario) {
+    function(user) {
+
+        usuario = user;
 
         const telaLogin =
             document.getElementById(
                 "telaLogin"
             );
-
 
         const sistema =
             document.getElementById(
@@ -208,314 +176,335 @@ onAuthStateChanged(
             );
 
 
-        const nomeUsuario =
-            document.getElementById(
-                "nomeUsuario"
-            );
-
-
-        if (usuario) {
-
-            console.log(
-                "✅ Usuário logado:",
-                usuario.email
-            );
-
+        if (user) {
 
             telaLogin.classList.add(
                 "escondida"
             );
-
 
             sistema.classList.remove(
                 "escondida"
             );
 
 
-            nomeUsuario.textContent =
-                usuario.email;
+            document.getElementById(
+                "nomeUsuario"
+            ).textContent =
+                "Logado como: " +
+                user.email;
 
-
-            atualizarDashboard();
 
             carregarRegistros();
 
-        }
+            mostrarPagina(
+                "dashboard"
+            );
 
-        else {
+        } else {
 
             telaLogin.classList.remove(
                 "escondida"
             );
 
-
             sistema.classList.add(
                 "escondida"
             );
-
         }
 
     }
 );
 
 
-// =====================================================
-// SAIR
-// =====================================================
 
-window.sairSistema =
-    async function() {
+/* =========================
+   SAIR
+========================= */
 
-        try {
+window.sairSistema = async function() {
 
-            await signOut(auth);
+    try {
 
-        }
+        await signOut(auth);
 
-        catch (erro) {
+    } catch (erro) {
 
-            console.error(
-                "Erro ao sair:",
-                erro
-            );
-
-        }
-
-    };
-
-
-// =====================================================
-// TROCAR TELA
-// =====================================================
-
-window.mostrarTela =
-    function(id) {
-
-        document
-            .querySelectorAll(".tela")
-            .forEach(
-                function(tela) {
-
-                    tela.classList.add(
-                        "escondida"
-                    );
-
-                }
-            );
-
-
-        const tela =
-            document.getElementById(id);
-
-
-        if (tela) {
-
-            tela.classList.remove(
-                "escondida"
-            );
-
-        }
-
-    };
-
-
-// =====================================================
-// FORMATAR DATA
-// =====================================================
-
-function formatarData(data) {
-
-    if (!data) {
-
-        return "-";
-
+        console.error(
+            "Erro ao sair:",
+            erro
+        );
     }
+};
 
 
-    const partes =
-        data.split("-");
+
+/* =========================
+   NAVEGAÇÃO
+========================= */
+
+window.mostrarPagina = function(pagina) {
+
+    const paginas = [
+
+        "paginaDashboard",
+        "paginaAmbulancia",
+        "paginaTransferencia",
+        "paginaApoio",
+        "paginaRegistros"
+
+    ];
 
 
-    if (
-        partes.length !== 3
-    ) {
+    paginas.forEach(
+        function(id) {
 
-        return data;
+            document
+                .getElementById(id)
+                .classList.add(
+                    "escondida"
+                );
 
-    }
-
-
-    return (
-        partes[2] +
-        "/" +
-        partes[1] +
-        "/" +
-        partes[0]
+        }
     );
 
+
+    const paginaEscolhida =
+        document.getElementById(
+            "pagina" +
+            pagina.charAt(0).toUpperCase() +
+            pagina.slice(1)
+        );
+
+
+    if (paginaEscolhida) {
+
+        paginaEscolhida.classList.remove(
+            "escondida"
+        );
+    }
+
+
+    if (pagina === "registros") {
+
+        carregarRegistros();
+
+    }
+
+};
+
+
+
+/* =========================
+   DATA ATUAL
+========================= */
+
+function dataHoje() {
+
+    const hoje = new Date();
+
+    const ano =
+        hoje.getFullYear();
+
+    const mes =
+        String(
+            hoje.getMonth() + 1
+        ).padStart(2, "0");
+
+    const dia =
+        String(
+            hoje.getDate()
+        ).padStart(2, "0");
+
+
+    return `${ano}-${mes}-${dia}`;
 }
 
 
-// =====================================================
-// SALVAR AMBULÂNCIA
-// =====================================================
+
+document.getElementById(
+    "dataAmbulancia"
+).value = dataHoje();
+
+
+document.getElementById(
+    "dataTransferencia"
+).value = dataHoje();
+
+
+document.getElementById(
+    "dataApoio"
+).value = dataHoje();
+
+
+
+/* =========================
+   AMBULÂNCIA
+========================= */
 
 document
-    .getElementById(
-        "formAmbulancia"
-    )
-    .addEventListener(
-        "submit",
-        async function(event) {
+    .getElementById("formAmbulancia")
+    .addEventListener("submit", async function(event) {
 
-            event.preventDefault();
+        event.preventDefault();
 
 
-            const usuario =
-                auth.currentUser;
+        if (!usuario) {
+
+            alert(
+                "Você precisa estar logado."
+            );
+
+            return;
+        }
 
 
-            if (!usuario) {
+        const dados = {
 
-                alert(
-                    "❌ Você precisa estar logado."
-                );
+            tipo: "ambulancia",
 
-                return;
+            data:
+                document
+                    .getElementById(
+                        "dataAmbulancia"
+                    )
+                    .value,
 
-            }
+            rotaId:
+                document
+                    .getElementById(
+                        "rotaAmbulancia"
+                    )
+                    .value
+                    .trim(),
 
+            driver:
+                document
+                    .getElementById(
+                        "driverAmbulancia"
+                    )
+                    .value
+                    .trim(),
 
-            const registro = {
+            cidade:
+                document
+                    .getElementById(
+                        "cidadeAmbulancia"
+                    )
+                    .value
+                    .trim(),
 
-                tipo:
-                    "ambulancia",
-
-                data:
-                    document
-                        .getElementById(
-                            "dataAmbulancia"
-                        )
-                        .value,
-
-                rota:
-                    document
-                        .getElementById(
-                            "rotaAmbulancia"
-                        )
-                        .value
-                        .trim(),
-
-                driver:
-                    document
-                        .getElementById(
-                            "driverAmbulancia"
-                        )
-                        .value
-                        .trim(),
-
-                cidade:
-                    document
-                        .getElementById(
-                            "cidadeAmbulancia"
-                        )
-                        .value
-                        .trim(),
-
-                pacotes:
+            pacotes:
+                Number(
                     document
                         .getElementById(
                             "pacotesAmbulancia"
                         )
-                        .value,
-
-                motivo:
-                    document
-                        .getElementById(
-                            "motivoAmbulancia"
-                        )
                         .value
-                        .trim(),
+                ),
 
-                meliLiberou:
-                    document
-                        .getElementById(
-                            "meliAmbulancia"
-                        )
-                        .value
-                        .trim(),
-
-                observacoes:
-                    document
-                        .getElementById(
-                            "obsAmbulancia"
-                        )
-                        .value
-                        .trim(),
-
-                lancadoPor:
-                    usuario.email,
-
-                criadoEm:
-                    new Date().toISOString()
-
-            };
-
-
-            try {
-
-                await push(
-                    ref(
-                        db,
-                        "ambulancias"
-                    ),
-                    registro
-                );
-
-
-                alert(
-                    "✅ Ambulância registrada!"
-                );
-
-
+            motivo:
                 document
                     .getElementById(
-                        "formAmbulancia"
+                        "motivoAmbulancia"
                     )
-                    .reset();
+                    .value
+                    .trim(),
+
+            meliLiberou:
+                document
+                    .getElementById(
+                        "meliAmbulancia"
+                    )
+                    .value
+                    .trim(),
+
+            observacoes:
+                document
+                    .getElementById(
+                        "obsAmbulancia"
+                    )
+                    .value
+                    .trim(),
+
+            lancadoPor:
+                usuario.email,
+
+            criadoEm:
+                new Date().toISOString()
+        };
 
 
-                atualizarDashboard();
+        try {
 
-                carregarRegistros();
-
-                mostrarTela(
-                    "dashboard"
+            const novaReferencia =
+                push(
+                    ref(
+                        database,
+                        "ambulancias"
+                    )
                 );
 
-            }
 
-            catch (erro) {
+            await set(
+                novaReferencia,
+                dados
+            );
 
-                console.error(
-                    "Erro ao salvar ambulância:",
-                    erro
+
+            document
+                .getElementById(
+                    "formAmbulancia"
+                )
+                .reset();
+
+
+            document.getElementById(
+                "dataAmbulancia"
+            ).value = dataHoje();
+
+
+            const mensagem =
+                document.getElementById(
+                    "mensagemAmbulancia"
                 );
 
 
-                alert(
-                    "❌ Erro ao salvar ambulância."
+            mensagem.style.color =
+                "#16a34a";
+
+            mensagem.textContent =
+                "✅ Ambulância registrada com sucesso!";
+
+
+            atualizarDashboard();
+
+
+        } catch (erro) {
+
+            console.error(
+                erro
+            );
+
+
+            const mensagem =
+                document.getElementById(
+                    "mensagemAmbulancia"
                 );
 
-            }
 
+            mensagem.style.color =
+                "#dc2626";
+
+            mensagem.textContent =
+                "❌ Erro ao salvar a ambulância.";
         }
-    );
+
+    });
 
 
-// =====================================================
-// SALVAR TRANSFERÊNCIA
-// =====================================================
+
+/* =========================
+   TRANSFERÊNCIA
+========================= */
 
 document
     .getElementById(
@@ -528,25 +517,19 @@ document
             event.preventDefault();
 
 
-            const usuario =
-                auth.currentUser;
-
-
             if (!usuario) {
 
                 alert(
-                    "❌ Você precisa estar logado."
+                    "Você precisa estar logado."
                 );
 
                 return;
-
             }
 
 
-            const registro = {
+            const dados = {
 
-                tipo:
-                    "transferencia",
+                tipo: "transferencia",
 
                 data:
                     document
@@ -555,7 +538,7 @@ document
                         )
                         .value,
 
-                rota:
+                rotaId:
                     document
                         .getElementById(
                             "rotaTransferencia"
@@ -616,23 +599,23 @@ document
 
                 criadoEm:
                     new Date().toISOString()
-
             };
 
 
             try {
 
-                await push(
-                    ref(
-                        db,
-                        "transferencias"
-                    ),
-                    registro
-                );
+                const novaReferencia =
+                    push(
+                        ref(
+                            database,
+                            "transferencias"
+                        )
+                    );
 
 
-                alert(
-                    "✅ Transferência registrada!"
+                await set(
+                    novaReferencia,
+                    dados
                 );
 
 
@@ -643,236 +626,592 @@ document
                     .reset();
 
 
+                document.getElementById(
+                    "dataTransferencia"
+                ).value = dataHoje();
+
+
+                const mensagem =
+                    document.getElementById(
+                        "mensagemTransferencia"
+                    );
+
+
+                mensagem.style.color =
+                    "#16a34a";
+
+                mensagem.textContent =
+                    "✅ Transferência registrada com sucesso!";
+
+
                 atualizarDashboard();
 
-                carregarRegistros();
 
-                mostrarTela(
-                    "dashboard"
-                );
-
-            }
-
-            catch (erro) {
+            } catch (erro) {
 
                 console.error(
-                    "Erro ao salvar transferência:",
                     erro
                 );
 
 
+                const mensagem =
+                    document.getElementById(
+                        "mensagemTransferencia"
+                    );
+
+
+                mensagem.style.color =
+                    "#dc2626";
+
+                mensagem.textContent =
+                    "❌ Erro ao salvar a transferência.";
+            }
+
+        }
+    );
+
+
+
+/* =========================
+   APOIO DE ROTA
+========================= */
+
+document
+    .getElementById("formApoio")
+    .addEventListener(
+        "submit",
+        async function(event) {
+
+            event.preventDefault();
+
+
+            if (!usuario) {
+
                 alert(
-                    "❌ Erro ao salvar transferência."
+                    "Você precisa estar logado."
                 );
 
+                return;
+            }
+
+
+            const dados = {
+
+                tipo: "apoio",
+
+                data:
+                    document
+                        .getElementById(
+                            "dataApoio"
+                        )
+                        .value,
+
+                rotaId:
+                    document
+                        .getElementById(
+                            "rotaApoio"
+                        )
+                        .value
+                        .trim(),
+
+                valor:
+                    Number(
+                        document
+                            .getElementById(
+                                "valorApoio"
+                            )
+                            .value
+                    ),
+
+                driverRealiza:
+                    document
+                        .getElementById(
+                            "driverRealizaApoio"
+                        )
+                        .value
+                        .trim(),
+
+                driverPrecisa:
+                    document
+                        .getElementById(
+                            "driverPrecisaApoio"
+                        )
+                        .value
+                        .trim(),
+
+                quemLiberou:
+                    document
+                        .getElementById(
+                            "quemLiberouApoio"
+                        )
+                        .value
+                        .trim(),
+
+                observacoes:
+                    document
+                        .getElementById(
+                            "obsApoio"
+                        )
+                        .value
+                        .trim(),
+
+                lancadoPor:
+                    usuario.email,
+
+                criadoEm:
+                    new Date().toISOString()
+            };
+
+
+            try {
+
+                const novaReferencia =
+                    push(
+                        ref(
+                            database,
+                            "apoios"
+                        )
+                    );
+
+
+                await set(
+                    novaReferencia,
+                    dados
+                );
+
+
+                document
+                    .getElementById(
+                        "formApoio"
+                    )
+                    .reset();
+
+
+                document.getElementById(
+                    "dataApoio"
+                ).value = dataHoje();
+
+
+                const mensagem =
+                    document.getElementById(
+                        "mensagemApoio"
+                    );
+
+
+                mensagem.style.color =
+                    "#16a34a";
+
+                mensagem.textContent =
+                    "✅ Apoio de rota registrado com sucesso!";
+
+
+                atualizarDashboard();
+
+
+            } catch (erro) {
+
+                console.error(
+                    erro
+                );
+
+
+                const mensagem =
+                    document.getElementById(
+                        "mensagemApoio"
+                    );
+
+
+                mensagem.style.color =
+                    "#dc2626";
+
+                mensagem.textContent =
+                    "❌ Erro ao salvar o apoio.";
             }
 
         }
     );
 
 
-// =====================================================
-// DASHBOARD
-// =====================================================
 
-function atualizarDashboard() {
+/* =========================
+   CARREGAR REGISTROS
+========================= */
 
+function carregarRegistros() {
 
-    onValue(
-        ref(
-            db,
-            "ambulancias"
-        ),
-        function(snapshot) {
-
-            let total = 0;
+    if (!usuario) {
+        return;
+    }
 
 
-            if (
-                snapshot.exists()
-            ) {
-
-                total =
-                    Object.keys(
-                        snapshot.val()
-                    ).length;
-
-            }
+    const registros = [];
 
 
-            document
-                .getElementById(
-                    "totalAmbulancias"
-                )
-                .textContent =
-                total;
+    const referencias = [
 
-        },
         {
-            onlyOnce: true
-        }
-    );
-
-
-    onValue(
-        ref(
-            db,
-            "transferencias"
-        ),
-        function(snapshot) {
-
-            let total = 0;
-
-
-            if (
-                snapshot.exists()
-            ) {
-
-                total =
-                    Object.keys(
-                        snapshot.val()
-                    ).length;
-
-            }
-
-
-            document
-                .getElementById(
-                    "totalTransferencias"
-                )
-                .textContent =
-                total;
-
-        },
-        {
-            onlyOnce: true
-        }
-    );
-
-}
-
-
-// =====================================================
-// CARREGAR REGISTROS
-// =====================================================
-
-window.carregarRegistros =
-    function() {
-
-        todosOsRegistros = [];
-
-
-        onValue(
-            ref(
-                db,
+            tipo: "ambulancia",
+            referencia: ref(
+                database,
                 "ambulancias"
-            ),
-            function(snapshot) {
+            )
+        },
 
-                if (
-                    snapshot.exists()
-                ) {
+        {
+            tipo: "transferencia",
+            referencia: ref(
+                database,
+                "transferencias"
+            )
+        },
+
+        {
+            tipo: "apoio",
+            referencia: ref(
+                database,
+                "apoios"
+            )
+        }
+
+    ];
+
+
+    let carregados = 0;
+
+
+    referencias.forEach(
+        function(item) {
+
+            onValue(
+                item.referencia,
+                function(snapshot) {
 
                     const dados =
                         snapshot.val();
 
 
-                    Object.entries(
-                        dados
-                    ).forEach(
-                        function([
-                            id,
-                            registro
-                        ]) {
+                    registros
+                        .filter(
+                            r =>
+                                r.fonte ===
+                                item.tipo
+                        )
+                        .forEach(
+                            () => {}
+                        );
 
-                            todosOsRegistros.push({
 
-                                id:
+                    carregados++;
+
+
+                    if (dados) {
+
+                        Object.entries(
+                            dados
+                        ).forEach(
+                            ([id, registro]) => {
+
+                                registros.push({
+
+                                    ...registro,
+
                                     id,
 
-                                ...registro
+                                    fonte:
+                                        item.tipo
 
-                            });
+                                });
 
-                        }
-                    );
-
-                }
-
-
-                carregarTransferencias();
-
-            },
-            {
-                onlyOnce: true
-            }
-        );
-
-    };
-
-
-// =====================================================
-// CARREGAR TRANSFERÊNCIAS
-// =====================================================
-
-function carregarTransferencias() {
-
-    onValue(
-        ref(
-            db,
-            "transferencias"
-        ),
-        function(snapshot) {
-
-            if (
-                snapshot.exists()
-            ) {
-
-                const dados =
-                    snapshot.val();
-
-
-                Object.entries(
-                    dados
-                ).forEach(
-                    function([
-                        id,
-                        registro
-                    ]) {
-
-                        todosOsRegistros.push({
-
-                            id:
-                                id,
-
-                            ...registro
-
-                        });
+                            }
+                        );
 
                     }
-                );
-
-            }
 
 
-            mostrarRegistros(
-                todosOsRegistros
+                    if (
+                        carregados ===
+                        referencias.length
+                    ) {
+
+                        todosRegistros =
+                            registros.sort(
+                                (
+                                    a,
+                                    b
+                                ) => {
+
+                                    const dataA =
+                                        a.criadoEm ||
+                                        a.data ||
+                                        "";
+
+                                    const dataB =
+                                        b.criadoEm ||
+                                        b.data ||
+                                        "";
+
+                                    return dataB.localeCompare(
+                                        dataA
+                                    );
+
+                                }
+                            );
+
+
+                        aplicarFiltros();
+
+                        atualizarDashboard();
+
+                    }
+
+                },
+                {
+                    onlyOnce: true
+                }
             );
 
-        },
-        {
-            onlyOnce: true
         }
     );
 
 }
 
 
-// =====================================================
-// MOSTRAR REGISTROS
-// =====================================================
 
-function mostrarRegistros(
+/* =========================
+   DASHBOARD
+========================= */
+
+function atualizarDashboard() {
+
+    const ambulancias =
+        todosRegistros.filter(
+            registro =>
+                registro.tipo ===
+                "ambulancia"
+        ).length;
+
+
+    const transferencias =
+        todosRegistros.filter(
+            registro =>
+                registro.tipo ===
+                "transferencia"
+        ).length;
+
+
+    const apoios =
+        todosRegistros.filter(
+            registro =>
+                registro.tipo ===
+                "apoio"
+        ).length;
+
+
+    document.getElementById(
+        "totalAmbulancias"
+    ).textContent =
+        ambulancias;
+
+
+    document.getElementById(
+        "totalTransferencias"
+    ).textContent =
+        transferencias;
+
+
+    document.getElementById(
+        "totalApoios"
+    ).textContent =
+        apoios;
+
+}
+
+
+
+/* =========================
+   FILTROS
+========================= */
+
+document
+    .getElementById(
+        "filtroData"
+    )
+    .addEventListener(
+        "input",
+        aplicarFiltros
+    );
+
+
+document
+    .getElementById(
+        "filtroRota"
+    )
+    .addEventListener(
+        "input",
+        aplicarFiltros
+    );
+
+
+document
+    .getElementById(
+        "filtroDriver"
+    )
+    .addEventListener(
+        "input",
+        aplicarFiltros
+    );
+
+
+document
+    .getElementById(
+        "filtroTipo"
+    )
+    .addEventListener(
+        "change",
+        aplicarFiltros
+    );
+
+
+
+function aplicarFiltros() {
+
+    const data =
+        document
+            .getElementById(
+                "filtroData"
+            )
+            .value;
+
+
+    const rota =
+        document
+            .getElementById(
+                "filtroRota"
+            )
+            .value
+            .trim()
+            .toLowerCase();
+
+
+    const driver =
+        document
+            .getElementById(
+                "filtroDriver"
+            )
+            .value
+            .trim()
+            .toLowerCase();
+
+
+    const tipo =
+        document
+            .getElementById(
+                "filtroTipo"
+            )
+            .value;
+
+
+    const filtrados =
+        todosRegistros.filter(
+            function(registro) {
+
+                const correspondeData =
+                    !data ||
+                    registro.data === data;
+
+
+                const correspondeRota =
+                    !rota ||
+                    String(
+                        registro.rotaId || ""
+                    )
+                    .toLowerCase()
+                    .includes(rota);
+
+
+                const textoDrivers =
+                    [
+
+                        registro.driver,
+
+                        registro.driverInicial,
+
+                        registro.driverSubstituto,
+
+                        registro.driverRealiza,
+
+                        registro.driverPrecisa
+
+                    ]
+                    .filter(Boolean)
+                    .join(" ")
+                    .toLowerCase();
+
+
+                const correspondeDriver =
+                    !driver ||
+                    textoDrivers.includes(
+                        driver
+                    );
+
+
+                const correspondeTipo =
+                    !tipo ||
+                    registro.tipo === tipo;
+
+
+                return (
+                    correspondeData &&
+                    correspondeRota &&
+                    correspondeDriver &&
+                    correspondeTipo
+                );
+
+            }
+        );
+
+
+    exibirRegistros(
+        filtrados
+    );
+
+}
+
+
+
+window.limparFiltros = function() {
+
+    document.getElementById(
+        "filtroData"
+    ).value = "";
+
+
+    document.getElementById(
+        "filtroRota"
+    ).value = "";
+
+
+    document.getElementById(
+        "filtroDriver"
+    ).value = "";
+
+
+    document.getElementById(
+        "filtroTipo"
+    ).value = "";
+
+
+    aplicarFiltros();
+
+};
+
+
+
+/* =========================
+   EXIBIR REGISTROS
+========================= */
+
+function exibirRegistros(
     registros
 ) {
 
@@ -880,13 +1219,6 @@ function mostrarRegistros(
         document.getElementById(
             "listaRegistros"
         );
-
-
-    if (!lista) {
-
-        return;
-
-    }
 
 
     lista.innerHTML = "";
@@ -897,27 +1229,12 @@ function mostrarRegistros(
     ) {
 
         lista.innerHTML =
-            "<p>📭 Nenhum registro encontrado.</p>";
+            `<div class="sem-registros">
+                Nenhum registro encontrado.
+            </div>`;
 
         return;
-
     }
-
-
-    registros.sort(
-        function(a, b) {
-
-            return (
-                new Date(
-                    b.criadoEm || 0
-                ) -
-                new Date(
-                    a.criadoEm || 0
-                )
-            );
-
-        }
-    );
 
 
     registros.forEach(
@@ -933,139 +1250,270 @@ function mostrarRegistros(
                 "registro";
 
 
+            let titulo =
+                "";
+
+
+            let conteudo =
+                "";
+
+
             if (
                 registro.tipo ===
                 "ambulancia"
             ) {
 
-                div.innerHTML = `
+                titulo =
+                    "🚑 Ambulância";
 
-                    <h3>
-                        🚑 Ambulância
-                    </h3>
+
+                conteudo = `
 
                     <p>
                         <strong>📅 Data:</strong>
-                        ${formatarData(registro.data)}
+                        ${escapar(
+                            registro.data
+                        )}
                     </p>
 
                     <p>
-                        <strong>🛣️ Rota:</strong>
-                        ${registro.rota || "-"}
+                        <strong>🔢 Rota ID:</strong>
+                        ${escapar(
+                            registro.rotaId
+                        )}
                     </p>
 
                     <p>
-                        <strong>👤 Driver:</strong>
-                        ${registro.driver || "-"}
+                        <strong>🚚 Driver:</strong>
+                        ${escapar(
+                            registro.driver
+                        )}
                     </p>
 
                     <p>
                         <strong>📍 Cidade:</strong>
-                        ${registro.cidade || "-"}
+                        ${escapar(
+                            registro.cidade
+                        )}
                     </p>
 
                     <p>
                         <strong>📦 Pacotes:</strong>
-                        ${registro.pacotes || "-"}
+                        ${escapar(
+                            registro.pacotes
+                        )}
                     </p>
 
                     <p>
-                        <strong>⚠️ Motivo:</strong>
-                        ${registro.motivo || "-"}
+                        <strong>👤 Liberado por:</strong>
+                        ${escapar(
+                            registro.meliLiberou
+                        )}
                     </p>
 
                     <p>
-                        <strong>🟡 Liberado pelo Meli:</strong>
-                        ${registro.meliLiberou || "-"}
+                        <strong>📝 Motivo:</strong>
+                        ${escapar(
+                            registro.motivo
+                        )}
                     </p>
-
-                    <p>
-                        <strong>📝 Observações:</strong>
-                        ${registro.observacoes || "-"}
-                    </p>
-
-                    <p>
-                        <strong>👤 Lançado por:</strong>
-                        ${registro.lancadoPor || "-"}
-                    </p>
-
-                    <button
-                        onclick="excluirAmbulancia('${registro.id}')"
-                        class="botao-excluir"
-                    >
-                        🗑️ Excluir
-                    </button>
 
                 `;
 
             }
 
-            else {
 
-                div.innerHTML = `
+            else if (
+                registro.tipo ===
+                "transferencia"
+            ) {
 
-                    <h3>
-                        🔄 Transferência
-                    </h3>
+                titulo =
+                    "🔄 Transferência";
+
+
+                conteudo = `
 
                     <p>
                         <strong>📅 Data:</strong>
-                        ${formatarData(registro.data)}
+                        ${escapar(
+                            registro.data
+                        )}
                     </p>
 
                     <p>
-                        <strong>🛣️ Rota:</strong>
-                        ${registro.rota || "-"}
+                        <strong>🔢 Rota ID:</strong>
+                        ${escapar(
+                            registro.rotaId
+                        )}
                     </p>
 
                     <p>
-                        <strong>👤 Driver inicial:</strong>
-                        ${registro.driverInicial || "-"}
+                        <strong>🚚 Driver inicial:</strong>
+                        ${escapar(
+                            registro.driverInicial
+                        )}
                     </p>
 
                     <p>
-                        <strong>🔄 Driver substituto:</strong>
-                        ${registro.driverSubstituto || "-"}
+                        <strong>🚚 Driver substituto:</strong>
+                        ${escapar(
+                            registro.driverSubstituto
+                        )}
                     </p>
 
                     <p>
                         <strong>📍 Cidade:</strong>
-                        ${registro.cidade || "-"}
+                        ${escapar(
+                            registro.cidade
+                        )}
                     </p>
 
                     <p>
-                        <strong>⚠️ Motivo:</strong>
-                        ${registro.motivo || "-"}
+                        <strong>👤 Liberado por:</strong>
+                        ${escapar(
+                            registro.meliLiberou
+                        )}
                     </p>
 
                     <p>
-                        <strong>🟡 Liberado pelo Meli:</strong>
-                        ${registro.meliLiberou || "-"}
+                        <strong>📝 Motivo:</strong>
+                        ${escapar(
+                            registro.motivo
+                        )}
                     </p>
-
-                    <p>
-                        <strong>📝 Observações:</strong>
-                        ${registro.observacoes || "-"}
-                    </p>
-
-                    <p>
-                        <strong>👤 Lançado por:</strong>
-                        ${registro.lancadoPor || "-"}
-                    </p>
-
-                    <button
-                        onclick="excluirTransferencia('${registro.id}')"
-                        class="botao-excluir"
-                    >
-                        🗑️ Excluir
-                    </button>
 
                 `;
 
             }
 
 
-            lista.appendChild(div);
+            else if (
+                registro.tipo ===
+                "apoio"
+            ) {
+
+                titulo =
+                    "🚚 Apoio de Rota";
+
+
+                const valor =
+                    Number(
+                        registro.valor || 0
+                    )
+                    .toLocaleString(
+                        "pt-BR",
+                        {
+                            style: "currency",
+                            currency: "BRL"
+                        }
+                    );
+
+
+                conteudo = `
+
+                    <p>
+                        <strong>📅 Data:</strong>
+                        ${escapar(
+                            registro.data
+                        )}
+                    </p>
+
+                    <p>
+                        <strong>🔢 Rota que recebeu apoio:</strong>
+                        ${escapar(
+                            registro.rotaId
+                        )}
+                    </p>
+
+                    <p>
+                        <strong>💰 Valor:</strong>
+                        ${valor}
+                    </p>
+
+                    <p>
+                        <strong>🚚 Driver que realizou:</strong>
+                        ${escapar(
+                            registro.driverRealiza
+                        )}
+                    </p>
+
+                    <p>
+                        <strong>🚚 Driver que precisou:</strong>
+                        ${escapar(
+                            registro.driverPrecisa
+                        )}
+                    </p>
+
+                    <p>
+                        <strong>👤 Apoio liberado por:</strong>
+                        ${escapar(
+                            registro.quemLiberou
+                        )}
+                    </p>
+
+                `;
+
+            }
+
+
+            const observacao =
+                registro.observacoes
+                    ? `
+                        <div class="registro-observacao">
+                            <strong>📝 Observações:</strong>
+                            <p>
+                                ${escapar(
+                                    registro.observacoes
+                                )}
+                            </p>
+                        </div>
+                    `
+                    : "";
+
+
+            div.innerHTML = `
+
+                <div class="registro-titulo">
+
+                    <div class="registro-tipo">
+                        ${titulo}
+                    </div>
+
+                    <button
+                        class="botao-excluir"
+                        onclick="excluirRegistro(
+                            '${registro.fonte}',
+                            '${registro.id}'
+                        )"
+                    >
+                        🗑️ Excluir
+                    </button>
+
+                </div>
+
+
+                <div class="registro-info">
+
+                    ${conteudo}
+
+                    <p>
+                        <strong>👤 Lançado por:</strong>
+                        ${escapar(
+                            registro.lancadoPor
+                        )}
+                    </p>
+
+                </div>
+
+                ${observacao}
+
+            `;
+
+
+            lista.appendChild(
+                div
+            );
 
         }
     );
@@ -1073,123 +1521,76 @@ function mostrarRegistros(
 }
 
 
-// =====================================================
-// FILTROS
-// =====================================================
 
-window.filtrarRegistros =
-    function() {
+/* =========================
+   PROTEÇÃO DE TEXTO
+========================= */
 
-        const data =
-            document
-                .getElementById(
-                    "filtroData"
-                )
-                .value;
+function escapar(valor) {
 
+    if (
+        valor === null ||
+        valor === undefined
+    ) {
 
-        const rota =
-            document
-                .getElementById(
-                    "filtroRota"
-                )
-                .value
-                .trim()
-                .toLowerCase();
+        return "";
+
+    }
 
 
-        let filtrados =
-            todosOsRegistros;
-
-
-        if (data) {
-
-            filtrados =
-                filtrados.filter(
-                    function(registro) {
-
-                        return (
-                            registro.data ===
-                            data
-                        );
-
-                    }
-                );
-
-        }
-
-
-        if (rota) {
-
-            filtrados =
-                filtrados.filter(
-                    function(registro) {
-
-                        return (
-                            registro.rota &&
-                            registro.rota
-                                .toLowerCase()
-                                .includes(
-                                    rota
-                                )
-                        );
-
-                    }
-                );
-
-        }
-
-
-        mostrarRegistros(
-            filtrados
+    return String(valor)
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
         );
-
-    };
-
-
-// =====================================================
-// LIMPAR FILTROS
-// =====================================================
-
-window.limparFiltros =
-    function() {
-
-        document
-            .getElementById(
-                "filtroData"
-            )
-            .value = "";
+}
 
 
-        document
-            .getElementById(
-                "filtroRota"
-            )
-            .value = "";
 
+/* =========================
+   EXCLUIR REGISTRO
+========================= */
 
-        mostrarRegistros(
-            todosOsRegistros
-        );
+window.excluirRegistro =
+    async function(
+        tipo,
+        id
+    ) {
 
-    };
+        if (!usuario) {
 
-
-// =====================================================
-// EXCLUIR AMBULÂNCIA
-// =====================================================
-
-window.excluirAmbulancia =
-    async function(id) {
-
-        if (
-            !confirm(
-                "Tem certeza que deseja excluir este registro?"
-            )
-        ) {
+            alert(
+                "Você precisa estar logado."
+            );
 
             return;
+        }
 
+
+        const confirmar =
+            confirm(
+                "Tem certeza que deseja excluir este registro?"
+            );
+
+
+        if (!confirmar) {
+            return;
         }
 
 
@@ -1197,24 +1598,26 @@ window.excluirAmbulancia =
 
             await remove(
                 ref(
-                    db,
-                    "ambulancias/" + id
+                    database,
+                    `${tipo === "ambulancia"
+                        ? "ambulancias"
+                        : tipo === "transferencia"
+                            ? "transferencias"
+                            : "apoios"
+                    }/${id}`
                 )
             );
 
 
             alert(
-                "✅ Registro excluído."
+                "✅ Registro excluído com sucesso."
             );
 
 
             carregarRegistros();
 
-            atualizarDashboard();
 
-        }
-
-        catch (erro) {
+        } catch (erro) {
 
             console.error(
                 erro
@@ -1222,7 +1625,7 @@ window.excluirAmbulancia =
 
 
             alert(
-                "❌ Não foi possível excluir."
+                "❌ Não foi possível excluir o registro."
             );
 
         }
@@ -1230,64 +1633,10 @@ window.excluirAmbulancia =
     };
 
 
-// =====================================================
-// EXCLUIR TRANSFERÊNCIA
-// =====================================================
 
-window.excluirTransferencia =
-    async function(id) {
-
-        if (
-            !confirm(
-                "Tem certeza que deseja excluir este registro?"
-            )
-        ) {
-
-            return;
-
-        }
-
-
-        try {
-
-            await remove(
-                ref(
-                    db,
-                    "transferencias/" + id
-                )
-            );
-
-
-            alert(
-                "✅ Registro excluído."
-            );
-
-
-            carregarRegistros();
-
-            atualizarDashboard();
-
-        }
-
-        catch (erro) {
-
-            console.error(
-                erro
-            );
-
-
-            alert(
-                "❌ Não foi possível excluir."
-            );
-
-        }
-
-    };
-
-
-// =====================================================
-// ALTERAR SENHA
-// =====================================================
+/* =========================
+   ALTERAR SENHA
+========================= */
 
 window.abrirAlterarSenha =
     function() {
@@ -1301,20 +1650,12 @@ window.abrirAlterarSenha =
             );
 
 
-        document
-            .getElementById(
-                "formAlterarSenha"
-            )
-            .reset();
-
-
-        document
-            .getElementById(
-                "mensagemSenha"
-            )
-            .textContent = "";
+        document.getElementById(
+            "mensagemSenha"
+        ).textContent = "";
 
     };
+
 
 
 window.fecharAlterarSenha =
@@ -1331,6 +1672,7 @@ window.fecharAlterarSenha =
     };
 
 
+
 document
     .getElementById(
         "formAlterarSenha"
@@ -1342,65 +1684,33 @@ document
             event.preventDefault();
 
 
-            const usuario =
-                auth.currentUser;
-
-
             if (!usuario) {
-
-                alert(
-                    "❌ Você precisa estar logado."
-                );
-
                 return;
-
             }
 
 
             const senhaAtual =
-                document
-                    .getElementById(
-                        "senhaAtual"
-                    )
-                    .value;
+                document.getElementById(
+                    "senhaAtual"
+                ).value;
 
 
             const novaSenha =
-                document
-                    .getElementById(
-                        "novaSenha"
-                    )
-                    .value;
+                document.getElementById(
+                    "novaSenha"
+                ).value;
 
 
             const confirmarSenha =
-                document
-                    .getElementById(
-                        "confirmarSenha"
-                    )
-                    .value;
+                document.getElementById(
+                    "confirmarSenha"
+                ).value;
 
 
             const mensagem =
-                document
-                    .getElementById(
-                        "mensagemSenha"
-                    );
-
-
-            if (
-                novaSenha.length < 6
-            ) {
-
-                mensagem.style.color =
-                    "#dc2626";
-
-                mensagem.textContent =
-                    "❌ A nova senha precisa ter pelo menos 6 caracteres.";
-
-                return;
-
-            }
+                document.getElementById(
+                    "mensagemSenha"
+                );
 
 
             if (
@@ -1415,31 +1725,21 @@ document
                     "❌ As novas senhas não são iguais.";
 
                 return;
-
             }
 
 
             if (
-                senhaAtual ===
-                novaSenha
+                novaSenha.length < 6
             ) {
 
                 mensagem.style.color =
                     "#dc2626";
 
                 mensagem.textContent =
-                    "❌ A nova senha precisa ser diferente da atual.";
+                    "❌ A nova senha precisa ter pelo menos 6 caracteres.";
 
                 return;
-
             }
-
-
-            mensagem.style.color =
-                "#2563eb";
-
-            mensagem.textContent =
-                "⏳ Verificando senha atual...";
 
 
             try {
@@ -1457,10 +1757,6 @@ document
                 );
 
 
-                mensagem.textContent =
-                    "⏳ Salvando nova senha...";
-
-
                 await updatePassword(
                     usuario,
                     novaSenha
@@ -1469,7 +1765,6 @@ document
 
                 mensagem.style.color =
                     "#16a34a";
-
 
                 mensagem.textContent =
                     "✅ Senha alterada com sucesso!";
@@ -1482,18 +1777,7 @@ document
                     .reset();
 
 
-                setTimeout(
-                    function() {
-
-                        fecharAlterarSenha();
-
-                    },
-                    1500
-                );
-
-            }
-
-            catch (erro) {
+            } catch (erro) {
 
                 console.error(
                     "Erro ao alterar senha:",
@@ -1515,9 +1799,7 @@ document
                     mensagem.textContent =
                         "❌ A senha atual está incorreta.";
 
-                }
-
-                else if (
+                } else if (
                     erro.code ===
                     "auth/weak-password"
                 ) {
@@ -1525,23 +1807,18 @@ document
                     mensagem.textContent =
                         "❌ A nova senha é muito fraca.";
 
-                }
-
-                else if (
+                } else if (
                     erro.code ===
                     "auth/requires-recent-login"
                 ) {
 
                     mensagem.textContent =
-                        "❌ Por segurança, saia e entre novamente antes de alterar a senha.";
+                        "❌ Saia e entre novamente para alterar a senha.";
 
-                }
-
-                else {
+                } else {
 
                     mensagem.textContent =
-                        "❌ Erro ao alterar a senha.";
-
+                        "❌ Não foi possível alterar a senha.";
                 }
 
             }
@@ -1550,9 +1827,10 @@ document
     );
 
 
-// =====================================================
-// RECUPERAR SENHA
-// =====================================================
+
+/* =========================
+   RECUPERAR SENHA
+========================= */
 
 window.abrirRecuperarSenha =
     function() {
@@ -1569,33 +1847,29 @@ window.abrirRecuperarSenha =
 
 
         const emailLogin =
-            document
-                .getElementById(
-                    "loginEmail"
-                )
-                .value
-                .trim();
+            document.getElementById(
+                "loginEmail"
+            )
+            .value
+            .trim();
 
 
         if (emailLogin) {
 
-            document
-                .getElementById(
-                    "emailRecuperacao"
-                )
-                .value =
+            document.getElementById(
+                "emailRecuperacao"
+            ).value =
                 emailLogin;
 
         }
 
 
-        document
-            .getElementById(
-                "mensagemRecuperacao"
-            )
-            .textContent = "";
+        document.getElementById(
+            "mensagemRecuperacao"
+        ).textContent = "";
 
     };
+
 
 
 window.fecharRecuperarSenha =
@@ -1610,6 +1884,7 @@ window.fecharRecuperarSenha =
             );
 
     };
+
 
 
 document
@@ -1633,15 +1908,13 @@ document
 
 
             const mensagem =
-                document
-                    .getElementById(
-                        "mensagemRecuperacao"
-                    );
+                document.getElementById(
+                    "mensagemRecuperacao"
+                );
 
 
             mensagem.style.color =
                 "#2563eb";
-
 
             mensagem.textContent =
                 "⏳ Enviando e-mail...";
@@ -1658,13 +1931,10 @@ document
                 mensagem.style.color =
                     "#16a34a";
 
-
                 mensagem.textContent =
-                    "✅ E-mail enviado! Verifique sua caixa de entrada e a pasta de spam.";
+                    "✅ E-mail enviado! Verifique sua caixa de entrada e também a pasta de spam.";
 
-            }
-
-            catch (erro) {
+            } catch (erro) {
 
                 console.error(
                     "Erro ao recuperar senha:",
@@ -1678,32 +1948,33 @@ document
 
                 if (
                     erro.code ===
-                    "auth/invalid-email"
-                ) {
-
-                    mensagem.textContent =
-                        "❌ Digite um e-mail válido.";
-
-                }
-
-                else if (
-                    erro.code ===
                     "auth/user-not-found"
                 ) {
 
                     mensagem.textContent =
                         "❌ Não encontramos uma conta com esse e-mail.";
 
-                }
-
-                else {
+                } else if (
+                    erro.code ===
+                    "auth/invalid-email"
+                ) {
 
                     mensagem.textContent =
-                        "❌ Não foi possível enviar o e-mail.";
+                        "❌ Digite um e-mail válido.";
 
+                } else {
+
+                    mensagem.textContent =
+                        "❌ Não foi possível enviar o e-mail de recuperação.";
                 }
 
             }
 
         }
     );
+
+
+
+/* =========================
+   FIM
+========================= */
