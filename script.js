@@ -38,9 +38,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-
 const auth = getAuth(app);
-
 const db = getDatabase(app);
 
 
@@ -79,7 +77,6 @@ function esconderElemento(id) {
 
 
 function hoje() {
-
     const data = new Date();
 
     const ano = data.getFullYear();
@@ -97,13 +94,11 @@ function hoje() {
 
 
 function formatarData(data) {
-
     if (!data) {
         return "-";
     }
 
-    const partes =
-        String(data).split("-");
+    const partes = String(data).split("-");
 
     if (partes.length !== 3) {
         return data;
@@ -114,9 +109,7 @@ function formatarData(data) {
 
 
 function formatarMoeda(valor) {
-
-    const numero =
-        Number(valor) || 0;
+    const numero = Number(valor) || 0;
 
     return numero.toLocaleString(
         "pt-BR",
@@ -132,23 +125,17 @@ function mostrarToast(
     mensagem,
     tipo = "normal"
 ) {
-
-    const toast =
-        elemento("toast");
+    const toast = elemento("toast");
 
     if (!toast) {
         return;
     }
 
-    toast.textContent =
-        mensagem;
+    toast.textContent = mensagem;
 
-    toast.className =
-        "toast";
+    toast.className = "toast";
 
-    toast.classList.add(
-        "visivel"
-    );
+    toast.classList.add("visivel");
 
     if (tipo === "erro") {
         toast.classList.add("erro");
@@ -159,11 +146,7 @@ function mostrarToast(
     }
 
     setTimeout(function () {
-
-        toast.classList.remove(
-            "visivel"
-        );
-
+        toast.classList.remove("visivel");
     }, 3500);
 }
 
@@ -174,8 +157,7 @@ function mostrarToast(
 
 function configurarLogin() {
 
-    const formLogin =
-        elemento("formLogin");
+    const formLogin = elemento("formLogin");
 
     if (!formLogin) {
         console.warn(
@@ -371,16 +353,14 @@ function configurarLogin() {
 // RECUPERAR SENHA
 // ======================================================
 
-function configurarRecuperacaoSenha() {
+function abrirModalRecuperacao() {
 
-    const btnEsqueciSenha =
-        elemento("btnEsqueciSenha");
+    console.log(
+        "Botão 'Esqueci minha senha' clicado."
+    );
 
     const modal =
         elemento("modalRecuperarSenha");
-
-    const form =
-        elemento("formRecuperarSenha");
 
     const emailLogin =
         elemento("loginEmail");
@@ -388,22 +368,96 @@ function configurarRecuperacaoSenha() {
     const emailRecuperacao =
         elemento("emailRecuperacao");
 
-    const mensagem =
-        elemento("mensagemRecuperarSenha");
+    if (!modal) {
 
+        console.error(
+            "Modal de recuperação não encontrado."
+        );
+
+        return;
+    }
+
+    if (
+        emailLogin &&
+        emailRecuperacao &&
+        emailLogin.value.trim()
+    ) {
+
+        emailRecuperacao.value =
+            emailLogin.value.trim();
+    }
+
+    modal.classList.remove("oculto");
+
+    modal.style.display = "flex";
+    modal.style.visibility = "visible";
+    modal.style.opacity = "1";
+
+    console.log(
+        "Modal de recuperação aberto."
+    );
+}
+
+
+function fecharModalRecuperacao() {
+
+    const modal =
+        elemento("modalRecuperarSenha");
+
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.add("oculto");
+
+    modal.style.display = "";
+    modal.style.visibility = "";
+    modal.style.opacity = "";
+}
+
+
+function configurarRecuperacaoSenha() {
 
     console.log(
         "Configurando recuperação de senha..."
     );
 
+    const btnEsqueciSenha =
+        elemento("btnEsqueciSenha");
+
+    const form =
+        elemento("formRecuperarSenha");
 
     if (!btnEsqueciSenha) {
 
         console.error(
-            "ERRO: btnEsqueciSenha não encontrado."
+            "ERRO: botão btnEsqueciSenha não encontrado."
         );
 
     } else {
+
+        /*
+         * CORREÇÃO:
+         * Coloca diretamente no botão.
+         * Assim não dependemos somente do addEventListener.
+         */
+
+        btnEsqueciSenha.onclick =
+            function (event) {
+
+                if (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+
+                abrirModalRecuperacao();
+            };
+
+
+        /*
+         * Também mantém o addEventListener
+         * como camada adicional de segurança.
+         */
 
         btnEsqueciSenha.addEventListener(
             "click",
@@ -411,36 +465,14 @@ function configurarRecuperacaoSenha() {
 
                 event.preventDefault();
 
-                console.log(
-                    "Botão 'Esqueci minha senha' clicado."
-                );
-
-                if (
-                    emailLogin &&
-                    emailRecuperacao &&
-                    emailLogin.value.trim()
-                ) {
-
-                    emailRecuperacao.value =
-                        emailLogin.value.trim();
-                }
-
-                if (modal) {
-
-                    modal.classList.remove(
-                        "oculto"
-                    );
-
-                    console.log(
-                        "Modal de recuperação aberto."
-                    );
-                }
+                abrirModalRecuperacao();
 
             }
         );
 
+
         console.log(
-            "Evento do botão de recuperação configurado."
+            "Botão de recuperação configurado com sucesso."
         );
     }
 
@@ -464,6 +496,12 @@ function configurarRecuperacaoSenha() {
             console.log(
                 "Formulário de recuperação enviado."
             );
+
+            const emailRecuperacao =
+                elemento("emailRecuperacao");
+
+            const mensagem =
+                elemento("mensagemRecuperarSenha");
 
             const email =
                 emailRecuperacao
@@ -639,9 +677,7 @@ onAuthStateChanged(
                 usuarioEmail.textContent =
                     "-";
             }
-
         }
-
     }
 );
 
@@ -683,12 +719,9 @@ function configurarLogout() {
                     "Não foi possível sair.",
                     "erro"
                 );
-
             }
-
         }
     );
-
 }
 
 
@@ -711,7 +744,6 @@ window.alternarSidebar =
         sidebar.classList.toggle(
             "aberta"
         );
-
     };
 
 
@@ -751,12 +783,9 @@ function configurarSidebar() {
                 sidebar.classList.remove(
                     "aberta"
                 );
-
             }
-
         }
     );
-
 }
 
 
@@ -797,7 +826,6 @@ function configurarNavegacao() {
                                 pagina.classList.remove(
                                     "ativa"
                                 );
-
                             }
                         );
 
@@ -812,7 +840,6 @@ function configurarNavegacao() {
                         pagina.classList.add(
                             "ativa"
                         );
-
                     }
 
 
@@ -826,7 +853,6 @@ function configurarNavegacao() {
                                 menu.classList.remove(
                                     "ativo"
                                 );
-
                             }
                         );
 
@@ -858,7 +884,6 @@ function configurarNavegacao() {
 
                         paginaRegistros:
                             "Registros"
-
                     };
 
 
@@ -867,7 +892,6 @@ function configurarNavegacao() {
                         titulo.textContent =
                             titulos[paginaId]
                             || "Dashboard";
-
                     }
 
 
@@ -885,7 +909,6 @@ function configurarNavegacao() {
                         sidebar.classList.remove(
                             "aberta"
                         );
-
                     }
 
 
@@ -895,15 +918,11 @@ function configurarNavegacao() {
                     ) {
 
                         renderizarRegistros();
-
                     }
-
                 }
             );
-
         }
     );
-
 }
 
 
@@ -936,7 +955,6 @@ async function carregarDados() {
                 caminho: "apoios",
                 tipo: "apoio"
             }
-
         ];
 
 
@@ -981,12 +999,9 @@ async function carregarDados() {
                                 item.tipo,
 
                             ...dados[id]
-
                         });
-
                     }
                 );
-
         }
 
 
@@ -1002,7 +1017,6 @@ async function carregarDados() {
                 return dataB.localeCompare(
                     dataA
                 );
-
             }
         );
 
@@ -1033,9 +1047,7 @@ async function carregarDados() {
             "Não foi possível carregar os dados.",
             "erro"
         );
-
     }
-
 }
 
 
@@ -1136,7 +1148,6 @@ function configurarFormularioAmbulancia() {
                                 minute: "2-digit"
                             }
                         )
-
             };
 
 
@@ -1187,12 +1198,9 @@ function configurarFormularioAmbulancia() {
                     "Erro ao salvar ambulância.",
                     "erro"
                 );
-
             }
-
         }
     );
-
 }
 
 
@@ -1291,7 +1299,6 @@ function configurarFormularioTransferencia() {
                                 minute: "2-digit"
                             }
                         )
-
             };
 
 
@@ -1342,12 +1349,9 @@ function configurarFormularioTransferencia() {
                     "Erro ao salvar transferência.",
                     "erro"
                 );
-
             }
-
         }
     );
-
 }
 
 
@@ -1443,7 +1447,6 @@ function configurarFormularioApoio() {
                                 minute: "2-digit"
                             }
                         )
-
             };
 
 
@@ -1494,12 +1497,9 @@ function configurarFormularioApoio() {
                     "Erro ao salvar apoio.",
                     "erro"
                 );
-
             }
-
         }
     );
-
 }
 
 
@@ -1578,7 +1578,6 @@ function atualizarDashboard() {
                             item.valor
                         ) || 0
                     );
-
             },
             0
         );
@@ -1597,7 +1596,6 @@ function atualizarDashboard() {
                             item.valor
                         ) || 0
                     );
-
             },
             0
         );
@@ -1625,7 +1623,6 @@ function atualizarDashboard() {
 
         apoiosHoje:
             apoiosHoje.length
-
     };
 
 
@@ -1640,9 +1637,7 @@ function atualizarDashboard() {
 
                     el.textContent =
                         valores[id];
-
                 }
-
             }
         );
 
@@ -1659,7 +1654,6 @@ function atualizarDashboard() {
             formatarMoeda(
                 valorHoje
             );
-
     }
 
 
@@ -1675,7 +1669,6 @@ function atualizarDashboard() {
             formatarMoeda(
                 valorTotal
             );
-
     }
 
 
@@ -1774,9 +1767,7 @@ function atualizarDashboard() {
                 </div>
 
             </div>
-
         `;
-
     }
 
 
@@ -1799,9 +1790,7 @@ function atualizarDashboard() {
             criarListaRegistros(
                 recentes
             );
-
     }
-
 }
 
 
@@ -1820,7 +1809,6 @@ function criarListaRegistros(
                 Nenhum registro encontrado.
             </div>
         `;
-
     }
 
 
@@ -1845,7 +1833,6 @@ function criarListaRegistros(
 
                     icone =
                         "🚑";
-
                 }
 
 
@@ -1859,7 +1846,6 @@ function criarListaRegistros(
 
                     icone =
                         "🔄";
-
                 }
 
 
@@ -1873,7 +1859,6 @@ function criarListaRegistros(
 
                     icone =
                         "🤝";
-
                 }
 
 
@@ -1896,7 +1881,6 @@ function criarListaRegistros(
                             registro.driverSubstituto ||
                             "-"
                         }`;
-
                 }
 
 
@@ -1950,11 +1934,9 @@ function criarListaRegistros(
                     </div>
 
                 `;
-
             }
         )
         .join("");
-
 }
 
 
@@ -2010,7 +1992,6 @@ function renderizarRegistros() {
                 ) {
 
                     return false;
-
                 }
 
 
@@ -2026,7 +2007,6 @@ function renderizarRegistros() {
                 ) {
 
                     return false;
-
                 }
 
 
@@ -2038,9 +2018,7 @@ function renderizarRegistros() {
                     ) {
 
                         return false;
-
                     }
-
                 }
 
 
@@ -2068,14 +2046,11 @@ function renderizarRegistros() {
                     ) {
 
                         return false;
-
                     }
-
                 }
 
 
                 return true;
-
             }
         );
 
@@ -2084,7 +2059,6 @@ function renderizarRegistros() {
         criarListaRegistros(
             filtrados
         );
-
 }
 
 
@@ -2126,7 +2100,6 @@ function configurarFiltros() {
                 "change",
                 renderizarRegistros
             );
-
         }
     );
 
@@ -2182,12 +2155,9 @@ function configurarFiltros() {
 
 
                 renderizarRegistros();
-
             }
         );
-
     }
-
 }
 
 
@@ -2222,7 +2192,6 @@ window.excluirRegistro =
 
             apoio:
                 "apoios"
-
         };
 
 
@@ -2266,9 +2235,7 @@ window.excluirRegistro =
                 "Não foi possível excluir.",
                 "erro"
             );
-
         }
-
     };
 
 
@@ -2293,10 +2260,8 @@ function configurarAlterarSenha() {
                 mostrarElemento(
                     "modalSenha"
                 );
-
             }
         );
-
     }
 
 
@@ -2424,12 +2389,9 @@ function configurarAlterarSenha() {
 
                 mensagem.className =
                     "mensagem erro";
-
             }
-
         }
     );
-
 }
 
 
@@ -2459,10 +2421,8 @@ function configurarModais() {
                         esconderElemento(
                             modalId
                         );
-
                     }
                 );
-
             }
         );
 
@@ -2486,15 +2446,11 @@ function configurarModais() {
                             modal.classList.add(
                                 "oculto"
                             );
-
                         }
-
                     }
                 );
-
             }
         );
-
 }
 
 
@@ -2558,9 +2514,7 @@ function inicializarSistema() {
 
                 campo.value =
                     dataHoje;
-
             }
-
         }
     );
 
@@ -2568,7 +2522,6 @@ function inicializarSistema() {
     console.log(
         "Caxiense Controle Operacional carregado com sucesso."
     );
-
 }
 
 
@@ -2589,5 +2542,4 @@ if (
 } else {
 
     inicializarSistema();
-
 }
