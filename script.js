@@ -36,11 +36,8 @@ const firebaseConfig = {
     appId: "1:194048564958:web:af334ffd5d248ec9d76c4f"
 };
 
-
 const app = initializeApp(firebaseConfig);
-
 const db = getDatabase(app);
-
 const auth = getAuth(app);
 
 
@@ -50,13 +47,17 @@ const auth = getAuth(app);
 
 let usuario = null;
 let todosRegistros = [];
-
-let toastTimeout;
+let toastTimeout = null;
 
 
 /* =========================================================
    HELPERS
 ========================================================= */
+
+function elemento(id) {
+    return document.getElementById(id);
+}
+
 
 function hojeISO() {
 
@@ -85,7 +86,7 @@ function formatarData(data) {
     const partes = String(data).split("-");
 
     if (partes.length !== 3) {
-        return data;
+        return String(data);
     }
 
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
@@ -118,19 +119,17 @@ function escaparHTML(valor) {
 
 
 function mostrarMensagem(
-    elemento,
+    campo,
     mensagem,
     tipo = "erro"
 ) {
 
-    if (!elemento) {
+    if (!campo) {
         return;
     }
 
-    elemento.textContent = mensagem;
-
-    elemento.className =
-        `mensagem ${tipo}`;
+    campo.textContent = mensagem;
+    campo.className = `mensagem ${tipo}`;
 }
 
 
@@ -139,8 +138,7 @@ function mostrarToast(
     tipo = "normal"
 ) {
 
-    const toast =
-        document.getElementById("toast");
+    const toast = elemento("toast");
 
     if (!toast) {
         return;
@@ -150,8 +148,7 @@ function mostrarToast(
 
     toast.textContent = mensagem;
 
-    toast.className =
-        `toast mostrar ${tipo}`;
+    toast.className = `toast mostrar ${tipo}`;
 
     toastTimeout = setTimeout(() => {
 
@@ -177,35 +174,30 @@ function preencherDatas() {
 
     campos.forEach(id => {
 
-        const campo =
-            document.getElementById(id);
+        const campo = elemento(id);
 
-        if (campo) {
+        if (campo && !campo.value) {
             campo.value = hoje;
         }
 
     });
 
 
-    const dataDashboard =
-        document.getElementById(
-            "dataDashboard"
-        );
+    const dataDashboard = elemento(
+        "dataDashboard"
+    );
 
     if (dataDashboard) {
-
         dataDashboard.textContent =
             formatarData(hoje);
     }
 
 
-    const dataTopbar =
-        document.getElementById(
-            "dataTopbar"
-        );
+    const dataTopbar = elemento(
+        "dataTopbar"
+    );
 
     if (dataTopbar) {
-
         dataTopbar.textContent =
             formatarData(hoje);
     }
@@ -216,9 +208,7 @@ function preencherDatas() {
    LOGIN
 ========================================================= */
 
-const formLogin =
-    document.getElementById("formLogin");
-
+const formLogin = elemento("formLogin");
 
 if (formLogin) {
 
@@ -228,20 +218,38 @@ if (formLogin) {
 
             evento.preventDefault();
 
+            const emailCampo = elemento(
+                "loginEmail"
+            );
+
+            const senhaCampo = elemento(
+                "loginSenha"
+            );
+
+            const mensagem = elemento(
+                "mensagemLogin"
+            );
+
+            if (!emailCampo || !senhaCampo) {
+                return;
+            }
+
             const email =
-                document.getElementById(
-                    "loginEmail"
-                ).value.trim();
+                emailCampo.value.trim();
 
             const senha =
-                document.getElementById(
-                    "loginSenha"
-                ).value;
+                senhaCampo.value;
 
-            const mensagem =
-                document.getElementById(
-                    "mensagemLogin"
+            if (!email || !senha) {
+
+                mostrarMensagem(
+                    mensagem,
+                    "Informe o e-mail e a senha.",
+                    "erro"
                 );
+
+                return;
+            }
 
 
             mostrarMensagem(
@@ -259,59 +267,63 @@ if (formLogin) {
                     senha
                 );
 
-                mensagem.textContent = "";
+                if (mensagem) {
 
-                mensagem.className =
-                    "mensagem";
+                    mensagem.textContent = "";
+
+                    mensagem.className =
+                        "mensagem";
+                }
 
             } catch (erro) {
 
-                console.error(erro);
+                console.error(
+                    "Erro no login:",
+                    erro
+                );
 
                 let texto =
                     "Não foi possível entrar. Verifique o e-mail e a senha.";
 
-                if (
-                    erro.code ===
-                    "auth/invalid-credential"
-                ) {
 
-                    texto =
-                        "E-mail ou senha incorretos.";
+                switch (erro.code) {
 
-                } else if (
-                    erro.code ===
-                    "auth/user-not-found"
-                ) {
+                    case "auth/invalid-credential":
+                        texto =
+                            "E-mail ou senha incorretos.";
+                        break;
 
-                    texto =
-                        "Usuário não encontrado.";
+                    case "auth/user-not-found":
+                        texto =
+                            "Usuário não encontrado.";
+                        break;
 
-                } else if (
-                    erro.code ===
-                    "auth/wrong-password"
-                ) {
+                    case "auth/wrong-password":
+                        texto =
+                            "Senha incorreta.";
+                        break;
 
-                    texto =
-                        "Senha incorreta.";
+                    case "auth/too-many-requests":
+                        texto =
+                            "Muitas tentativas. Aguarde alguns minutos.";
+                        break;
 
-                } else if (
-                    erro.code ===
-                    "auth/too-many-requests"
-                ) {
+                    case "auth/invalid-api-key":
+                        texto =
+                            "Erro na configuração da autenticação.";
+                        break;
 
-                    texto =
-                        "Muitas tentativas. Aguarde alguns minutos.";
+                    case "auth/network-request-failed":
+                        texto =
+                            "Erro de conexão. Verifique sua internet.";
+                        break;
 
-                } else if (
-                    erro.code ===
-                    "auth/invalid-api-key"
-                ) {
-
-                    texto =
-                        "Erro de configuração da autenticação.";
-
+                    case "auth/operation-not-allowed":
+                        texto =
+                            "O login por e-mail e senha não está habilitado no Firebase.";
+                        break;
                 }
+
 
                 mostrarMensagem(
                     mensagem,
@@ -336,16 +348,19 @@ onAuthStateChanged(
 
         usuario = usuarioAtual;
 
-
         const telaLogin =
-            document.getElementById(
-                "telaLogin"
-            );
+            elemento("telaLogin");
 
         const sistema =
-            document.getElementById(
-                "sistema"
+            elemento("sistema");
+
+
+        if (!telaLogin || !sistema) {
+            console.error(
+                "Elementos de login/sistema não encontrados no HTML."
             );
+            return;
+        }
 
 
         if (usuarioAtual) {
@@ -363,9 +378,7 @@ onAuthStateChanged(
 
             preencherDatas();
 
-            carregarDashboard();
-
-            carregarRegistros();
+            carregarDados();
 
             mostrarPagina(
                 "dashboard"
@@ -400,7 +413,6 @@ function atualizarUsuario() {
     const email =
         usuario.email || "Usuário";
 
-
     const nome =
         email.includes("@")
             ? email.split("@")[0]
@@ -408,34 +420,25 @@ function atualizarUsuario() {
 
 
     const nomeUsuario =
-        document.getElementById(
-            "nomeUsuario"
-        );
+        elemento("nomeUsuario");
 
     const emailUsuario =
-        document.getElementById(
-            "emailUsuario"
-        );
+        elemento("emailUsuario");
 
 
     if (nomeUsuario) {
-
-        nomeUsuario.textContent =
-            nome;
+        nomeUsuario.textContent = nome;
     }
 
 
     if (emailUsuario) {
-
-        emailUsuario.textContent =
-            email;
+        emailUsuario.textContent = email;
     }
 
 
     const avatar =
-        document.querySelector(
-            ".avatar"
-        );
+        document.querySelector(".avatar");
+
 
     if (avatar) {
 
@@ -443,6 +446,7 @@ function atualizarUsuario() {
             nome
                 .charAt(0)
                 .toUpperCase();
+
     }
 
 }
@@ -458,12 +462,20 @@ window.sairSistema = async function () {
 
         await signOut(auth);
 
+        mostrarToast(
+            "Você saiu do sistema."
+        );
+
     } catch (erro) {
 
-        console.error(erro);
+        console.error(
+            "Erro ao sair:",
+            erro
+        );
 
         mostrarToast(
-            "Não foi possível sair do sistema."
+            "Não foi possível sair do sistema.",
+            "erro"
         );
     }
 
@@ -477,35 +489,26 @@ window.sairSistema = async function () {
 window.alternarSidebar = function () {
 
     const sidebar =
-        document.querySelector(
-            ".sidebar"
-        );
-
+        document.querySelector(".sidebar");
 
     if (!sidebar) {
         return;
     }
 
-
     sidebar.classList.toggle(
         "aberta"
     );
-
 };
 
 
 function fecharSidebarMobile() {
 
     const sidebar =
-        document.querySelector(
-            ".sidebar"
-        );
-
+        document.querySelector(".sidebar");
 
     if (!sidebar) {
         return;
     }
-
 
     if (window.innerWidth <= 900) {
 
@@ -533,9 +536,9 @@ window.mostrarPagina = function (
 
 
     paginas.forEach(
-        elemento => {
+        paginaElemento => {
 
-            elemento.classList.remove(
+            paginaElemento.classList.remove(
                 "ativa"
             );
 
@@ -543,9 +546,15 @@ window.mostrarPagina = function (
     );
 
 
+    const primeiraLetra =
+        pagina.charAt(0).toUpperCase();
+
+    const restante =
+        pagina.slice(1);
+
     const paginaAtual =
-        document.getElementById(
-            `pagina${pagina.charAt(0).toUpperCase()}${pagina.slice(1)}`
+        elemento(
+            `pagina${primeiraLetra}${restante}`
         );
 
 
@@ -560,20 +569,15 @@ window.mostrarPagina = function (
 
     const menus = {
 
-        dashboard:
-            "menuDashboard",
+        dashboard: "menuDashboard",
 
-        ambulancia:
-            "menuAmbulancia",
+        ambulancia: "menuAmbulancia",
 
-        transferencia:
-            "menuTransferencia",
+        transferencia: "menuTransferencia",
 
-        apoio:
-            "menuApoio",
+        apoio: "menuApoio",
 
-        registros:
-            "menuRegistros"
+        registros: "menuRegistros"
 
     };
 
@@ -581,12 +585,12 @@ window.mostrarPagina = function (
     Object.values(menus).forEach(
         id => {
 
-            const elemento =
-                document.getElementById(id);
+            const menu =
+                elemento(id);
 
-            if (elemento) {
+            if (menu) {
 
-                elemento.classList.remove(
+                menu.classList.remove(
                     "ativo"
                 );
 
@@ -597,7 +601,7 @@ window.mostrarPagina = function (
 
 
     const menuAtual =
-        document.getElementById(
+        elemento(
             menus[pagina]
         );
 
@@ -613,7 +617,8 @@ window.mostrarPagina = function (
 
     const nomes = {
 
-        dashboard: "Dashboard",
+        dashboard:
+            "Dashboard",
 
         ambulancia:
             "Lançar ambulância",
@@ -631,9 +636,7 @@ window.mostrarPagina = function (
 
 
     const titulo =
-        document.getElementById(
-            "tituloPagina"
-        );
+        elemento("tituloPagina");
 
 
     if (titulo) {
@@ -645,9 +648,7 @@ window.mostrarPagina = function (
 
 
     const breadcrumb =
-        document.getElementById(
-            "breadcrumb"
-        );
+        elemento("breadcrumb");
 
 
     if (breadcrumb) {
@@ -662,16 +663,12 @@ window.mostrarPagina = function (
 
 
     if (pagina === "dashboard") {
-
         atualizarDashboard();
-
     }
 
 
     if (pagina === "registros") {
-
         aplicarFiltros();
-
     }
 
 };
@@ -682,9 +679,7 @@ window.mostrarPagina = function (
 ========================================================= */
 
 const formAmbulancia =
-    document.getElementById(
-        "formAmbulancia"
-    );
+    elemento("formAmbulancia");
 
 
 if (formAmbulancia) {
@@ -697,6 +692,12 @@ if (formAmbulancia) {
 
 
             if (!usuario) {
+
+                mostrarToast(
+                    "Faça login para registrar a operação.",
+                    "erro"
+                );
+
                 return;
             }
 
@@ -706,44 +707,44 @@ if (formAmbulancia) {
                 tipo: "ambulancia",
 
                 data:
-                    document.getElementById(
+                    elemento(
                         "dataAmbulancia"
                     ).value,
 
                 rota:
-                    document.getElementById(
+                    elemento(
                         "rotaAmbulancia"
                     ).value.trim(),
 
                 driver:
-                    document.getElementById(
+                    elemento(
                         "driverAmbulancia"
                     ).value.trim(),
 
                 cidade:
-                    document.getElementById(
+                    elemento(
                         "cidadeAmbulancia"
                     ).value.trim(),
 
                 pacotes:
                     Number(
-                        document.getElementById(
+                        elemento(
                             "pacotesAmbulancia"
                         ).value
                     ) || 0,
 
                 motivo:
-                    document.getElementById(
+                    elemento(
                         "motivoAmbulancia"
                     ).value.trim(),
 
                 meli:
-                    document.getElementById(
+                    elemento(
                         "meliAmbulancia"
                     ).value.trim(),
 
                 observacoes:
-                    document.getElementById(
+                    elemento(
                         "obsAmbulancia"
                     ).value.trim(),
 
@@ -759,7 +760,10 @@ if (formAmbulancia) {
             try {
 
                 await push(
-                    ref(db, "ambulancias"),
+                    ref(
+                        db,
+                        "ambulancias"
+                    ),
                     registro
                 );
 
@@ -768,22 +772,24 @@ if (formAmbulancia) {
 
                 preencherDatas();
 
-
                 mostrarToast(
-                    "Ambulância registrada com sucesso."
+                    "Ambulância registrada com sucesso.",
+                    "sucesso"
                 );
 
+                carregarDados();
 
-                carregarDashboard();
-
-                carregarRegistros();
 
             } catch (erro) {
 
-                console.error(erro);
+                console.error(
+                    "Erro ao registrar ambulância:",
+                    erro
+                );
 
                 mostrarToast(
-                    "Erro ao registrar a ambulância."
+                    "Erro ao registrar a ambulância.",
+                    "erro"
                 );
 
             }
@@ -799,9 +805,7 @@ if (formAmbulancia) {
 ========================================================= */
 
 const formTransferencia =
-    document.getElementById(
-        "formTransferencia"
-    );
+    elemento("formTransferencia");
 
 
 if (formTransferencia) {
@@ -814,6 +818,12 @@ if (formTransferencia) {
 
 
             if (!usuario) {
+
+                mostrarToast(
+                    "Faça login para registrar a operação.",
+                    "erro"
+                );
+
                 return;
             }
 
@@ -823,47 +833,47 @@ if (formTransferencia) {
                 tipo: "transferencia",
 
                 data:
-                    document.getElementById(
+                    elemento(
                         "dataTransferencia"
                     ).value,
 
                 rota:
-                    document.getElementById(
+                    elemento(
                         "rotaTransferencia"
                     ).value.trim(),
 
                 driverInicial:
-                    document.getElementById(
+                    elemento(
                         "driverInicial"
                     ).value.trim(),
 
                 driverSubstituto:
-                    document.getElementById(
+                    elemento(
                         "driverSubstituto"
                     ).value.trim(),
 
                 driver:
-                    document.getElementById(
+                    elemento(
                         "driverSubstituto"
                     ).value.trim(),
 
                 cidade:
-                    document.getElementById(
+                    elemento(
                         "cidadeTransferencia"
                     ).value.trim(),
 
                 motivo:
-                    document.getElementById(
+                    elemento(
                         "motivoTransferencia"
                     ).value.trim(),
 
                 meli:
-                    document.getElementById(
+                    elemento(
                         "meliTransferencia"
                     ).value.trim(),
 
                 observacoes:
-                    document.getElementById(
+                    elemento(
                         "obsTransferencia"
                     ).value.trim(),
 
@@ -879,7 +889,10 @@ if (formTransferencia) {
             try {
 
                 await push(
-                    ref(db, "transferencias"),
+                    ref(
+                        db,
+                        "transferencias"
+                    ),
                     registro
                 );
 
@@ -888,22 +901,24 @@ if (formTransferencia) {
 
                 preencherDatas();
 
-
                 mostrarToast(
-                    "Transferência registrada com sucesso."
+                    "Transferência registrada com sucesso.",
+                    "sucesso"
                 );
 
+                carregarDados();
 
-                carregarDashboard();
-
-                carregarRegistros();
 
             } catch (erro) {
 
-                console.error(erro);
+                console.error(
+                    "Erro ao registrar transferência:",
+                    erro
+                );
 
                 mostrarToast(
-                    "Erro ao registrar a transferência."
+                    "Erro ao registrar a transferência.",
+                    "erro"
                 );
 
             }
@@ -919,9 +934,7 @@ if (formTransferencia) {
 ========================================================= */
 
 const formApoio =
-    document.getElementById(
-        "formApoio"
-    );
+    elemento("formApoio");
 
 
 if (formApoio) {
@@ -934,6 +947,12 @@ if (formApoio) {
 
 
             if (!usuario) {
+
+                mostrarToast(
+                    "Faça login para registrar a operação.",
+                    "erro"
+                );
+
                 return;
             }
 
@@ -943,44 +962,44 @@ if (formApoio) {
                 tipo: "apoio",
 
                 data:
-                    document.getElementById(
+                    elemento(
                         "dataApoio"
                     ).value,
 
                 rota:
-                    document.getElementById(
+                    elemento(
                         "rotaApoio"
                     ).value.trim(),
 
                 valor:
                     Number(
-                        document.getElementById(
+                        elemento(
                             "valorApoio"
                         ).value
                     ) || 0,
 
                 driverRealiza:
-                    document.getElementById(
+                    elemento(
                         "driverRealizaApoio"
                     ).value.trim(),
 
                 driverPrecisa:
-                    document.getElementById(
+                    elemento(
                         "driverPrecisaApoio"
                     ).value.trim(),
 
                 driver:
-                    document.getElementById(
+                    elemento(
                         "driverRealizaApoio"
                     ).value.trim(),
 
                 quemLiberou:
-                    document.getElementById(
+                    elemento(
                         "quemLiberouApoio"
                     ).value.trim(),
 
                 observacoes:
-                    document.getElementById(
+                    elemento(
                         "obsApoio"
                     ).value.trim(),
 
@@ -996,7 +1015,10 @@ if (formApoio) {
             try {
 
                 await push(
-                    ref(db, "apoios"),
+                    ref(
+                        db,
+                        "apoios"
+                    ),
                     registro
                 );
 
@@ -1005,22 +1027,24 @@ if (formApoio) {
 
                 preencherDatas();
 
-
                 mostrarToast(
-                    "Apoio registrado com sucesso."
+                    "Apoio registrado com sucesso.",
+                    "sucesso"
                 );
 
+                carregarDados();
 
-                carregarDashboard();
-
-                carregarRegistros();
 
             } catch (erro) {
 
-                console.error(erro);
+                console.error(
+                    "Erro ao registrar apoio:",
+                    erro
+                );
 
                 mostrarToast(
-                    "Erro ao registrar o apoio."
+                    "Erro ao registrar o apoio.",
+                    "erro"
                 );
 
             }
@@ -1032,14 +1056,14 @@ if (formApoio) {
 
 
 /* =========================================================
-   CARREGAR DASHBOARD
+   CARREGAR TODOS OS DADOS
 ========================================================= */
 
-function carregarDashboard() {
+async function carregarDados() {
 
-    const dados = [];
-
-    let finalizados = 0;
+    if (!usuario) {
+        return;
+    }
 
 
     const caminhos = [
@@ -1058,40 +1082,52 @@ function carregarDashboard() {
     ];
 
 
+    const resultados = [];
+
+
+    let carregados = 0;
+
+
     caminhos.forEach(item => {
 
         onValue(
-            ref(db, item.caminho),
+            ref(
+                db,
+                item.caminho
+            ),
+
             snapshot => {
 
                 const valor =
                     snapshot.val() || {};
 
 
-                Object.entries(valor)
-                    .forEach(
-                        ([id, registro]) => {
-
-                            dados.push({
+                const registros =
+                    Object.entries(valor)
+                        .map(
+                            ([id, registro]) => ({
                                 ...registro,
                                 id,
                                 tipo: item.tipo
-                            });
-
-                        }
-                    );
+                            })
+                        );
 
 
-                finalizados++;
+                resultados.push(
+                    ...registros
+                );
+
+
+                carregados++;
 
 
                 if (
-                    finalizados ===
+                    carregados ===
                     caminhos.length
                 ) {
 
                     todosRegistros =
-                        dados.sort(
+                        resultados.sort(
                             (a, b) =>
                                 Number(
                                     b.criadoEm || 0
@@ -1104,16 +1140,16 @@ function carregarDashboard() {
 
                     atualizarDashboard();
 
-                    renderizarRegistros(
-                        todosRegistros
-                    );
+                    aplicarFiltros();
 
                 }
 
             },
+
             {
                 onlyOnce: true
             }
+
         );
 
     });
@@ -1122,7 +1158,7 @@ function carregarDashboard() {
 
 
 /* =========================================================
-   ATUALIZAR DASHBOARD
+   DASHBOARD
 ========================================================= */
 
 function atualizarDashboard() {
@@ -1133,24 +1169,24 @@ function atualizarDashboard() {
 
     const ambulancias =
         registros.filter(
-            r =>
-                r.tipo ===
+            registro =>
+                registro.tipo ===
                 "ambulancia"
         );
 
 
     const transferencias =
         registros.filter(
-            r =>
-                r.tipo ===
+            registro =>
+                registro.tipo ===
                 "transferencia"
         );
 
 
     const apoios =
         registros.filter(
-            r =>
-                r.tipo ===
+            registro =>
+                registro.tipo ===
                 "apoio"
         );
 
@@ -1161,11 +1197,13 @@ function atualizarDashboard() {
 
     const valorTotal =
         apoios.reduce(
-            (soma, registro) =>
-                soma +
-                (Number(
-                    registro.valor
-                ) || 0),
+            (totalValor, registro) =>
+                totalValor +
+                (
+                    Number(
+                        registro.valor
+                    ) || 0
+                ),
             0
         );
 
@@ -1175,24 +1213,30 @@ function atualizarDashboard() {
         ambulancias.length
     );
 
+
     definirTexto(
         "totalTransferencias",
         transferencias.length
     );
+
 
     definirTexto(
         "totalApoios",
         apoios.length
     );
 
+
     definirTexto(
         "totalGeral",
         total
     );
 
+
     definirTexto(
         "valorTotalApoios",
-        formatarMoeda(valorTotal)
+        formatarMoeda(
+            valorTotal
+        )
     );
 
 
@@ -1200,53 +1244,63 @@ function atualizarDashboard() {
         hojeISO();
 
 
-    const hojeAmb =
+    const hojeAmbulancias =
         ambulancias.filter(
-            r => r.data === hoje
-        ).length;
+            registro =>
+                registro.data === hoje
+        );
 
 
-    const hojeTrans =
+    const hojeTransferencias =
         transferencias.filter(
-            r => r.data === hoje
-        ).length;
+            registro =>
+                registro.data === hoje
+        );
 
 
-    const hojeApoio =
+    const hojeApoios =
         apoios.filter(
-            r => r.data === hoje
+            registro =>
+                registro.data === hoje
         );
 
 
     const hojeValor =
-        hojeApoio.reduce(
-            (soma, r) =>
-                soma +
-                (Number(
-                    r.valor
-                ) || 0),
+        hojeApoios.reduce(
+            (totalValor, registro) =>
+                totalValor +
+                (
+                    Number(
+                        registro.valor
+                    ) || 0
+                ),
             0
         );
 
 
     definirTexto(
         "hojeAmbulancias",
-        hojeAmb
+        hojeAmbulancias.length
     );
+
 
     definirTexto(
         "hojeTransferencias",
-        hojeTrans
+        hojeTransferencias.length
     );
+
 
     definirTexto(
         "hojeApoios",
-        hojeApoio.length
+        hojeApoios.length
     );
+
 
     definirTexto(
         "hojeValorApoios",
-        formatarMoeda(hojeValor)
+        formatarMoeda(
+            hojeValor
+        )
     );
 
 
@@ -1255,10 +1309,12 @@ function atualizarDashboard() {
         ambulancias.length
     );
 
+
     definirTexto(
         "barraTransferenciasTexto",
         transferencias.length
     );
+
 
     definirTexto(
         "barraApoiosTexto",
@@ -1277,64 +1333,95 @@ function atualizarDashboard() {
 
     definirLargura(
         "barraAmbulancias",
-        ambulancias.length / maior * 100
+        ambulancias.length /
+        maior *
+        100
     );
+
 
     definirLargura(
         "barraTransferencias",
-        transferencias.length / maior * 100
+        transferencias.length /
+        maior *
+        100
     );
+
 
     definirLargura(
         "barraApoios",
-        apoios.length / maior * 100
+        apoios.length /
+        maior *
+        100
     );
 
 
     criarUltimosLancamentos(
-        registros.slice(0, 6)
+        registros.slice(
+            0,
+            6
+        )
     );
 
 }
 
+
+/* =========================================================
+   DEFINIR TEXTO
+========================================================= */
 
 function definirTexto(
     id,
     valor
 ) {
 
-    const elemento =
-        document.getElementById(id);
+    const campo =
+        elemento(id);
 
-    if (elemento) {
+    if (campo) {
 
-        elemento.textContent =
+        campo.textContent =
             valor;
+
     }
 
 }
 
+
+/* =========================================================
+   BARRAS
+========================================================= */
 
 function definirLargura(
     id,
     valor
 ) {
 
-    const elemento =
-        document.getElementById(id);
+    const campo =
+        elemento(id);
 
-    if (!elemento) {
+    if (!campo) {
         return;
     }
 
-    elemento.style.width =
-        `${Math.max(0, Math.min(100, valor))}%`;
+
+    const largura =
+        Math.max(
+            0,
+            Math.min(
+                100,
+                Number(valor) || 0
+            )
+        );
+
+
+    campo.style.width =
+        `${largura}%`;
 
 }
 
 
 /* =========================================================
-   MINI REGISTROS
+   ÚLTIMOS LANÇAMENTOS
 ========================================================= */
 
 function criarUltimosLancamentos(
@@ -1342,7 +1429,7 @@ function criarUltimosLancamentos(
 ) {
 
     const container =
-        document.getElementById(
+        elemento(
             "ultimosLancamentos"
         );
 
@@ -1365,9 +1452,11 @@ function criarUltimosLancamentos(
 
 
     container.innerHTML =
-        registros.map(
-            criarMiniRegistro
-        ).join("");
+        registros
+            .map(
+                criarMiniRegistro
+            )
+            .join("");
 
 }
 
@@ -1412,7 +1501,8 @@ function criarMiniRegistro(
 
                 <strong>
                     ${escaparHTML(config.nome)}
-                    • ${escaparHTML(identificacao)}
+                    •
+                    ${escaparHTML(identificacao)}
                 </strong>
 
                 <span>
@@ -1432,121 +1522,35 @@ function criarMiniRegistro(
 
 
 /* =========================================================
-   REGISTROS
-========================================================= */
-
-function carregarRegistros() {
-
-    const caminhos = [
-        {
-            tipo: "ambulancia",
-            caminho: "ambulancias"
-        },
-        {
-            tipo: "transferencia",
-            caminho: "transferencias"
-        },
-        {
-            tipo: "apoio",
-            caminho: "apoios"
-        }
-    ];
-
-
-    const resultados = [];
-
-    let carregados = 0;
-
-
-    caminhos.forEach(item => {
-
-        onValue(
-            ref(db, item.caminho),
-            snapshot => {
-
-                const valor =
-                    snapshot.val() || {};
-
-
-                resultados.push(
-                    ...Object.entries(valor)
-                        .map(
-                            ([id, registro]) => ({
-                                ...registro,
-                                id,
-                                tipo: item.tipo
-                            })
-                        )
-                );
-
-
-                carregados++;
-
-
-                if (
-                    carregados ===
-                    caminhos.length
-                ) {
-
-                    todosRegistros =
-                        resultados.sort(
-                            (a, b) =>
-                                Number(
-                                    b.criadoEm || 0
-                                ) -
-                                Number(
-                                    a.criadoEm || 0
-                                )
-                        );
-
-
-                    atualizarDashboard();
-
-                    aplicarFiltros();
-
-                }
-
-            },
-            {
-                onlyOnce: true
-            }
-        );
-
-    });
-
-}
-
-
-/* =========================================================
    FILTROS
 ========================================================= */
 
 function aplicarFiltros() {
 
     const data =
-        document.getElementById(
+        elemento(
             "filtroData"
         )?.value || "";
 
 
     const rota =
-        document.getElementById(
+        elemento(
             "filtroRota"
         )?.value
-            .trim()
+            ?.trim()
             .toLowerCase() || "";
 
 
     const driver =
-        document.getElementById(
+        elemento(
             "filtroDriver"
         )?.value
-            .trim()
+            ?.trim()
             .toLowerCase() || "";
 
 
     const tipo =
-        document.getElementById(
+        elemento(
             "filtroTipo"
         )?.value || "";
 
@@ -1558,41 +1562,55 @@ function aplicarFiltros() {
                 const rotaRegistro =
                     String(
                         registro.rota || ""
-                    ).toLowerCase();
+                    )
+                    .toLowerCase();
 
 
-                const drivers =
-                    [
-                        registro.driver,
-                        registro.driverInicial,
-                        registro.driverSubstituto,
-                        registro.driverRealiza,
-                        registro.driverPrecisa
-                    ]
-                        .filter(Boolean)
-                        .join(" ")
-                        .toLowerCase();
+                const motoristas = [
+
+                    registro.driver,
+
+                    registro.driverInicial,
+
+                    registro.driverSubstituto,
+
+                    registro.driverRealiza,
+
+                    registro.driverPrecisa
+
+                ]
+                    .filter(Boolean)
+                    .join(" ")
+                    .toLowerCase();
 
 
                 return (
 
-                    (!data ||
-                        registro.data === data)
+                    (
+                        !data ||
+                        registro.data === data
+                    )
 
                     &&
 
-                    (!rota ||
-                        rotaRegistro.includes(rota))
+                    (
+                        !rota ||
+                        rotaRegistro.includes(rota)
+                    )
 
                     &&
 
-                    (!driver ||
-                        drivers.includes(driver))
+                    (
+                        !driver ||
+                        motoristas.includes(driver)
+                    )
 
                     &&
 
-                    (!tipo ||
-                        registro.tipo === tipo)
+                    (
+                        !tipo ||
+                        registro.tipo === tipo
+                    )
 
                 );
 
@@ -1607,39 +1625,43 @@ function aplicarFiltros() {
 }
 
 
-window.limparFiltros = function () {
+window.limparFiltros =
+    function () {
 
-    [
-        "filtroData",
-        "filtroRota",
-        "filtroDriver"
-    ].forEach(id => {
+        [
+            "filtroData",
+            "filtroRota",
+            "filtroDriver"
+        ].forEach(
+            id => {
 
-        const campo =
-            document.getElementById(id);
+                const campo =
+                    elemento(id);
 
-        if (campo) {
-            campo.value = "";
-        }
+                if (campo) {
+                    campo.value = "";
+                }
 
-    });
-
-
-    const tipo =
-        document.getElementById(
-            "filtroTipo"
+            }
         );
 
-    if (tipo) {
-        tipo.value = "";
-    }
+
+        const tipo =
+            elemento(
+                "filtroTipo"
+            );
 
 
-    renderizarRegistros(
-        todosRegistros
-    );
+        if (tipo) {
+            tipo.value = "";
+        }
 
-};
+
+        renderizarRegistros(
+            todosRegistros
+        );
+
+    };
 
 
 /* =========================================================
@@ -1654,7 +1676,8 @@ window.limparFiltros = function () {
 ].forEach(id => {
 
     const campo =
-        document.getElementById(id);
+        elemento(id);
+
 
     if (!campo) {
         return;
@@ -1680,7 +1703,7 @@ function renderizarRegistros(
 ) {
 
     const lista =
-        document.getElementById(
+        elemento(
             "listaRegistros"
         );
 
@@ -1704,14 +1727,16 @@ function renderizarRegistros(
 
     lista.innerHTML =
         registros
-            .map(criarRegistroHTML)
+            .map(
+                criarRegistroHTML
+            )
             .join("");
 
 }
 
 
 /* =========================================================
-   HTML DE REGISTRO
+   REGISTRO HTML
 ========================================================= */
 
 function criarRegistroHTML(
@@ -1771,6 +1796,18 @@ function criarRegistroHTML(
     }
 
 
+    const tipoSeguro =
+        escaparHTML(
+            registro.tipo
+        );
+
+
+    const idSeguro =
+        escaparHTML(
+            registro.id
+        );
+
+
     return `
         <div class="registro-card">
 
@@ -1789,14 +1826,14 @@ function criarRegistroHTML(
                 <div class="registro-tipo-text">
 
                     <strong>
-                        ${escaparHTML(config.nome)}
+                        ${escaparHTML(
+                            config.nome
+                        )}
                     </strong>
 
                     <span>
-                        ${escaparHTML(
+                        ${formatarData(
                             registro.data
-                                ? formatarData(registro.data)
-                                : "Sem data"
                         )}
                     </span>
 
@@ -1808,12 +1845,17 @@ function criarRegistroHTML(
             <div class="registro-info">
 
                 <strong>
-                    ${escaparHTML(titulo)}
+                    ${escaparHTML(
+                        titulo
+                    )}
                 </strong>
 
                 <span>
-                    ${escaparHTML(detalhes)}
+                    ${escaparHTML(
+                        detalhes
+                    )}
                 </span>
+
 
                 ${
                     registro.motivo
@@ -1828,6 +1870,7 @@ function criarRegistroHTML(
                         : ""
                 }
 
+
                 ${
                     registro.observacoes
                         ? `
@@ -1841,10 +1884,12 @@ function criarRegistroHTML(
                         : ""
                 }
 
+
                 <span>
                     Lançado por:
                     ${escaparHTML(
-                        registro.lancadoPor || "—"
+                        registro.lancadoPor ||
+                        "—"
                     )}
                 </span>
 
@@ -1854,6 +1899,7 @@ function criarRegistroHTML(
             <div class="registro-extra">
 
                 <span class="registro-data">
+
                     ${
                         registro.criadoEm
                             ? new Date(
@@ -1863,19 +1909,14 @@ function criarRegistroHTML(
                             )
                             : "—"
                     }
+
                 </span>
+
 
                 <button
                     type="button"
                     class="btn-excluir"
-                    onclick="excluirRegistro(
-                        '${escaparHTML(
-                            registro.tipo
-                        )}',
-                        '${escaparHTML(
-                            registro.id
-                        )}'
-                    )"
+                    onclick="excluirRegistro('${tipoSeguro}', '${idSeguro}')"
                     title="Excluir registro"
                 >
                     🗑
@@ -1890,177 +1931,211 @@ function criarRegistroHTML(
 
 
 /* =========================================================
-   CONFIGURAÇÃO DOS TIPOS
+   TIPOS
 ========================================================= */
 
 function obterConfigTipo(
     tipo
 ) {
 
-    if (tipo === "ambulancia") {
+    if (
+        tipo ===
+        "ambulancia"
+    ) {
 
         return {
+
             nome: "Ambulância",
+
             icone: "🚑",
+
             cor: "#16a34a",
+
             fundo: "#dcfce7"
+
         };
 
     }
 
 
-    if (tipo === "transferencia") {
+    if (
+        tipo ===
+        "transferencia"
+    ) {
 
         return {
+
             nome: "Transferência",
+
             icone: "⇄",
+
             cor: "#2563eb",
+
             fundo: "#dbeafe"
+
         };
 
     }
 
 
     return {
+
         nome: "Apoio de rota",
+
         icone: "＋",
+
         cor: "#ea580c",
+
         fundo: "#ffedd5"
+
     };
 
 }
 
 
 /* =========================================================
-   EXCLUIR
+   EXCLUIR REGISTRO
 ========================================================= */
 
-window.excluirRegistro = async function (
-    tipo,
-    id
-) {
+window.excluirRegistro =
+    async function (
+        tipo,
+        id
+    ) {
 
-    if (!tipo || !id) {
-        return;
-    }
-
-
-    const confirmacao =
-        confirm(
-            "Tem certeza que deseja excluir este registro?"
-        );
+        if (!tipo || !id) {
+            return;
+        }
 
 
-    if (!confirmacao) {
-        return;
-    }
+        const confirmou =
+            window.confirm(
+                "Tem certeza que deseja excluir este registro?"
+            );
 
 
-    const caminhos = {
+        if (!confirmou) {
+            return;
+        }
 
-        ambulancia:
-            "ambulancias",
 
-        transferencia:
-            "transferencias",
+        const caminhos = {
 
-        apoio:
-            "apoios"
+            ambulancia:
+                "ambulancias",
+
+            transferencia:
+                "transferencias",
+
+            apoio:
+                "apoios"
+
+        };
+
+
+        const caminho =
+            caminhos[tipo];
+
+
+        if (!caminho) {
+            return;
+        }
+
+
+        try {
+
+            await remove(
+                ref(
+                    db,
+                    `${caminho}/${id}`
+                )
+            );
+
+
+            mostrarToast(
+                "Registro excluído com sucesso.",
+                "sucesso"
+            );
+
+
+            carregarDados();
+
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao excluir:",
+                erro
+            );
+
+
+            mostrarToast(
+                "Não foi possível excluir o registro.",
+                "erro"
+            );
+
+        }
 
     };
-
-
-    const caminho =
-        caminhos[tipo];
-
-
-    if (!caminho) {
-        return;
-    }
-
-
-    try {
-
-        await remove(
-            ref(
-                db,
-                `${caminho}/${id}`
-            )
-        );
-
-
-        mostrarToast(
-            "Registro excluído com sucesso."
-        );
-
-
-        carregarDashboard();
-
-        carregarRegistros();
-
-    } catch (erro) {
-
-        console.error(erro);
-
-        mostrarToast(
-            "Não foi possível excluir o registro."
-        );
-
-    }
-
-};
 
 
 /* =========================================================
    ALTERAR SENHA
 ========================================================= */
 
-window.abrirAlterarSenha = function () {
+window.abrirAlterarSenha =
+    function () {
 
-    const modal =
-        document.getElementById(
-            "modalSenha"
+        const modal =
+            elemento(
+                "modalSenha"
+            );
+
+
+        if (!modal) {
+            return;
+        }
+
+
+        modal.classList.remove(
+            "oculto"
         );
 
 
-    if (!modal) {
-        return;
-    }
+        const form =
+            elemento(
+                "formAlterarSenha"
+            );
 
 
-    modal.classList.remove(
-        "oculto"
-    );
+        if (form) {
+            form.reset();
+        }
 
 
-    document.getElementById(
-        "formAlterarSenha"
-    )?.reset();
+        const mensagem =
+            elemento(
+                "mensagemSenha"
+            );
 
 
-    const mensagem =
-        document.getElementById(
-            "mensagemSenha"
-        );
+        if (mensagem) {
 
+            mensagem.textContent = "";
 
-    if (mensagem) {
+            mensagem.className =
+                "mensagem";
 
-        mensagem.textContent = "";
+        }
 
-        mensagem.className =
-            "mensagem";
-
-    }
-
-};
+    };
 
 
 window.fecharAlterarSenha =
     function () {
 
         const modal =
-            document.getElementById(
+            elemento(
                 "modalSenha"
             );
 
@@ -2077,7 +2152,7 @@ window.fecharAlterarSenha =
 
 
 const formAlterarSenha =
-    document.getElementById(
+    elemento(
         "formAlterarSenha"
     );
 
@@ -2097,25 +2172,25 @@ if (formAlterarSenha) {
 
 
             const senhaAtual =
-                document.getElementById(
+                elemento(
                     "senhaAtual"
                 ).value;
 
 
             const novaSenha =
-                document.getElementById(
+                elemento(
                     "novaSenha"
                 ).value;
 
 
             const confirmarSenha =
-                document.getElementById(
+                elemento(
                     "confirmarSenha"
                 ).value;
 
 
             const mensagem =
-                document.getElementById(
+                elemento(
                     "mensagemSenha"
                 );
 
@@ -2135,7 +2210,9 @@ if (formAlterarSenha) {
             }
 
 
-            if (novaSenha.length < 6) {
+            if (
+                novaSenha.length < 6
+            ) {
 
                 mostrarMensagem(
                     mensagem,
@@ -2178,53 +2255,54 @@ if (formAlterarSenha) {
                 formAlterarSenha.reset();
 
 
-                setTimeout(() => {
+                setTimeout(
+                    () => {
 
-                    fecharAlterarSenha();
+                        fecharAlterarSenha();
 
-                }, 1200);
+                    },
+                    1200
+                );
 
 
             } catch (erro) {
 
-                console.error(erro);
+                console.error(
+                    "Erro ao alterar senha:",
+                    erro
+                );
 
 
                 let texto =
                     "Não foi possível alterar a senha.";
 
 
-                if (
-                    erro.code ===
-                    "auth/invalid-credential"
-                ) {
+                switch (erro.code) {
 
-                    texto =
-                        "A senha atual está incorreta.";
+                    case "auth/invalid-credential":
 
-                } else if (
-                    erro.code ===
-                    "auth/wrong-password"
-                ) {
+                    case "auth/wrong-password":
 
-                    texto =
-                        "A senha atual está incorreta.";
+                        texto =
+                            "A senha atual está incorreta.";
 
-                } else if (
-                    erro.code ===
-                    "auth/weak-password"
-                ) {
+                        break;
 
-                    texto =
-                        "A nova senha é muito fraca.";
 
-                } else if (
-                    erro.code ===
-                    "auth/requires-recent-login"
-                ) {
+                    case "auth/weak-password":
 
-                    texto =
-                        "Faça login novamente e tente alterar a senha.";
+                        texto =
+                            "A nova senha é muito fraca.";
+
+                        break;
+
+
+                    case "auth/requires-recent-login":
+
+                        texto =
+                            "Faça login novamente e tente alterar a senha.";
+
+                        break;
 
                 }
 
@@ -2251,7 +2329,7 @@ window.abrirRecuperarSenha =
     function () {
 
         const modal =
-            document.getElementById(
+            elemento(
                 "modalRecuperarSenha"
             );
 
@@ -2267,20 +2345,20 @@ window.abrirRecuperarSenha =
 
 
         const emailLogin =
-            document.getElementById(
+            elemento(
                 "loginEmail"
             )?.value.trim();
 
 
         const emailRecuperacao =
-            document.getElementById(
+            elemento(
                 "emailRecuperacao"
             );
 
 
         if (
-            emailRecuperacao &&
-            emailLogin
+            emailLogin &&
+            emailRecuperacao
         ) {
 
             emailRecuperacao.value =
@@ -2290,7 +2368,7 @@ window.abrirRecuperarSenha =
 
 
         const mensagem =
-            document.getElementById(
+            elemento(
                 "mensagemRecuperacao"
             );
 
@@ -2311,7 +2389,7 @@ window.fecharRecuperarSenha =
     function () {
 
         const modal =
-            document.getElementById(
+            elemento(
                 "modalRecuperarSenha"
             );
 
@@ -2328,7 +2406,7 @@ window.fecharRecuperarSenha =
 
 
 const formRecuperarSenha =
-    document.getElementById(
+    elemento(
         "formRecuperarSenha"
     );
 
@@ -2342,16 +2420,34 @@ if (formRecuperarSenha) {
             evento.preventDefault();
 
 
-            const email =
-                document.getElementById(
+            const campoEmail =
+                elemento(
                     "emailRecuperacao"
-                ).value.trim();
+                );
 
 
             const mensagem =
-                document.getElementById(
+                elemento(
                     "mensagemRecuperacao"
                 );
+
+
+            const email =
+                campoEmail
+                    ?.value
+                    .trim();
+
+
+            if (!email) {
+
+                mostrarMensagem(
+                    mensagem,
+                    "Digite seu e-mail.",
+                    "erro"
+                );
+
+                return;
+            }
 
 
             try {
@@ -2371,28 +2467,40 @@ if (formRecuperarSenha) {
 
             } catch (erro) {
 
-                console.error(erro);
+                console.error(
+                    "Erro na recuperação:",
+                    erro
+                );
 
 
                 let texto =
                     "Não foi possível enviar o e-mail de recuperação.";
 
 
-                if (
-                    erro.code ===
-                    "auth/user-not-found"
-                ) {
+                switch (erro.code) {
 
-                    texto =
-                        "Não encontramos uma conta com esse e-mail.";
+                    case "auth/user-not-found":
 
-                } else if (
-                    erro.code ===
-                    "auth/invalid-email"
-                ) {
+                        texto =
+                            "Não encontramos uma conta com esse e-mail.";
 
-                    texto =
-                        "Digite um e-mail válido.";
+                        break;
+
+
+                    case "auth/invalid-email":
+
+                        texto =
+                            "Digite um e-mail válido.";
+
+                        break;
+
+
+                    case "auth/network-request-failed":
+
+                        texto =
+                            "Erro de conexão. Verifique sua internet.";
+
+                        break;
 
                 }
 
@@ -2412,7 +2520,7 @@ if (formRecuperarSenha) {
 
 
 /* =========================================================
-   FECHAR MODAIS CLICANDO FORA
+   FECHAR MODAIS
 ========================================================= */
 
 window.addEventListener(
@@ -2420,12 +2528,13 @@ window.addEventListener(
     evento => {
 
         const modalSenha =
-            document.getElementById(
+            elemento(
                 "modalSenha"
             );
 
+
         const modalRecuperacao =
-            document.getElementById(
+            elemento(
                 "modalRecuperarSenha"
             );
 
@@ -2454,7 +2563,7 @@ window.addEventListener(
 
 
 /* =========================================================
-   FECHAR SIDEBAR AO CLICAR FORA
+   FECHAR SIDEBAR MOBILE AO CLICAR FORA
 ========================================================= */
 
 document.addEventListener(
@@ -2474,8 +2583,9 @@ document.addEventListener(
                 ".sidebar"
             );
 
+
         const botao =
-            document.getElementById(
+            elemento(
                 "btnMenuMobile"
             );
 
@@ -2526,6 +2636,10 @@ document.addEventListener(
     () => {
 
         preencherDatas();
+
+        console.log(
+            "Caxiense LOG: sistema carregado."
+        );
 
     }
 );
