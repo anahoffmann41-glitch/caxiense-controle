@@ -38,7 +38,9 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+
 const auth = getAuth(app);
+
 const db = getDatabase(app);
 
 
@@ -59,24 +61,33 @@ function elemento(id) {
 
 
 function mostrarElemento(id) {
+
     const el = elemento(id);
 
     if (el) {
+
         el.classList.remove("oculto");
+
+        el.style.display = "";
     }
 }
 
 
 function esconderElemento(id) {
+
     const el = elemento(id);
 
     if (el) {
+
         el.classList.add("oculto");
+
+        el.style.display = "none";
     }
 }
 
 
 function hoje() {
+
     const data = new Date();
 
     const ano = data.getFullYear();
@@ -94,11 +105,13 @@ function hoje() {
 
 
 function formatarData(data) {
+
     if (!data) {
         return "-";
     }
 
-    const partes = String(data).split("-");
+    const partes =
+        String(data).split("-");
 
     if (partes.length !== 3) {
         return data;
@@ -109,7 +122,9 @@ function formatarData(data) {
 
 
 function formatarMoeda(valor) {
-    const numero = Number(valor) || 0;
+
+    const numero =
+        Number(valor) || 0;
 
     return numero.toLocaleString(
         "pt-BR",
@@ -125,29 +140,48 @@ function mostrarToast(
     mensagem,
     tipo = "normal"
 ) {
-    const toast = elemento("toast");
+
+    const toast =
+        elemento("toast");
 
     if (!toast) {
         return;
     }
 
-    toast.textContent = mensagem;
+    toast.textContent =
+        mensagem;
 
-    toast.className = "toast";
+    toast.className =
+        "toast";
 
-    toast.classList.add("visivel");
+    toast.classList.add(
+        "visivel"
+    );
 
     if (tipo === "erro") {
-        toast.classList.add("erro");
+
+        toast.classList.add(
+            "erro"
+        );
     }
 
     if (tipo === "sucesso") {
-        toast.classList.add("sucesso");
+
+        toast.classList.add(
+            "sucesso"
+        );
     }
 
-    setTimeout(function () {
-        toast.classList.remove("visivel");
-    }, 3500);
+    setTimeout(
+        function () {
+
+            toast.classList.remove(
+                "visivel"
+            );
+
+        },
+        3500
+    );
 }
 
 
@@ -157,12 +191,15 @@ function mostrarToast(
 
 function configurarLogin() {
 
-    const formLogin = elemento("formLogin");
+    const formLogin =
+        elemento("formLogin");
 
     if (!formLogin) {
+
         console.warn(
             "formLogin não encontrado."
         );
+
         return;
     }
 
@@ -220,7 +257,8 @@ function configurarLogin() {
 
             if (mensagem) {
 
-                mensagem.textContent = "";
+                mensagem.textContent =
+                    "";
 
                 mensagem.className =
                     "mensagem";
@@ -360,13 +398,17 @@ function abrirModalRecuperacao() {
     );
 
     const modal =
-        elemento("modalRecuperarSenha");
+        elemento(
+            "modalRecuperarSenha"
+        );
 
     const emailLogin =
         elemento("loginEmail");
 
     const emailRecuperacao =
-        elemento("emailRecuperacao");
+        elemento(
+            "emailRecuperacao"
+        );
 
     if (!modal) {
 
@@ -387,11 +429,18 @@ function abrirModalRecuperacao() {
             emailLogin.value.trim();
     }
 
-    modal.classList.remove("oculto");
+    modal.classList.remove(
+        "oculto"
+    );
 
-    modal.style.display = "flex";
-    modal.style.visibility = "visible";
-    modal.style.opacity = "1";
+    modal.style.display =
+        "flex";
+
+    modal.style.visibility =
+        "visible";
+
+    modal.style.opacity =
+        "1";
 
     console.log(
         "Modal de recuperação aberto."
@@ -402,17 +451,26 @@ function abrirModalRecuperacao() {
 function fecharModalRecuperacao() {
 
     const modal =
-        elemento("modalRecuperarSenha");
+        elemento(
+            "modalRecuperarSenha"
+        );
 
     if (!modal) {
         return;
     }
 
-    modal.classList.add("oculto");
+    modal.classList.add(
+        "oculto"
+    );
 
-    modal.style.display = "";
-    modal.style.visibility = "";
-    modal.style.opacity = "";
+    modal.style.display =
+        "";
+
+    modal.style.visibility =
+        "";
+
+    modal.style.opacity =
+        "";
 }
 
 
@@ -423,10 +481,14 @@ function configurarRecuperacaoSenha() {
     );
 
     const btnEsqueciSenha =
-        elemento("btnEsqueciSenha");
+        elemento(
+            "btnEsqueciSenha"
+        );
 
     const form =
-        elemento("formRecuperarSenha");
+        elemento(
+            "formRecuperarSenha"
+        );
 
     if (!btnEsqueciSenha) {
 
@@ -436,43 +498,21 @@ function configurarRecuperacaoSenha() {
 
     } else {
 
-        /*
-         * CORREÇÃO:
-         * Coloca diretamente no botão.
-         * Assim não dependemos somente do addEventListener.
-         */
-
         btnEsqueciSenha.onclick =
             function (event) {
 
                 if (event) {
+
                     event.preventDefault();
+
                     event.stopPropagation();
                 }
 
                 abrirModalRecuperacao();
             };
 
-
-        /*
-         * Também mantém o addEventListener
-         * como camada adicional de segurança.
-         */
-
-        btnEsqueciSenha.addEventListener(
-            "click",
-            function (event) {
-
-                event.preventDefault();
-
-                abrirModalRecuperacao();
-
-            }
-        );
-
-
         console.log(
-            "Botão de recuperação configurado com sucesso."
+            "Botão de recuperação configurado."
         );
     }
 
@@ -498,10 +538,14 @@ function configurarRecuperacaoSenha() {
             );
 
             const emailRecuperacao =
-                elemento("emailRecuperacao");
+                elemento(
+                    "emailRecuperacao"
+                );
 
             const mensagem =
-                elemento("mensagemRecuperarSenha");
+                elemento(
+                    "mensagemRecuperarSenha"
+                );
 
             const email =
                 emailRecuperacao
@@ -536,11 +580,9 @@ function configurarRecuperacaoSenha() {
                     email
                 );
 
-
                 console.log(
                     "E-mail de recuperação enviado."
                 );
-
 
                 if (mensagem) {
 
@@ -551,7 +593,6 @@ function configurarRecuperacaoSenha() {
                         "mensagem sucesso";
                 }
 
-
             } catch (error) {
 
                 console.error(
@@ -561,7 +602,6 @@ function configurarRecuperacaoSenha() {
 
                 let mensagemErro =
                     "Não foi possível enviar o e-mail de recuperação.";
-
 
                 switch (error.code) {
 
@@ -601,7 +641,6 @@ function configurarRecuperacaoSenha() {
                         break;
                 }
 
-
                 if (mensagem) {
 
                     mensagem.textContent =
@@ -610,15 +649,119 @@ function configurarRecuperacaoSenha() {
                     mensagem.className =
                         "mensagem erro";
                 }
-
             }
-
         }
     );
 
-
     console.log(
         "Formulário de recuperação configurado."
+    );
+}
+
+
+// ======================================================
+// MOSTRAR SISTEMA
+// ======================================================
+
+function mostrarSistema() {
+
+    const telaLogin =
+        elemento("telaLogin");
+
+    const sistema =
+        elemento("sistema");
+
+
+    if (telaLogin) {
+
+        telaLogin.classList.add(
+            "oculto"
+        );
+
+        telaLogin.style.display =
+            "none";
+    }
+
+
+    if (sistema) {
+
+        sistema.classList.remove(
+            "oculto"
+        );
+
+        sistema.style.display =
+            "block";
+
+        sistema.style.visibility =
+            "visible";
+
+        sistema.style.opacity =
+            "1";
+
+        sistema.style.position =
+            "relative";
+
+        sistema.style.top =
+            "0";
+
+        sistema.style.left =
+            "0";
+
+        sistema.style.width =
+            "100%";
+
+        sistema.style.minHeight =
+            "100vh";
+
+        sistema.style.zIndex =
+            "1";
+    }
+
+    console.log(
+        "Sistema exibido."
+    );
+}
+
+
+function mostrarLogin() {
+
+    const telaLogin =
+        elemento("telaLogin");
+
+    const sistema =
+        elemento("sistema");
+
+
+    if (telaLogin) {
+
+        telaLogin.classList.remove(
+            "oculto"
+        );
+
+        telaLogin.style.display =
+            "flex";
+
+        telaLogin.style.visibility =
+            "visible";
+
+        telaLogin.style.opacity =
+            "1";
+    }
+
+
+    if (sistema) {
+
+        sistema.classList.add(
+            "oculto"
+        );
+
+        sistema.style.display =
+            "none";
+    }
+
+
+    console.log(
+        "Tela de login exibida."
     );
 }
 
@@ -638,39 +781,52 @@ onAuthStateChanged(
                 : "desconectado"
         );
 
+
         if (user) {
 
-            esconderElemento(
-                "telaLogin"
-            );
+            mostrarSistema();
 
-            mostrarElemento(
-                "sistema"
-            );
 
             const usuarioEmail =
-                elemento("usuarioEmail");
+                elemento(
+                    "usuarioEmail"
+                );
 
             if (usuarioEmail) {
 
                 usuarioEmail.textContent =
-                    user.email || "Usuário";
+                    user.email ||
+                    "Usuário";
             }
 
-            await carregarDados();
+
+            // Sempre começa no Dashboard
+            abrirPagina(
+                "paginaDashboard"
+            );
+
+
+            try {
+
+                await carregarDados();
+
+            } catch (error) {
+
+                console.error(
+                    "Erro ao carregar dados:",
+                    error
+                );
+            }
 
         } else {
 
-            mostrarElemento(
-                "telaLogin"
-            );
+            mostrarLogin();
 
-            esconderElemento(
-                "sistema"
-            );
 
             const usuarioEmail =
-                elemento("usuarioEmail");
+                elemento(
+                    "usuarioEmail"
+                );
 
             if (usuarioEmail) {
 
@@ -692,20 +848,29 @@ function configurarLogout() {
         elemento("btnSair");
 
     if (!btnSair) {
+
+        console.warn(
+            "btnSair não encontrado."
+        );
+
         return;
     }
+
 
     btnSair.addEventListener(
         "click",
         async function () {
 
+            console.log(
+                "Solicitação de logout."
+            );
+
             try {
 
                 await signOut(auth);
 
-                mostrarToast(
-                    "Você saiu do sistema.",
-                    "sucesso"
+                console.log(
+                    "Logout realizado."
                 );
 
             } catch (error) {
@@ -767,6 +932,7 @@ function configurarSidebar() {
                 return;
             }
 
+
             if (
                 window.innerWidth <= 900 &&
                 sidebar.classList.contains(
@@ -793,6 +959,159 @@ function configurarSidebar() {
 // NAVEGAÇÃO
 // ======================================================
 
+function abrirPagina(
+    paginaId
+) {
+
+    console.log(
+        "Abrindo página:",
+        paginaId
+    );
+
+
+    const paginas =
+        document.querySelectorAll(
+            ".pagina"
+        );
+
+
+    paginas.forEach(
+        function (pagina) {
+
+            pagina.classList.remove(
+                "ativa"
+            );
+
+            // CORREÇÃO PRINCIPAL:
+            // esconde diretamente pelo JavaScript
+            pagina.style.display =
+                "none";
+        }
+    );
+
+
+    const pagina =
+        elemento(
+            paginaId
+        );
+
+
+    if (!pagina) {
+
+        console.error(
+            "Página não encontrada:",
+            paginaId
+        );
+
+        return;
+    }
+
+
+    pagina.classList.add(
+        "ativa"
+    );
+
+    // Mostra diretamente
+    pagina.style.display =
+        "block";
+
+
+    const menuItens =
+        document.querySelectorAll(
+            ".menu-item[data-pagina]"
+        );
+
+
+    menuItens.forEach(
+        function (menu) {
+
+            menu.classList.remove(
+                "ativo"
+            );
+        }
+    );
+
+
+    const menuAtivo =
+        document.querySelector(
+            `.menu-item[data-pagina="${paginaId}"]`
+        );
+
+
+    if (menuAtivo) {
+
+        menuAtivo.classList.add(
+            "ativo"
+        );
+    }
+
+
+    const titulos = {
+
+        paginaDashboard:
+            "Dashboard",
+
+        paginaAmbulancia:
+            "Ambulâncias",
+
+        paginaTransferencia:
+            "Transferências",
+
+        paginaApoio:
+            "Apoio de Rota",
+
+        paginaRegistros:
+            "Registros"
+    };
+
+
+    const titulo =
+        elemento(
+            "tituloPagina"
+        );
+
+
+    if (titulo) {
+
+        titulo.textContent =
+            titulos[paginaId] ||
+            "Dashboard";
+    }
+
+
+    if (
+        paginaId ===
+        "paginaRegistros"
+    ) {
+
+        renderizarRegistros();
+    }
+
+
+    const sidebar =
+        document.querySelector(
+            ".sidebar"
+        );
+
+
+    if (
+        sidebar &&
+        window.innerWidth <= 900
+    ) {
+
+        sidebar.classList.remove(
+            "aberta"
+        );
+    }
+
+
+    console.log(
+        "Página aberta com sucesso:",
+        paginaId
+    );
+}
+
+
 function configurarNavegacao() {
 
     const menuItens =
@@ -800,128 +1119,54 @@ function configurarNavegacao() {
             ".menu-item[data-pagina]"
         );
 
+
+    console.log(
+        "Itens de menu encontrados:",
+        menuItens.length
+    );
+
+
     menuItens.forEach(
         function (item) {
 
             item.addEventListener(
                 "click",
-                function () {
+                function (event) {
+
+                    event.preventDefault();
+
+                    event.stopPropagation();
+
 
                     const paginaId =
                         item.getAttribute(
                             "data-pagina"
                         );
 
+
+                    console.log(
+                        "Menu clicado:",
+                        paginaId
+                    );
+
+
                     if (!paginaId) {
                         return;
                     }
 
-                    document
-                        .querySelectorAll(
-                            ".pagina"
-                        )
-                        .forEach(
-                            function (pagina) {
 
-                                pagina.classList.remove(
-                                    "ativa"
-                                );
-                            }
-                        );
-
-
-                    const pagina =
-                        elemento(
-                            paginaId
-                        );
-
-                    if (pagina) {
-
-                        pagina.classList.add(
-                            "ativa"
-                        );
-                    }
-
-
-                    document
-                        .querySelectorAll(
-                            ".menu-item[data-pagina]"
-                        )
-                        .forEach(
-                            function (menu) {
-
-                                menu.classList.remove(
-                                    "ativo"
-                                );
-                            }
-                        );
-
-
-                    item.classList.add(
-                        "ativo"
+                    abrirPagina(
+                        paginaId
                     );
-
-
-                    const titulo =
-                        elemento(
-                            "tituloPagina"
-                        );
-
-
-                    const titulos = {
-
-                        paginaDashboard:
-                            "Dashboard",
-
-                        paginaAmbulancia:
-                            "Ambulâncias",
-
-                        paginaTransferencia:
-                            "Transferências",
-
-                        paginaApoio:
-                            "Apoio de Rota",
-
-                        paginaRegistros:
-                            "Registros"
-                    };
-
-
-                    if (titulo) {
-
-                        titulo.textContent =
-                            titulos[paginaId]
-                            || "Dashboard";
-                    }
-
-
-                    const sidebar =
-                        document.querySelector(
-                            ".sidebar"
-                        );
-
-
-                    if (
-                        sidebar &&
-                        window.innerWidth <= 900
-                    ) {
-
-                        sidebar.classList.remove(
-                            "aberta"
-                        );
-                    }
-
-
-                    if (
-                        paginaId ===
-                        "paginaRegistros"
-                    ) {
-
-                        renderizarRegistros();
-                    }
                 }
             );
         }
+    );
+
+
+    // Garante Dashboard inicial
+    abrirPagina(
+        "paginaDashboard"
     );
 }
 
@@ -942,18 +1187,27 @@ async function carregarDados() {
         const caminhos = [
 
             {
-                caminho: "ambulancias",
-                tipo: "ambulancia"
+                caminho:
+                    "ambulancias",
+
+                tipo:
+                    "ambulancia"
             },
 
             {
-                caminho: "transferencias",
-                tipo: "transferencia"
+                caminho:
+                    "transferencias",
+
+                tipo:
+                    "transferencia"
             },
 
             {
-                caminho: "apoios",
-                tipo: "apoio"
+                caminho:
+                    "apoios",
+
+                tipo:
+                    "apoio"
             }
         ];
 
@@ -962,7 +1216,8 @@ async function carregarDados() {
 
 
         for (
-            const item of caminhos
+            const item
+            of caminhos
         ) {
 
             const referencia =
@@ -979,6 +1234,7 @@ async function carregarDados() {
 
 
             if (!snapshot.exists()) {
+
                 continue;
             }
 
@@ -993,7 +1249,8 @@ async function carregarDados() {
 
                         registros.push({
 
-                            id: id,
+                            id:
+                                id,
 
                             tipo:
                                 item.tipo,
@@ -1035,7 +1292,6 @@ async function carregarDados() {
 
         renderizarRegistros();
 
-
     } catch (error) {
 
         console.error(
@@ -1061,6 +1317,7 @@ function configurarFormularioAmbulancia() {
         elemento(
             "formAmbulancia"
         );
+
 
     if (!form) {
         return;
@@ -1144,8 +1401,11 @@ function configurarFormularioAmbulancia() {
                         .toLocaleTimeString(
                             "pt-BR",
                             {
-                                hour: "2-digit",
-                                minute: "2-digit"
+                                hour:
+                                    "2-digit",
+
+                                minute:
+                                    "2-digit"
                             }
                         )
             };
@@ -1185,7 +1445,6 @@ function configurarFormularioAmbulancia() {
 
                 await carregarDados();
 
-
             } catch (error) {
 
                 console.error(
@@ -1214,6 +1473,7 @@ function configurarFormularioTransferencia() {
         elemento(
             "formTransferencia"
         );
+
 
     if (!form) {
         return;
@@ -1295,8 +1555,11 @@ function configurarFormularioTransferencia() {
                         .toLocaleTimeString(
                             "pt-BR",
                             {
-                                hour: "2-digit",
-                                minute: "2-digit"
+                                hour:
+                                    "2-digit",
+
+                                minute:
+                                    "2-digit"
                             }
                         )
             };
@@ -1336,7 +1599,6 @@ function configurarFormularioTransferencia() {
 
                 await carregarDados();
 
-
             } catch (error) {
 
                 console.error(
@@ -1365,6 +1627,7 @@ function configurarFormularioApoio() {
         elemento(
             "formApoio"
         );
+
 
     if (!form) {
         return;
@@ -1443,8 +1706,11 @@ function configurarFormularioApoio() {
                         .toLocaleTimeString(
                             "pt-BR",
                             {
-                                hour: "2-digit",
-                                minute: "2-digit"
+                                hour:
+                                    "2-digit",
+
+                                minute:
+                                    "2-digit"
                             }
                         )
             };
@@ -1483,7 +1749,6 @@ function configurarFormularioApoio() {
 
 
                 await carregarDados();
-
 
             } catch (error) {
 
@@ -1568,11 +1833,11 @@ function atualizarDashboard() {
     const valorHoje =
         apoiosHoje.reduce(
             function (
-                total,
+                totalAtual,
                 item
             ) {
 
-                return total +
+                return totalAtual +
                     (
                         Number(
                             item.valor
@@ -1586,11 +1851,11 @@ function atualizarDashboard() {
     const valorTotal =
         apoios.reduce(
             function (
-                total,
+                totalAtual,
                 item
             ) {
 
-                return total +
+                return totalAtual +
                     (
                         Number(
                             item.valor
@@ -1632,6 +1897,7 @@ function atualizarDashboard() {
 
                 const el =
                     elemento(id);
+
 
                 if (el) {
 
@@ -1695,6 +1961,7 @@ function atualizarDashboard() {
 
                 <div class="barra-info">
                     <span>Ambulâncias</span>
+
                     <strong>
                         ${ambulancias.length}
                     </strong>
@@ -1721,6 +1988,7 @@ function atualizarDashboard() {
 
                 <div class="barra-info">
                     <span>Transferências</span>
+
                     <strong>
                         ${transferencias.length}
                     </strong>
@@ -1747,6 +2015,7 @@ function atualizarDashboard() {
 
                 <div class="barra-info">
                     <span>Apoios</span>
+
                     <strong>
                         ${apoios.length}
                     </strong>
@@ -1767,6 +2036,7 @@ function atualizarDashboard() {
                 </div>
 
             </div>
+
         `;
     }
 
@@ -2026,13 +2296,17 @@ function renderizarRegistros() {
 
                     const textoMotorista = [
 
-                        registro.driver || "",
+                        registro.driver ||
+                            "",
 
-                        registro.driverInicial || "",
+                        registro.driverInicial ||
+                            "",
 
-                        registro.driverSubstituto || "",
+                        registro.driverSubstituto ||
+                            "",
 
-                        registro.driverAjudado || ""
+                        registro.driverAjudado ||
+                            ""
 
                     ]
                         .join(" ")
@@ -2069,15 +2343,10 @@ function renderizarRegistros() {
 function configurarFiltros() {
 
     [
-
         "filtroData",
-
         "filtroRota",
-
         "filtroDriver",
-
         "filtroTipo"
-
     ].forEach(
         function (id) {
 
@@ -2141,13 +2410,16 @@ function configurarFiltros() {
                     data.value = "";
                 }
 
+
                 if (rota) {
                     rota.value = "";
                 }
 
+
                 if (driver) {
                     driver.value = "";
                 }
+
 
                 if (tipo) {
                     tipo.value = "";
@@ -2221,7 +2493,6 @@ window.excluirRegistro =
 
 
             await carregarDados();
-
 
         } catch (error) {
 
@@ -2375,7 +2646,6 @@ function configurarAlterarSenha() {
 
                 formAlterarSenha.reset();
 
-
             } catch (error) {
 
                 console.error(
@@ -2446,6 +2716,9 @@ function configurarModais() {
                             modal.classList.add(
                                 "oculto"
                             );
+
+                            modal.style.display =
+                                "none";
                         }
                     }
                 );
